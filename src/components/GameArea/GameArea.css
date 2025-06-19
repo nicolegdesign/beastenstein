@@ -32,8 +32,8 @@
 }
 
 #food-bowl img {
-  width: 80px;
-  height: 80px;
+  width: 120px;
+  height: 120px;
   transition: all 0.3s ease;
 }
 
@@ -52,8 +52,8 @@
 }
 
 #pet-bed img {
-  width: 80px;
-  height: 80px;
+  width: 280px;
+  height: 280px;
   transition: all 0.3s ease;
 }
 
