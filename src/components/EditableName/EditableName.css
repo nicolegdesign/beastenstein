@@ -1,0 +1,21 @@
+/* Editable pet name styling */
+.editable-name {
+  color: #4CAF50;
+  border-bottom: 2px dashed transparent;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  outline: none;
+  background: transparent;
+}
+
+.editable-name:hover {
+  border-bottom-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.editable-name:focus {
+  border-bottom-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.15);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}

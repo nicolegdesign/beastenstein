@@ -1,0 +1,27 @@
+body {
+  font-family: sans-serif;
+  background-color: #f0f8ff;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.App {
+  text-align: center;
+  width: 100%;
+  max-width: 1400px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Stats UI positioned outside game area */
+#stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}

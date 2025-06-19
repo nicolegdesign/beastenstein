@@ -1,0 +1,62 @@
+.pet {
+  position: absolute;
+  z-index: 5;
+  transition: all 2s ease-in-out; /* Smooth movement animation */
+}
+
+.pet img {
+  width: 150px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Bounce animations for different happiness levels */
+@keyframes bounce-happy {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce-normal {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Animation classes */
+.pet-happy {
+  animation: bounce-happy 1s infinite;
+}
+
+.pet-normal {
+  animation: bounce-normal 2s infinite;
+}
+
+.pet-sad {
+  animation: bounce-slow 3s infinite;
+}
