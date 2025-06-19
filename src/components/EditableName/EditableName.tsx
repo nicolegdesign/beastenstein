@@ -4,25 +4,36 @@ import './EditableName.css';
 interface EditableNameProps {
   initialName?: string;
   onNameChange?: (name: string) => void;
+  petId?: string;
 }
 
 export const EditableName: React.FC<EditableNameProps> = ({ 
   initialName = 'Emi', 
-  onNameChange 
+  onNameChange,
+  petId
 }) => {
   const [name, setName] = useState(initialName);
   const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    // Load saved name from localStorage
-    const savedName = localStorage.getItem('petName') || initialName;
-    setName(savedName);
-  }, [initialName]);
+    // Load saved name from localStorage if petId is provided
+    if (petId) {
+      const savedName = localStorage.getItem(`petName_${petId}`) || initialName;
+      setName(savedName);
+    } else {
+      setName(initialName);
+    }
+  }, [initialName, petId]);
 
   const handleBlur = () => {
     const newName = spanRef.current?.textContent?.trim() || initialName;
     setName(newName);
-    localStorage.setItem('petName', newName);
+    
+    // Save to localStorage with petId-specific key
+    if (petId) {
+      localStorage.setItem(`petName_${petId}`, newName);
+    }
+    
     onNameChange?.(newName);
   };
 

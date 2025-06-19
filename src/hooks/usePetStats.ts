@@ -1,10 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PetStats, PetMood } from '../types/game';
 
-export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50, energy: 50 }) => {
+export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50, energy: 50 }, petId?: string) => {
   const [stats, setStats] = useState<PetStats>(initialStats);
   const [isResting, setIsResting] = useState(false);
   const restIntervalRef = useRef<number | null>(null);
+  const previousPetIdRef = useRef(petId);
+
+  // Update stats when switching pets (only when petId changes)
+  useEffect(() => {
+    if (petId && petId !== previousPetIdRef.current) {
+      setStats(initialStats);
+      previousPetIdRef.current = petId;
+    }
+  }, [petId, initialStats]);
 
   // Auto-decay stats every 3 seconds
   useEffect(() => {
@@ -95,6 +104,7 @@ export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50
   return {
     stats,
     isResting,
+    setIsResting,
     feed,
     play,
     startRest,

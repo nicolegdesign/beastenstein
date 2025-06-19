@@ -1,31 +1,82 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { EditableName } from './components/EditableName/EditableName';
 import { GameArea } from './components/GameArea/GameArea';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { PetSelector } from './components/PetSelector/PetSelector';
+import { Menu } from './components/Menu/Menu';
 import { usePetStats } from './hooks/usePetStats';
 import { usePetMovement } from './hooks/usePetMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { getPetById } from './types/pets';
+import type { IndividualPetData } from './types/game';
 import './App.css';
 
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   const [currentPetId, setCurrentPetId] = useState('emi');
-  const [petName, setPetName] = useState('Emi');
+  
+  // Initialize individual pet data from localStorage or defaults
+  const [petData, setPetData] = useState<Record<string, IndividualPetData>>(() => {
+    const defaultData: Record<string, IndividualPetData> = {
+      emi: {
+        name: localStorage.getItem('petName_emi') || 'Emi',
+        hunger: 50,
+        happiness: 50,
+        energy: 50,
+        isResting: false
+      },
+      hobbes: {
+        name: localStorage.getItem('petName_hobbes') || 'Hobbes',
+        hunger: 50,
+        happiness: 50,
+        energy: 50,
+        isResting: false
+      }
+    };
+    
+    // Load saved pet data from localStorage
+    Object.keys(defaultData).forEach(petId => {
+      const savedData = localStorage.getItem(`petData_${petId}`);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          defaultData[petId] = { ...defaultData[petId], ...parsed };
+        } catch (error) {
+          console.warn(`Failed to parse saved data for pet ${petId}:`, error);
+        }
+      }
+    });
+    
+    return defaultData;
+  });
+  
+  const [showPetSelector, setShowPetSelector] = useState(false);
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Get current pet's data
+  const currentPetData = petData[currentPetId];
   
   const {
     stats,
     isResting,
+    setIsResting,
     feed,
     play,
     startRest,
     travel,
     cleanup,
     getPetMood
-  } = usePetStats();
+  } = usePetStats({
+    hunger: currentPetData.hunger,
+    happiness: currentPetData.happiness,
+    energy: currentPetData.energy
+  }, currentPetId);
+
+  // Update the hook's resting state when switching pets
+  useEffect(() => {
+    setIsResting(currentPetData.isResting);
+  }, [currentPetId, currentPetData.isResting, setIsResting]);
 
   const { position } = usePetMovement(isResting, gameAreaRef);
   
@@ -35,8 +86,75 @@ function App() {
     const petConfig = getPetById(petId);
     if (petConfig) {
       setCurrentPetId(petId);
-      setPetName(petConfig.name);
+      setShowPetSelector(false); // Close selector after selection
     }
+  }, []);
+
+  const handleNameChange = useCallback((newName: string) => {
+    setPetData(prev => ({
+      ...prev,
+      [currentPetId]: {
+        ...prev[currentPetId],
+        name: newName
+      }
+    }));
+    
+    // Also save to localStorage for the EditableName component
+    localStorage.setItem(`petName_${currentPetId}`, newName);
+  }, [currentPetId]);
+
+  // Save pet data to localStorage whenever it changes
+  const savePetData = useCallback((petId: string, data: IndividualPetData) => {
+    localStorage.setItem(`petData_${petId}`, JSON.stringify(data));
+  }, []);
+
+  // Update pet data when stats change (with debouncing to prevent flashing)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setPetData(prev => {
+        const currentStats = prev[currentPetId];
+        const newData = {
+          name: currentPetData.name,
+          hunger: stats.hunger,
+          happiness: stats.happiness,
+          energy: stats.energy,
+          isResting: isResting
+        };
+        
+        // Only update if the stats have actually changed
+        if (
+          currentStats.hunger !== stats.hunger ||
+          currentStats.happiness !== stats.happiness ||
+          currentStats.energy !== stats.energy ||
+          currentStats.isResting !== isResting
+        ) {
+          savePetData(currentPetId, newData);
+          return {
+            ...prev,
+            [currentPetId]: newData
+          };
+        }
+        
+        return prev; // No change needed
+      });
+    }, 50); // 50ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [stats.hunger, stats.happiness, stats.energy, isResting, currentPetId, currentPetData.name, savePetData]);
+
+  // Menu handlers
+  const handleSelectPet = useCallback(() => {
+    setShowPetSelector(true);
+  }, []);
+
+  const handleOptions = useCallback(() => {
+    // TODO: Implement options functionality
+    console.log('Options clicked - functionality to be implemented');
+  }, []);
+
+  const handleSave = useCallback(() => {
+    // TODO: Implement save functionality  
+    console.log('Save clicked - functionality to be implemented');
   }, []);
 
   const handlePooCleanup = useCallback((pooId: string) => {
@@ -81,12 +199,28 @@ function App() {
 
   return (
     <div className="App">
-      <h1>My Buddy: <EditableName initialName={petName} onNameChange={setPetName} /></h1>
-      
-      <PetSelector 
-        currentPetId={currentPetId}
-        onPetChange={handlePetChange}
+      <Menu 
+        onSelectPet={handleSelectPet}
+        onOptions={handleOptions}
+        onSave={handleSave}
       />
+      
+      <h1>My Buddy: <EditableName 
+        key={currentPetId} 
+        initialName={currentPetData.name} 
+        onNameChange={handleNameChange} 
+        petId={currentPetId} 
+      /></h1>
+      
+      {showPetSelector && (
+        <PetSelector 
+          currentPetId={currentPetId}
+          onPetChange={handlePetChange}
+          onClose={() => setShowPetSelector(false)}
+          isModal={true}
+          petData={petData}
+        />
+      )}
       
       <div id="stats-container">
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />

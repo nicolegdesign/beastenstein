@@ -1,0 +1,142 @@
+.menu-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.menu-button {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button:hover {
+  background: #f0f8f0;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.menu-button.open {
+  background: #4CAF50;
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background: #333;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.menu-button.open .hamburger-line {
+  background: white;
+}
+
+.menu-button.open .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.menu-button.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-button.open .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.menu-dropdown {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  background: rgba(255, 255, 255, 0.98);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  min-width: 200px;
+  overflow: hidden;
+  animation: menuSlideIn 0.3s ease-out;
+}
+
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.menu-item {
+  width: 100%;
+  padding: 15px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+}
+
+.menu-item:hover {
+  background: #f0f8f0;
+  color: #4CAF50;
+}
+
+.menu-item:not(:last-child) {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  z-index: -1;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .menu-container {
+    top: 15px;
+    left: 15px;
+  }
+  
+  .menu-button {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .hamburger-line {
+    width: 22px;
+    height: 2.5px;
+  }
+  
+  .menu-dropdown {
+    min-width: 180px;
+  }
+  
+  .menu-item {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}

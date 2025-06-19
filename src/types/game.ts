@@ -4,6 +4,11 @@ export interface PetStats {
   energy: number;
 }
 
+export interface IndividualPetData extends PetStats {
+  name: string;
+  isResting: boolean;
+}
+
 export interface PetState extends PetStats {
   isResting: boolean;
   petName: string;
