@@ -15,6 +15,7 @@ interface GameAreaProps {
   petMood: PetMood;
   isResting: boolean;
   petPosition: { x: number; y: number };
+  petId: string;
   hunger: number;
   poos: PooItem[];
   onFeedFromBowl: () => void;
@@ -35,6 +36,7 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
   petMood,
   isResting,
   petPosition,
+  petId,
   hunger,
   poos,
   onFeedFromBowl,
@@ -58,6 +60,7 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
         mood={petMood}
         isResting={isResting}
         position={petPosition}
+        petId={petId}
       />
       
       <div id="food-bowl" onClick={onFeedFromBowl}>

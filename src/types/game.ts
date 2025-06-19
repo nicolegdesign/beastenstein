@@ -7,6 +7,7 @@ export interface PetStats {
 export interface PetState extends PetStats {
   isResting: boolean;
   petName: string;
+  currentPetId: string;
 }
 
 export type PetMood = 'happy' | 'normal' | 'sad';

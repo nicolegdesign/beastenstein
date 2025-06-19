@@ -3,13 +3,16 @@ import { StatusBar } from './components/StatusBar/StatusBar';
 import { EditableName } from './components/EditableName/EditableName';
 import { GameArea } from './components/GameArea/GameArea';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
+import { PetSelector } from './components/PetSelector/PetSelector';
 import { usePetStats } from './hooks/usePetStats';
 import { usePetMovement } from './hooks/usePetMovement';
 import { usePooManager } from './hooks/usePooManager';
+import { getPetById } from './types/pets';
 import './App.css';
 
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
+  const [currentPetId, setCurrentPetId] = useState('emi');
   const [petName, setPetName] = useState('Emi');
   const gameAreaRef = useRef<HTMLDivElement>(null);
   
@@ -27,6 +30,14 @@ function App() {
   const { position } = usePetMovement(isResting, gameAreaRef);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef);
+
+  const handlePetChange = useCallback((petId: string) => {
+    const petConfig = getPetById(petId);
+    if (petConfig) {
+      setCurrentPetId(petId);
+      setPetName(petConfig.name);
+    }
+  }, []);
 
   const handlePooCleanup = useCallback((pooId: string) => {
     cleanupPoo(pooId);
@@ -72,6 +83,11 @@ function App() {
     <div className="App">
       <h1>My Buddy: <EditableName initialName={petName} onNameChange={setPetName} /></h1>
       
+      <PetSelector 
+        currentPetId={currentPetId}
+        onPetChange={handlePetChange}
+      />
+      
       <div id="stats-container">
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
@@ -84,6 +100,7 @@ function App() {
         petMood={getPetMood()}
         isResting={isResting}
         petPosition={position}
+        petId={currentPetId}
         hunger={stats.hunger}
         poos={poos}
         onFeedFromBowl={feed}

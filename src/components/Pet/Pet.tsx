@@ -1,24 +1,29 @@
 import React from 'react';
 import type { PetMood } from '../../types/game';
+import { getPetById } from '../../types/pets';
 import './Pet.css';
 
 interface PetProps {
   mood: PetMood;
   isResting: boolean;
   position: { x: number; y: number };
+  petId: string;
 }
 
-export const Pet: React.FC<PetProps> = ({ mood, isResting, position }) => {
+export const Pet: React.FC<PetProps> = ({ mood, isResting, position, petId }) => {
   const getPetImage = (): string => {
-    if (isResting) return './images/pet-rest.png';
+    const petConfig = getPetById(petId);
+    if (!petConfig) return './images/pet-normal.png'; // fallback
+    
+    if (isResting) return petConfig.images.rest;
     
     switch (mood) {
       case 'happy':
-        return './images/pet-happy.png';
+        return petConfig.images.happy;
       case 'sad':
-        return './images/pet-sad.png';
+        return petConfig.images.sad;
       default:
-        return './images/pet-normal.png';
+        return petConfig.images.normal;
     }
   };
 
