@@ -52,17 +52,19 @@ export const EditableName: React.FC<EditableNameProps> = ({
   };
 
   return (
-    <span 
-      ref={spanRef}
-      id="pet-name" 
-      contentEditable="true" 
-      className="editable-name"
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      onPaste={handlePaste}
-      suppressContentEditableWarning={true}
-    >
-      {name}
-    </span>
+    <div className="name-plate">
+      <span 
+        ref={spanRef}
+        id="pet-name" 
+        contentEditable="true" 
+        className="editable-name"
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        suppressContentEditableWarning={true}
+      >
+        {name}
+      </span>
+    </div>
   );
 };

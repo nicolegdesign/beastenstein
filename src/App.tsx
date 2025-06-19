@@ -205,7 +205,7 @@ function App() {
         onSave={handleSave}
       />
       
-      <h1>My Buddy: <EditableName 
+      <h1><EditableName 
         key={currentPetId} 
         initialName={currentPetData.name} 
         onNameChange={handleNameChange} 
