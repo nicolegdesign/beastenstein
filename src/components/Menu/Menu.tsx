@@ -5,9 +5,10 @@ interface MenuProps {
   onSelectPet: () => void;
   onOptions: () => void;
   onSave: () => void;
+  onInventory: () => void;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave }) => {
+export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave, onInventory }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -38,6 +39,12 @@ export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave }) =>
             onClick={() => handleMenuItemClick(onSelectPet)}
           >
             🐾 Select Your Pet
+          </button>
+          <button 
+            className="menu-item"
+            onClick={() => handleMenuItemClick(onInventory)}
+          >
+            🎒 Inventory
           </button>
           <button 
             className="menu-item" 

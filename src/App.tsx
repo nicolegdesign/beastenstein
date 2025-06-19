@@ -5,11 +5,14 @@ import { GameArea } from './components/GameArea/GameArea';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { PetSelector } from './components/PetSelector/PetSelector';
 import { Menu } from './components/Menu/Menu';
+import { Inventory } from './components/Inventory/Inventory';
 import { usePetStats } from './hooks/usePetStats';
 import { usePetMovement } from './hooks/usePetMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { getPetById } from './types/pets';
+import { DEFAULT_ITEMS } from './types/inventory';
 import type { IndividualPetData } from './types/game';
+import type { InventoryItem } from './types/inventory';
 import './App.css';
 
 function App() {
@@ -52,6 +55,21 @@ function App() {
   });
   
   const [showPetSelector, setShowPetSelector] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  
+  // Initialize inventory from localStorage or defaults
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => {
+    const savedInventory = localStorage.getItem('inventoryItems');
+    if (savedInventory) {
+      try {
+        return JSON.parse(savedInventory);
+      } catch (error) {
+        console.warn('Failed to parse saved inventory:', error);
+      }
+    }
+    return DEFAULT_ITEMS;
+  });
+  
   const gameAreaRef = useRef<HTMLDivElement>(null);
   
   // Get current pet's data
@@ -157,6 +175,25 @@ function App() {
     console.log('Save clicked - functionality to be implemented');
   }, []);
 
+  const handleInventory = useCallback(() => {
+    setShowInventory(true);
+  }, []);
+
+  const handleItemClick = useCallback((itemId: string) => {
+    setInventoryItems(prevItems => {
+      const updatedItems = prevItems.map(item => {
+        if (item.id === itemId && item.quantity > 0) {
+          return { ...item, quantity: item.quantity - 1 };
+        }
+        return item;
+      });
+      
+      // Save to localStorage
+      localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+  }, []);
+
   const handlePooCleanup = useCallback((pooId: string) => {
     cleanupPoo(pooId);
     cleanup(); // Boost happiness for cleaning up
@@ -203,6 +240,7 @@ function App() {
         onSelectPet={handleSelectPet}
         onOptions={handleOptions}
         onSave={handleSave}
+        onInventory={handleInventory}
       />
       
       <h1><EditableName 
@@ -219,6 +257,15 @@ function App() {
           onClose={() => setShowPetSelector(false)}
           isModal={true}
           petData={petData}
+        />
+      )}
+      
+      {showInventory && (
+        <Inventory 
+          items={inventoryItems}
+          onItemClick={handleItemClick}
+          onClose={() => setShowInventory(false)}
+          isModal={true}
         />
       )}
       
