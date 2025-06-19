@@ -24,10 +24,10 @@ interface GameAreaProps {
 }
 
 const backgroundImages = [
-  '/images/background1.jpg',
-  '/images/background2.jpg',
-  '/images/background3.jpg',
-  '/images/background4.jpg'
+  './images/background1.jpg',
+  './images/background2.jpg',
+  './images/background3.jpg',
+  './images/background4.jpg'
 ];
 
 export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
@@ -43,7 +43,7 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
   children
 }, ref) => {
   const getBowlImage = () => {
-    return hunger <= 20 ? '/images/bowlEmpty.svg' : '/images/bowlFull.svg';
+    return hunger <= 20 ? './images/bowlEmpty.svg' : './images/bowlFull.svg';
   };
 
   return (
@@ -65,7 +65,7 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
       </div>
       
       <div id="pet-bed" onClick={onRestFromBed}>
-        <img src="/images/petBed.svg" alt="Pet Bed" />
+        <img src="./images/petBed.svg" alt="Pet Bed" />
       </div>
 
       {/* Render poos */}

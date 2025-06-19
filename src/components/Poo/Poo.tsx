@@ -23,7 +23,7 @@ export const Poo: React.FC<PooProps> = ({ id, x, y, onCleanup }) => {
       onClick={handleClick}
       title="Click to clean up!"
     >
-      <img src="/images/poo.png" alt="Poo" />
+      <img src="./images/poo.png" alt="Poo" />
     </div>
   );
 };

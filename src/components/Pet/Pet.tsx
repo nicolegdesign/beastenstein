@@ -10,15 +10,15 @@ interface PetProps {
 
 export const Pet: React.FC<PetProps> = ({ mood, isResting, position }) => {
   const getPetImage = (): string => {
-    if (isResting) return '/images/pet-rest.png';
+    if (isResting) return './images/pet-rest.png';
     
     switch (mood) {
       case 'happy':
-        return '/images/pet-happy.png';
+        return './images/pet-happy.png';
       case 'sad':
-        return '/images/pet-sad.png';
+        return './images/pet-sad.png';
       default:
-        return '/images/pet-normal.png';
+        return './images/pet-normal.png';
     }
   };
 

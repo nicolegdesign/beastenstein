@@ -46,7 +46,7 @@ function App() {
     tennisBall.className = 'tennis-ball';
     
     const ballImg = document.createElement('img');
-    ballImg.src = '/images/tennisBall.svg';
+    ballImg.src = './images/tennisBall.svg';
     ballImg.alt = 'Tennis Ball';
     tennisBall.appendChild(ballImg);
     
