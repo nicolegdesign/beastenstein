@@ -123,7 +123,6 @@ function App() {
     cleanup,
     fillHappiness,
     fillHunger,
-    fillEnergy,
     getPetMood
   } = usePetStats({
     hunger: currentPetData.hunger,
