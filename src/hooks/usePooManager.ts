@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { GameOptions } from '../types/options';
 
 interface PooItem {
   id: string;
@@ -6,7 +7,11 @@ interface PooItem {
   y: number;
 }
 
-export const usePooManager = (isResting: boolean, gameAreaRef: React.RefObject<HTMLDivElement | null>) => {
+export const usePooManager = (
+  isResting: boolean, 
+  gameAreaRef: React.RefObject<HTMLDivElement | null>,
+  options?: GameOptions
+) => {
   const [poos, setPoos] = useState<PooItem[]>([]);
 
   const spawnPoo = useCallback(() => {
@@ -40,12 +45,12 @@ export const usePooManager = (isResting: boolean, gameAreaRef: React.RefObject<H
     setPoos([]);
   }, []);
 
-  // Poo spawning timer - spawn poo every 30-60 seconds when not resting
+  // Poo spawning timer - spawn poo every 60-120 seconds when not resting (unless disabled)
   useEffect(() => {
-    if (isResting) return;
+    if (isResting || options?.disablePooSpawning) return;
 
-    const minDelay = 30000; // 30 seconds
-    const maxDelay = 60000; // 60 seconds
+    const minDelay = 60000; // 30 seconds
+    const maxDelay = 1200000; // 60 seconds
     
     const scheduleNextPoo = () => {
       const delay = Math.random() * (maxDelay - minDelay) + minDelay;
@@ -60,7 +65,7 @@ export const usePooManager = (isResting: boolean, gameAreaRef: React.RefObject<H
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [isResting, spawnPoo]);
+  }, [isResting, spawnPoo, options?.disablePooSpawning]);
 
   return {
     poos,

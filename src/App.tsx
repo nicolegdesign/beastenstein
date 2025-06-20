@@ -6,13 +6,17 @@ import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { PetSelector } from './components/PetSelector/PetSelector';
 import { Menu } from './components/Menu/Menu';
 import { Inventory } from './components/Inventory/Inventory';
+import { Options } from './components/Options/Options';
+import { Toast } from './components/Toast/Toast';
 import { usePetStats } from './hooks/usePetStats';
 import { usePetMovement } from './hooks/usePetMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { getPetById } from './types/pets';
 import { DEFAULT_ITEMS } from './types/inventory';
+import { DEFAULT_OPTIONS } from './types/options';
 import type { IndividualPetData } from './types/game';
 import type { InventoryItem } from './types/inventory';
+import type { GameOptions } from './types/options';
 import './App.css';
 
 function App() {
@@ -56,17 +60,50 @@ function App() {
   
   const [showPetSelector, setShowPetSelector] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  
+  // Initialize game options from localStorage or defaults
+  const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
+    const savedOptions = localStorage.getItem('gameOptions');
+    if (savedOptions) {
+      try {
+        return { ...DEFAULT_OPTIONS, ...JSON.parse(savedOptions) };
+      } catch (error) {
+        console.warn('Failed to parse saved options:', error);
+      }
+    }
+    return DEFAULT_OPTIONS;
+  });
+  
+  const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
+    message: '', 
+    show: false, 
+    type: 'success' 
+  });
   
   // Initialize inventory from localStorage or defaults
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => {
     const savedInventory = localStorage.getItem('inventoryItems');
+    
     if (savedInventory) {
       try {
-        return JSON.parse(savedInventory);
+        const savedItems = JSON.parse(savedInventory);
+        
+        // Merge saved data with default items to ensure we have the latest properties
+        const mergedItems = DEFAULT_ITEMS.map(defaultItem => {
+          const savedItem = savedItems.find((item: { id: string; quantity: number }) => item.id === defaultItem.id);
+          return {
+            ...defaultItem, // Start with default (includes effect property)
+            quantity: savedItem?.quantity ?? defaultItem.quantity // Preserve saved quantity
+          };
+        });
+        
+        return mergedItems;
       } catch (error) {
         console.warn('Failed to parse saved inventory:', error);
       }
     }
+    
     return DEFAULT_ITEMS;
   });
   
@@ -84,12 +121,15 @@ function App() {
     startRest,
     travel,
     cleanup,
+    fillHappiness,
+    fillHunger,
+    fillEnergy,
     getPetMood
   } = usePetStats({
     hunger: currentPetData.hunger,
     happiness: currentPetData.happiness,
     energy: currentPetData.energy
-  }, currentPetId);
+  }, currentPetId, gameOptions);
 
   // Update the hook's resting state when switching pets
   useEffect(() => {
@@ -98,7 +138,7 @@ function App() {
 
   const { position } = usePetMovement(isResting, gameAreaRef);
   
-  const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef);
+  const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
 
   const handlePetChange = useCallback((petId: string) => {
     const petConfig = getPetById(petId);
@@ -166,8 +206,18 @@ function App() {
   }, []);
 
   const handleOptions = useCallback(() => {
-    // TODO: Implement options functionality
-    console.log('Options clicked - functionality to be implemented');
+    setShowOptions(true);
+  }, []);
+
+  const handleOptionsChange = useCallback((newOptions: GameOptions) => {
+    setGameOptions(newOptions);
+    localStorage.setItem('gameOptions', JSON.stringify(newOptions));
+    
+    setToast({
+      message: '⚙️ Options updated successfully!',
+      show: true,
+      type: 'success'
+    });
   }, []);
 
   const handleSave = useCallback(() => {
@@ -180,6 +230,59 @@ function App() {
   }, []);
 
   const handleItemClick = useCallback((itemId: string) => {
+    // Find the item to check its effect
+    const item = inventoryItems.find(item => item.id === itemId);
+    if (!item || item.quantity <= 0) return;
+
+    // Apply item effect based on type
+    switch (item.effect) {
+      case 'happiness':
+        // Stuffed Lion - fill happiness to 100
+        fillHappiness();
+        setToast({ 
+          message: `🦁 ${item.name} used! Happiness is now full!`, 
+          show: true, 
+          type: 'success' 
+        });
+        break;
+        
+      case 'hunger':
+        // Beast Biscuit - fill hunger to 100
+        fillHunger();
+        setToast({ 
+          message: `🍪 ${item.name} used! Hunger is now full!`, 
+          show: true, 
+          type: 'success' 
+        });
+        break;
+        
+      case 'cleanup': {
+        // Shovel - clean up all poos
+        const pooCount = poos.length;
+        poos.forEach(poo => {
+          cleanupPoo(poo.id);
+        });
+        // Also give happiness boost for cleaning
+        cleanup();
+        setToast({ 
+          message: `🔧 ${item.name} used! Cleaned up ${pooCount} poo${pooCount !== 1 ? 's' : ''}!`, 
+          show: true, 
+          type: 'success' 
+        });
+        break;
+      }
+        
+      default:
+        // No effect for unknown items
+        setToast({ 
+          message: `${item.name} used but had no effect.`, 
+          show: true, 
+          type: 'info' 
+        });
+        break;
+    }
+
+    // Reduce item quantity
     setInventoryItems(prevItems => {
       const updatedItems = prevItems.map(item => {
         if (item.id === itemId && item.quantity > 0) {
@@ -192,7 +295,7 @@ function App() {
       localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
       return updatedItems;
     });
-  }, []);
+  }, [inventoryItems, fillHappiness, fillHunger, cleanup, poos, cleanupPoo, setToast]);
 
   const handlePooCleanup = useCallback((pooId: string) => {
     cleanupPoo(pooId);
@@ -269,6 +372,15 @@ function App() {
         />
       )}
       
+      {showOptions && (
+        <Options 
+          options={gameOptions}
+          onOptionsChange={handleOptionsChange}
+          onClose={() => setShowOptions(false)}
+          isModal={true}
+        />
+      )}
+      
       <div id="stats-container">
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
@@ -295,6 +407,13 @@ function App() {
         onRest={startRest}
         onTravel={handleTravel}
         isResting={isResting}
+      />
+
+      <Toast
+        message={toast.message}
+        show={toast.show}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, show: false })}
       />
     </div>
   );

@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PetStats, PetMood } from '../types/game';
+import type { GameOptions } from '../types/options';
 
-export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50, energy: 50 }, petId?: string) => {
+export const usePetStats = (
+  initialStats: PetStats = { hunger: 50, happiness: 50, energy: 50 }, 
+  petId?: string,
+  options?: GameOptions
+) => {
   const [stats, setStats] = useState<PetStats>(initialStats);
   const [isResting, setIsResting] = useState(false);
   const restIntervalRef = useRef<number | null>(null);
@@ -15,8 +20,13 @@ export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50
     }
   }, [petId, initialStats]);
 
-  // Auto-decay stats every 3 seconds
+  // Auto-decay stats every 3 seconds (unless disabled)
   useEffect(() => {
+    // Don't create interval if stat decay is disabled
+    if (options?.disableStatDecay) {
+      return;
+    }
+
     const interval = setInterval(() => {
       if (!isResting) {
         setStats(prev => ({
@@ -25,10 +35,10 @@ export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50
           energy: Math.max(0, prev.energy - 1)
         }));
       }
-    }, 3000);
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, [isResting]);
+  }, [isResting, options?.disableStatDecay]);
 
   // Rest cycle management
   useEffect(() => {
@@ -95,6 +105,31 @@ export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50
     }));
   }, [isResting]);
 
+  // Item effect functions for powerful boosts
+  const fillHappiness = useCallback(() => {
+    if (isResting) return;
+    setStats(prev => ({
+      ...prev,
+      happiness: 100
+    }));
+  }, [isResting]);
+
+  const fillHunger = useCallback(() => {
+    if (isResting) return;
+    setStats(prev => ({
+      ...prev,
+      hunger: 100
+    }));
+  }, [isResting]);
+
+  const fillEnergy = useCallback(() => {
+    if (isResting) return;
+    setStats(prev => ({
+      ...prev,
+      energy: 100
+    }));
+  }, [isResting]);
+
   const getPetMood = useCallback((): PetMood => {
     if (stats.happiness >= 80) return 'happy';
     if (stats.happiness >= 20) return 'normal';
@@ -110,6 +145,9 @@ export const usePetStats = (initialStats: PetStats = { hunger: 50, happiness: 50
     startRest,
     travel,
     cleanup,
+    fillHappiness,
+    fillHunger,
+    fillEnergy,
     getPetMood
   };
 };

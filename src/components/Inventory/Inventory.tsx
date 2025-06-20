@@ -1,13 +1,6 @@
 import React from 'react';
+import type { InventoryItem } from '../../types/inventory';
 import './Inventory.css';
-
-export interface InventoryItem {
-  id: string;
-  name: string;
-  image: string;
-  quantity: number;
-  description?: string;
-}
 
 interface InventoryProps {
   items: InventoryItem[];

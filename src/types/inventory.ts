@@ -9,6 +9,7 @@ export interface InventoryItem {
   image: string;
   quantity: number;
   description?: string;
+  effect: 'happiness' | 'hunger' | 'energy' | 'cleanup' | 'none';
 }
 
 export const DEFAULT_ITEMS: InventoryItem[] = [
@@ -17,20 +18,23 @@ export const DEFAULT_ITEMS: InventoryItem[] = [
     name: 'Stuffed Lion',
     image: stuffedLionSvg,
     quantity: 99,
-    description: 'A cuddly stuffed lion toy'
+    description: 'A cuddly stuffed lion toy that makes pets very happy!',
+    effect: 'happiness'
   },
   {
     id: 'shovel',
     name: 'Shovel',
     image: shovelSvg,
     quantity: 99,
-    description: 'A handy shovel for digging'
+    description: 'A handy shovel for cleaning up all the poos',
+    effect: 'cleanup'
   },
   {
     id: 'beastBiscuit',
     name: 'Beast Biscuit',
     image: beastBiscuitSvg,
     quantity: 99,
-    description: 'Delicious treats for your pet'
+    description: 'Delicious treats that completely satisfy hunger',
+    effect: 'hunger'
   }
 ];
