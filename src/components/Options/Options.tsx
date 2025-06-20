@@ -1,10 +1,6 @@
 import React from 'react';
+import type { GameOptions } from '../../types/options';
 import './Options.css';
-
-export interface GameOptions {
-  disableStatDecay: boolean;
-  disablePooSpawning: boolean;
-}
 
 interface OptionsProps {
   options: GameOptions;
@@ -46,7 +42,7 @@ export const Options: React.FC<OptionsProps> = ({
             <div className="option-info">
               <span className="option-title">🛡️ Disable Stat Decay</span>
               <span className="option-description">
-                Pet's hunger, happiness, and energy won't decrease over time
+                Beast's hunger, happiness, and energy won't decrease over time
               </span>
             </div>
           </label>
@@ -63,7 +59,7 @@ export const Options: React.FC<OptionsProps> = ({
             <div className="option-info">
               <span className="option-title">🚫 Disable Poo Spawning</span>
               <span className="option-description">
-                Pet won't create poos that need to be cleaned up
+                Beast won't create poos that need to be cleaned up
               </span>
             </div>
           </label>

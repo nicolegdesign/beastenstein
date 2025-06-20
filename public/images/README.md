@@ -1,12 +1,12 @@
 # Image Assets
 
-This folder contains your pet game image assets:
+This folder contains your beast game image assets:
 
 ## Current Images:
-- `pet-normal.png` - Normal pet state ✅
-- `pet-happy.png` - Happy pet state ✅
-- `pet-sad.png` - Sad pet state ✅
-- `pet-rest.png` - Resting pet state ✅
+- `pet-normal.png` - Normal beast state ✅
+- `pet-happy.png` - Happy beast state ✅
+- `pet-sad.png` - Sad beast state ✅
+- `pet-rest.png` - Resting beast state ✅
 - `bowlEmpty.svg` - Empty food bowl ✅
 - `bowlFull.svg` - Full food bowl ✅
 - `petBed.svg` - Pet bed ✅

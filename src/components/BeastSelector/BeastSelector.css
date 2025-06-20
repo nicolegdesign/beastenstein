@@ -1,4 +1,4 @@
-.pet-selector-overlay {
+.beast-selector-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -14,7 +14,7 @@
   to { opacity: 1; }
 }
 
-.pet-selector {
+.beast-selector {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   padding: 20px;
@@ -24,7 +24,7 @@
   text-align: center;
 }
 
-.pet-selector.modal {
+.beast-selector.modal {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -47,14 +47,14 @@
   }
 }
 
-.pet-selector-header {
+.beast-selector-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 15px;
 }
 
-.pet-selector-header h3 {
+.beast-selector-header h3 {
   margin: 0;
   color: #333;
   font-size: 1.2em;
@@ -78,14 +78,14 @@
   color: #333;
 }
 
-.pet-buttons {
+.beast-buttons {
   display: flex;
   gap: 15px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
-.pet-button {
+.beast-button {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -100,27 +100,27 @@
   max-width: 180px;
 }
 
-.pet-button:hover {
+.beast-button:hover {
   border-color: #4CAF50;
   background: #f8f8f8;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.pet-button.active {
+.beast-button.active {
   border-color: #4CAF50;
   background: #e8f5e8;
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-.pet-button img {
+.beast-button img {
   width: 60px;
   height: 60px;
   object-fit: contain;
   border-radius: 8px;
 }
 
-.pet-info {
+.beast-info {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -128,18 +128,18 @@
   width: 100%;
 }
 
-.pet-name {
+.beast-name {
   font-weight: bold;
   color: #333;
   font-size: 1em;
   text-align: center;
 }
 
-.pet-button.active .pet-name {
+.beast-button.active .beast-name {
   color: #4CAF50;
 }
 
-.pet-stats {
+.beast-stats {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -155,22 +155,22 @@
   font-size: 0.85em;
 }
 
-.pet-button.active .stat {
+.beast-button.active .stat {
   color: #4CAF50;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .pet-buttons {
+  .beast-buttons {
     justify-content: center;
   }
   
-  .pet-button {
+  .beast-button {
     min-width: 100px;
     padding: 12px;
   }
   
-  .pet-button img {
+  .beast-button img {
     width: 50px;
     height: 50px;
   }

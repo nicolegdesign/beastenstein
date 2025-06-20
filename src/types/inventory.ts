@@ -18,7 +18,7 @@ export const DEFAULT_ITEMS: InventoryItem[] = [
     name: 'Stuffed Lion',
     image: stuffedLionSvg,
     quantity: 99,
-    description: 'A cuddly stuffed lion toy that makes pets very happy!',
+    description: 'A cuddly stuffed lion toy that makes beasts very happy!',
     effect: 'happiness'
   },
   {

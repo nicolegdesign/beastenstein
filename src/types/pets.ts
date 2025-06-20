@@ -1,4 +1,4 @@
-export interface PetConfig {
+export interface BeastConfig {
   id: string;
   name: string;
   images: {
@@ -9,7 +9,7 @@ export interface PetConfig {
   };
 }
 
-export const PETS: PetConfig[] = [
+export const BEASTS: BeastConfig[] = [
   {
     id: 'emi',
     name: 'Emi',
@@ -32,6 +32,6 @@ export const PETS: PetConfig[] = [
   },
 ];
 
-export const getPetById = (id: string): PetConfig | undefined => {
-  return PETS.find(pet => pet.id === id);
+export const getBeastById = (id: string): BeastConfig | undefined => {
+  return BEASTS.find(beast => beast.id === id);
 };

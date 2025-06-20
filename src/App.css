@@ -17,7 +17,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Stats UI positioned outside game area */
+/* Stats UI positioned outside beast den */
 #stats-container {
   display: flex;
   justify-content: center;

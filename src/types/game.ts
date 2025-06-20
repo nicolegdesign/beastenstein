@@ -1,23 +1,23 @@
-export interface PetStats {
+export interface BeastStats {
   hunger: number;
   happiness: number;
   energy: number;
 }
 
-export interface IndividualPetData extends PetStats {
+export interface IndividualBeastData extends BeastStats {
   name: string;
   isResting: boolean;
 }
 
-export interface PetState extends PetStats {
+export interface BeastState extends BeastStats {
   isResting: boolean;
-  petName: string;
-  currentPetId: string;
+  beastName: string;
+  currentBeastId: string;
 }
 
-export type PetMood = 'happy' | 'normal' | 'sad';
+export type BeastMood = 'happy' | 'normal' | 'sad';
 
-export interface GameState extends PetState {
+export interface GameState extends BeastState {
   currentBackgroundIndex: number;
 }
 

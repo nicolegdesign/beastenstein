@@ -1,40 +1,42 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { StatusBar } from './components/StatusBar/StatusBar';
 import { EditableName } from './components/EditableName/EditableName';
-import { GameArea } from './components/GameArea/GameArea';
+import { BeastDen } from './components/BeastDen/BeastDen';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
-import { PetSelector } from './components/PetSelector/PetSelector';
+import { BeastSelector } from './components/BeastSelector/BeastSelector';
 import { Menu } from './components/Menu/Menu';
 import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
-import { usePetStats } from './hooks/usePetStats';
-import { usePetMovement } from './hooks/usePetMovement';
+import { BattleArena } from './components/BattleArena/BattleArena';
+import { Debug } from './components/Debug/Debug';
+import { useBeastStats } from './hooks/useBeastStats';
+import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
-import { getPetById } from './types/pets';
+import { getBeastById } from './types/pets';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
-import type { IndividualPetData } from './types/game';
+import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import './App.css';
 
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
-  const [currentPetId, setCurrentPetId] = useState('emi');
+  const [currentBeastId, setCurrentBeastId] = useState('emi');
   
-  // Initialize individual pet data from localStorage or defaults
-  const [petData, setPetData] = useState<Record<string, IndividualPetData>>(() => {
-    const defaultData: Record<string, IndividualPetData> = {
+  // Initialize individual beast data from localStorage or defaults
+  const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
+    const defaultData: Record<string, IndividualBeastData> = {
       emi: {
-        name: localStorage.getItem('petName_emi') || 'Emi',
+        name: localStorage.getItem('beastName_emi') || 'Emi',
         hunger: 50,
         happiness: 50,
         energy: 50,
         isResting: false
       },
       hobbes: {
-        name: localStorage.getItem('petName_hobbes') || 'Hobbes',
+        name: localStorage.getItem('beastName_hobbes') || 'Hobbes',
         hunger: 50,
         happiness: 50,
         energy: 50,
@@ -42,15 +44,15 @@ function App() {
       }
     };
     
-    // Load saved pet data from localStorage
-    Object.keys(defaultData).forEach(petId => {
-      const savedData = localStorage.getItem(`petData_${petId}`);
+    // Load saved beast data from localStorage
+    Object.keys(defaultData).forEach(beastId => {
+      const savedData = localStorage.getItem(`beastData_${beastId}`);
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData);
-          defaultData[petId] = { ...defaultData[petId], ...parsed };
+          defaultData[beastId] = { ...defaultData[beastId], ...parsed };
         } catch (error) {
-          console.warn(`Failed to parse saved data for pet ${petId}:`, error);
+          console.warn(`Failed to parse saved data for beast ${beastId}:`, error);
         }
       }
     });
@@ -58,9 +60,11 @@ function App() {
     return defaultData;
   });
   
-  const [showPetSelector, setShowPetSelector] = useState(false);
+  const [showBeastSelector, setShowBeastSelector] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [inBattleArena, setInBattleArena] = useState(false);
   
   // Initialize game options from localStorage or defaults
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
@@ -109,8 +113,8 @@ function App() {
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
   
-  // Get current pet's data
-  const currentPetData = petData[currentPetId];
+  // Get current beast's data
+  const currentBeastData = beastData[currentBeastId];
   
   const {
     stats,
@@ -123,55 +127,55 @@ function App() {
     cleanup,
     fillHappiness,
     fillHunger,
-    getPetMood
-  } = usePetStats({
-    hunger: currentPetData.hunger,
-    happiness: currentPetData.happiness,
-    energy: currentPetData.energy
-  }, currentPetId, gameOptions);
+    getBeastMood
+  } = useBeastStats({
+    hunger: currentBeastData.hunger,
+    happiness: currentBeastData.happiness,
+    energy: currentBeastData.energy
+  }, currentBeastId, gameOptions);
 
-  // Update the hook's resting state when switching pets
+  // Update the hook's resting state when switching beasts
   useEffect(() => {
-    setIsResting(currentPetData.isResting);
-  }, [currentPetId, currentPetData.isResting, setIsResting]);
+    setIsResting(currentBeastData.isResting);
+  }, [currentBeastId, currentBeastData.isResting, setIsResting]);
 
-  const { position } = usePetMovement(isResting, gameAreaRef);
+  const { position } = useBeastMovement(isResting, gameAreaRef);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
 
-  const handlePetChange = useCallback((petId: string) => {
-    const petConfig = getPetById(petId);
-    if (petConfig) {
-      setCurrentPetId(petId);
-      setShowPetSelector(false); // Close selector after selection
+  const handleBeastChange = useCallback((beastId: string) => {
+    const beastConfig = getBeastById(beastId);
+    if (beastConfig) {
+      setCurrentBeastId(beastId);
+      setShowBeastSelector(false); // Close selector after selection
     }
   }, []);
 
   const handleNameChange = useCallback((newName: string) => {
-    setPetData(prev => ({
+    setBeastData(prev => ({
       ...prev,
-      [currentPetId]: {
-        ...prev[currentPetId],
+      [currentBeastId]: {
+        ...prev[currentBeastId],
         name: newName
       }
     }));
     
     // Also save to localStorage for the EditableName component
-    localStorage.setItem(`petName_${currentPetId}`, newName);
-  }, [currentPetId]);
+    localStorage.setItem(`beastName_${currentBeastId}`, newName);
+  }, [currentBeastId]);
 
-  // Save pet data to localStorage whenever it changes
-  const savePetData = useCallback((petId: string, data: IndividualPetData) => {
-    localStorage.setItem(`petData_${petId}`, JSON.stringify(data));
+  // Save beast data to localStorage whenever it changes
+  const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
+    localStorage.setItem(`beastData_${beastId}`, JSON.stringify(data));
   }, []);
 
-  // Update pet data when stats change (with debouncing to prevent flashing)
+  // Update beast data when stats change (with debouncing to prevent flashing)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setPetData(prev => {
-        const currentStats = prev[currentPetId];
+      setBeastData(prev => {
+        const currentStats = prev[currentBeastId];
         const newData = {
-          name: currentPetData.name,
+          name: currentBeastData.name,
           hunger: stats.hunger,
           happiness: stats.happiness,
           energy: stats.energy,
@@ -185,10 +189,10 @@ function App() {
           currentStats.energy !== stats.energy ||
           currentStats.isResting !== isResting
         ) {
-          savePetData(currentPetId, newData);
+          saveBeastData(currentBeastId, newData);
           return {
             ...prev,
-            [currentPetId]: newData
+            [currentBeastId]: newData
           };
         }
         
@@ -197,11 +201,11 @@ function App() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, isResting, currentPetId, currentPetData.name, savePetData]);
+  }, [stats.hunger, stats.happiness, stats.energy, isResting, currentBeastId, currentBeastData.name, saveBeastData]);
 
   // Menu handlers
-  const handleSelectPet = useCallback(() => {
-    setShowPetSelector(true);
+  const handleSelectBeast = useCallback(() => {
+    setShowBeastSelector(true);
   }, []);
 
   const handleOptions = useCallback(() => {
@@ -226,6 +230,14 @@ function App() {
 
   const handleInventory = useCallback(() => {
     setShowInventory(true);
+  }, []);
+
+  const handleBattleArena = useCallback(() => {
+    setInBattleArena(prev => !prev);
+  }, []);
+
+  const handleDebug = useCallback(() => {
+    setShowDebug(true);
   }, []);
 
   const handleItemClick = useCallback((itemId: string) => {
@@ -337,28 +349,30 @@ function App() {
   }, [play, createTennisBall]);
 
   return (
-    <div className="App">
-      <Menu 
-        onSelectPet={handleSelectPet}
+    <div className="App">      <Menu 
+        onSelectBeast={handleSelectBeast}
         onOptions={handleOptions}
         onSave={handleSave}
         onInventory={handleInventory}
+        onBattleArena={handleBattleArena}
+        onDebug={handleDebug}
+        inBattleArena={inBattleArena}
       />
-      
+
       <h1><EditableName 
-        key={currentPetId} 
-        initialName={currentPetData.name} 
+        key={currentBeastId}
+        initialName={currentBeastData.name} 
         onNameChange={handleNameChange} 
-        petId={currentPetId} 
+        beastId={currentBeastId} 
       /></h1>
       
-      {showPetSelector && (
-        <PetSelector 
-          currentPetId={currentPetId}
-          onPetChange={handlePetChange}
-          onClose={() => setShowPetSelector(false)}
+      {showBeastSelector && (
+        <BeastSelector 
+          currentBeastId={currentBeastId}
+          onBeastChange={handleBeastChange}
+          onClose={() => setShowBeastSelector(false)}
           isModal={true}
-          petData={petData}
+          beastData={beastData}
         />
       )}
       
@@ -380,33 +394,52 @@ function App() {
         />
       )}
       
+      {showDebug && (
+        <Debug 
+          options={gameOptions}
+          onOptionsChange={handleOptionsChange}
+          onClose={() => setShowDebug(false)}
+          isModal={true}
+        />
+      )}
+      
       <div id="stats-container">
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
         <StatusBar label="Energy" value={stats.energy} id="energy" />
       </div>
 
-      <GameArea
-        ref={gameAreaRef}
-        backgroundIndex={currentBackgroundIndex}
-        petMood={getPetMood()}
-        isResting={isResting}
-        petPosition={position}
-        petId={currentPetId}
-        hunger={stats.hunger}
-        poos={poos}
-        onFeedFromBowl={feed}
-        onRestFromBed={startRest}
-        onCleanupPoo={handlePooCleanup}
-      />
+      {inBattleArena ? (
+        <BattleArena
+          beastId={currentBeastId}
+          beastMood={getBeastMood()}
+          showBeastBorder={gameOptions.showBeastBorder}
+        />
+      ) : (
+        <>
+          <BeastDen
+            ref={gameAreaRef}
+            backgroundIndex={currentBackgroundIndex}
+            beastMood={getBeastMood()}
+            isResting={isResting}
+            beastPosition={position}
+            beastId={currentBeastId}
+            hunger={stats.hunger}
+            poos={poos}
+            onFeedFromBowl={feed}
+            onRestFromBed={startRest}
+            onCleanupPoo={handlePooCleanup}
+          />
 
-      <ActionButtons
-        onFeed={feed}
-        onPlay={handlePlay}
-        onRest={startRest}
-        onTravel={handleTravel}
-        isResting={isResting}
-      />
+          <ActionButtons
+            onFeed={feed}
+            onPlay={handlePlay}
+            onRest={startRest}
+            onTravel={handleTravel}
+            isResting={isResting}
+          />
+        </>
+      )}
 
       <Toast
         message={toast.message}

@@ -1,10 +1,15 @@
-.pet {
+.beast {
   position: absolute;
   z-index: 5;
   transition: all 2s ease-in-out; /* Smooth movement animation */
 }
 
-.pet img {
+.beast-no-position {
+  position: relative !important;
+  transition: none !important;
+}
+
+.beast img {
   width: 150px;
   border-radius: 10px;
   transition: all 0.3s ease;
@@ -49,14 +54,14 @@
 }
 
 /* Animation classes */
-.pet-happy {
+.beast-happy {
   animation: bounce-happy 1s infinite;
 }
 
-.pet-normal {
+.beast-normal {
   animation: bounce-normal 2s infinite;
 }
 
-.pet-sad {
+.beast-sad {
   animation: bounce-slow 3s infinite;
 }

@@ -1,8 +1,8 @@
 import React, { forwardRef } from 'react';
-import { Pet } from '../Pet/Pet';
+import { Beast } from '../Beast/Beast';
 import { Poo } from '../Poo/Poo';
-import type { PetMood } from '../../types/game';
-import './GameArea.css';
+import type { BeastMood } from '../../types/game';
+import './BeastDen.css';
 
 interface PooItem {
   id: string;
@@ -10,12 +10,12 @@ interface PooItem {
   y: number;
 }
 
-interface GameAreaProps {
+interface BeastDenProps {
   backgroundIndex: number;
-  petMood: PetMood;
+  beastMood: BeastMood;
   isResting: boolean;
-  petPosition: { x: number; y: number };
-  petId: string;
+  beastPosition: { x: number; y: number };
+  beastId: string;
   hunger: number;
   poos: PooItem[];
   onFeedFromBowl: () => void;
@@ -31,12 +31,12 @@ const backgroundImages = [
   './images/background4.jpg'
 ];
 
-export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
+export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   backgroundIndex,
-  petMood,
+  beastMood,
   isResting,
-  petPosition,
-  petId,
+  beastPosition,
+  beastId,
   hunger,
   poos,
   onFeedFromBowl,
@@ -51,28 +51,28 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
   return (
     <div 
       ref={ref}
-      id="game-area"
+      id="beast-den"
       style={{
         backgroundImage: `url('${backgroundImages[backgroundIndex]}')`
       }}
     >
-      <Pet 
-        mood={petMood}
+      <Beast 
+        mood={beastMood}
         isResting={isResting}
-        position={petPosition}
-        petId={petId}
+        position={beastPosition}
+        beastId={beastId}
       />
       
       <div id="food-bowl" onClick={onFeedFromBowl}>
         <img src={getBowlImage()} alt="Food Bowl" />
       </div>
       
-      <div id="pet-bed" onClick={onRestFromBed}>
-        <img src="./images/petBed.svg" alt="Pet Bed" />
+      <div id="beast-bed" onClick={onRestFromBed}>
+        <img src="./images/petBed.svg" alt="Beast Bed" />
       </div>
 
       {/* Render poos */}
-      {poos.map(poo => (
+      {poos.map((poo: PooItem) => (
         <Poo
           key={poo.id}
           id={poo.id}
@@ -87,4 +87,4 @@ export const GameArea = forwardRef<HTMLDivElement, GameAreaProps>(({
   );
 });
 
-GameArea.displayName = 'GameArea';
+BeastDen.displayName = 'BeastDen';

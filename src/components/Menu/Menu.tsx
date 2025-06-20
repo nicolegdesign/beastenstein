@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import './Menu.css';
 
 interface MenuProps {
-  onSelectPet: () => void;
+  onSelectBeast: () => void;
   onOptions: () => void;
   onSave: () => void;
   onInventory: () => void;
+  onBattleArena: () => void;
+  onDebug: () => void;
+  inBattleArena: boolean;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave, onInventory }) => {
+export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, onInventory, onBattleArena, onDebug, inBattleArena }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -36,9 +39,9 @@ export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave, onIn
         <div className="menu-dropdown">
           <button 
             className="menu-item"
-            onClick={() => handleMenuItemClick(onSelectPet)}
+            onClick={() => handleMenuItemClick(onSelectBeast)}
           >
-            🐾 Select Your Pet
+            🐾 Select Your Beast
           </button>
           <button 
             className="menu-item"
@@ -47,10 +50,22 @@ export const Menu: React.FC<MenuProps> = ({ onSelectPet, onOptions, onSave, onIn
             🎒 Inventory
           </button>
           <button 
+            className="menu-item"
+            onClick={() => handleMenuItemClick(onBattleArena)}
+          >
+            {inBattleArena ? '🏠 Leave Arena' : '⚔️ Battle Arena'}
+          </button>
+          <button 
             className="menu-item" 
             onClick={() => handleMenuItemClick(onOptions)}
           >
             ⚙️ Options
+          </button>
+          <button 
+            className="menu-item"
+            onClick={() => handleMenuItemClick(onDebug)}
+          >
+            🐛 Debug
           </button>
           <button 
             className="menu-item"

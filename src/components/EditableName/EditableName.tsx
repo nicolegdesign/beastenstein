@@ -4,34 +4,34 @@ import './EditableName.css';
 interface EditableNameProps {
   initialName?: string;
   onNameChange?: (name: string) => void;
-  petId?: string;
+  beastId?: string;
 }
 
 export const EditableName: React.FC<EditableNameProps> = ({ 
   initialName = 'Emi', 
   onNameChange,
-  petId
+  beastId
 }) => {
   const [name, setName] = useState(initialName);
   const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    // Load saved name from localStorage if petId is provided
-    if (petId) {
-      const savedName = localStorage.getItem(`petName_${petId}`) || initialName;
+    // Load saved name from localStorage if beastId is provided
+    if (beastId) {
+      const savedName = localStorage.getItem(`beastName_${beastId}`) || initialName;
       setName(savedName);
     } else {
       setName(initialName);
     }
-  }, [initialName, petId]);
+  }, [initialName, beastId]);
 
   const handleBlur = () => {
     const newName = spanRef.current?.textContent?.trim() || initialName;
     setName(newName);
     
-    // Save to localStorage with petId-specific key
-    if (petId) {
-      localStorage.setItem(`petName_${petId}`, newName);
+    // Save to localStorage with beastId-specific key
+    if (beastId) {
+      localStorage.setItem(`beastName_${beastId}`, newName);
     }
     
     onNameChange?.(newName);
@@ -55,7 +55,7 @@ export const EditableName: React.FC<EditableNameProps> = ({
     <div className="name-plate">
       <span 
         ref={spanRef}
-        id="pet-name" 
+        id="beast-name" 
         contentEditable="true" 
         className="editable-name"
         onBlur={handleBlur}

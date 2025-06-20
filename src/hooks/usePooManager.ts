@@ -20,7 +20,7 @@ export const usePooManager = (
     const gameArea = gameAreaRef.current;
     const rect = gameArea.getBoundingClientRect();
     
-    // Generate random position within game area bounds
+    // Generate random position within beast den bounds
     // Avoid edges to prevent poo from being too close to bed/bowl
     const margin = 100;
     const x = Math.random() * (rect.width - 2 * margin) + margin;

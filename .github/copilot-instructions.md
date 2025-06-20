@@ -1,24 +1,24 @@
-# Copilot Instructions for Virtual Pet Game
+# Copilot Instructions for Virtual Beast Game
 
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-This is a React TypeScript virtual pet game project with the following features:
+This is a React TypeScript virtual beast game project with the following features:
 
 ## Game Features
-- Virtual pet with three stats: hunger, happiness, and energy
+- Virtual beast with three stats: hunger, happiness, and energy
 - Interactive feeding bowl that changes states (empty/full)
-- Pet bed for resting functionality
+- Beast bed for resting functionality
 - Background cycling through multiple environments
-- Pet animations based on mood (happy, normal, sad bouncing)
+- Beast animations based on mood (happy, normal, sad bouncing)
 - Poo cleanup mini-game with random spawning
 - Tennis ball play animation
-- Pet movement around the game area
-- Editable pet name with localStorage persistence
+- Beast movement around the beast den
+- Editable beast name with localStorage persistence
 
 ## Architecture Guidelines
 - Use functional components with React hooks
 - Implement TypeScript interfaces for all game state
-- Use custom hooks for game logic (useGameLoop, usePetStats, useAnimations)
+- Use custom hooks for game logic (useGameLoop, useBeastStats, useAnimations)
 - Prefer CSS modules or styled-components for styling
 - Use React's useEffect for game timers and intervals
 - Implement proper cleanup for intervals and timeouts

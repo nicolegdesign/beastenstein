@@ -1,5 +1,5 @@
-/* Game container with background */
-#game-area {
+/* Beast Den container with background */
+#beast-den {
   position: relative;
   width: 90vw;
   height: 70vh;
@@ -37,8 +37,8 @@
   transition: all 0.3s ease;
 }
 
-/* Pet bed styling */
-#pet-bed {
+/* Beast bed styling */
+#beast-bed {
   position: absolute;
   bottom: 20px;
   left: 20px;
@@ -47,11 +47,11 @@
   transition: all 0.3s ease;
 }
 
-#pet-bed:hover {
+#beast-bed:hover {
   transform: scale(1.1);
 }
 
-#pet-bed img {
+#beast-bed img {
   width: 280px;
   height: 280px;
   transition: all 0.3s ease;
