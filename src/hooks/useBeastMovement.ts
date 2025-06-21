@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export const useBeastMovement = (isResting: boolean, gameAreaRef?: React.RefObject<HTMLDivElement | null>) => {
+export const useBeastMovement = (
+  isResting: boolean, 
+  gameAreaRef?: React.RefObject<HTMLDivElement | null>,
+  disableRandomMovement: boolean = false
+) => {
   const [position, setPosition] = useState({ x: 50, y: 60 });
   const timeoutRef = useRef<number | null>(null);
 
   const moveBeastRandomly = useCallback(() => {
-    if (isResting || !gameAreaRef?.current) return;
+    if (isResting || !gameAreaRef?.current || disableRandomMovement) return;
 
     const gameArea = gameAreaRef.current;
     const gameWidth = gameArea.offsetWidth;
@@ -20,7 +24,7 @@ export const useBeastMovement = (isResting: boolean, gameAreaRef?: React.RefObje
     const newY = Math.random() * maxY;
 
     setPosition({ x: newX, y: newY });
-  }, [isResting, gameAreaRef]);
+  }, [isResting, gameAreaRef, disableRandomMovement]);
 
   const scheduleNextMove = useCallback(() => {
     const nextMoveTime = 5000 + Math.random() * 5000; // 5-10 seconds
@@ -31,7 +35,7 @@ export const useBeastMovement = (isResting: boolean, gameAreaRef?: React.RefObje
   }, [moveBeastRandomly]);
 
   useEffect(() => {
-    if (!isResting) {
+    if (!isResting && !disableRandomMovement) {
       scheduleNextMove();
     } else {
       if (timeoutRef.current) {
@@ -45,7 +49,7 @@ export const useBeastMovement = (isResting: boolean, gameAreaRef?: React.RefObje
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [isResting, scheduleNextMove]);
+  }, [isResting, scheduleNextMove, disableRandomMovement]);
 
   return { position };
 };

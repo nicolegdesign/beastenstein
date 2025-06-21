@@ -7,10 +7,60 @@ interface AnimatedNightWolfProps {
   size?: number;
 }
 
+// Configuration for mood-specific pieces
+// To add new mood variants:
+// 1. Add the new SVG file to /public/images/beasts/night-wolf/
+// 2. Update the appropriate piece configuration below
+// 3. The component will automatically use the new piece for that mood
+const NIGHT_WOLF_PIECES = {
+  head: {
+    // normal: '/images/beasts/night-wolf/night-wolf-head.svg',
+    normal: '/images/beasts/mountain-dragon/mountain-dragon-head.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-head-happy.svg',
+    sad: '/images/beasts/night-wolf/night-wolf-head.svg', // Can add sad variant later
+    rest: '/images/beasts/night-wolf/night-wolf-head.svg', // Can add rest variant later
+  },
+  torso: {
+    normal: '/images/beasts/night-wolf/night-wolf-torso.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-torso.svg', // Can add variants later
+    sad: '/images/beasts/night-wolf/night-wolf-torso.svg',
+    rest: '/images/beasts/night-wolf/night-wolf-torso.svg',
+  },
+  armLeft: {
+    normal: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
+    sad: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
+    rest: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
+  },
+  armRight: {
+    normal: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
+    sad: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
+    rest: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
+  },
+  legLeft: {
+    normal: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
+    sad: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
+    rest: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
+  },
+  legRight: {
+    normal: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
+    happy: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
+    sad: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
+    rest: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
+  },
+};
+
 export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({ 
   mood = 'normal',
   size = 100 
 }) => {
+  // Get the appropriate piece for the current mood
+  const getPieceUrl = (piece: keyof typeof NIGHT_WOLF_PIECES): string => {
+    return NIGHT_WOLF_PIECES[piece][mood] || NIGHT_WOLF_PIECES[piece].normal;
+  };
+
   // Adjust animation intensity based on mood
   const getAnimationScale = (): number => {
     switch (mood) {
@@ -40,7 +90,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
         
         {/* Left Leg (back layer) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-leg-l.svg"
+          src={getPieceUrl('legLeft')}
           alt="Night Wolf Left Leg"
           className="night-wolf-part night-wolf-leg-left"
           animate={{
@@ -64,7 +114,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
 
         {/* Right Leg (back layer) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-leg-r.svg"
+          src={getPieceUrl('legRight')}
           alt="Night Wolf Right Leg"
           className="night-wolf-part night-wolf-leg-right"
           animate={{
@@ -88,7 +138,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
 
         {/* Torso (center layer - main body) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-torso.svg"
+          src={getPieceUrl('torso')}
           alt="Night Wolf Torso"
           className="night-wolf-part night-wolf-torso"
           animate={{
@@ -111,7 +161,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
 
         {/* Left Arm (front layer) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-arm-l.svg"
+          src={getPieceUrl('armLeft')}
           alt="Night Wolf Left Arm"
           className="night-wolf-part night-wolf-arm-left"
           animate={{
@@ -135,7 +185,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
 
         {/* Right Arm (front layer) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-arm-r.svg"
+          src={getPieceUrl('armRight')}
           alt="Night Wolf Right Arm"
           className="night-wolf-part night-wolf-arm-right"
           animate={{
@@ -159,7 +209,7 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
 
         {/* Head (top layer) */}
         <motion.img
-          src="/images/beasts/night-wolf/night-wolf-head.svg"
+          src={getPieceUrl('head')}
           alt="Night Wolf Head"
           className="night-wolf-part night-wolf-head"
           animate={{
@@ -172,10 +222,10 @@ export const AnimatedNightWolf: React.FC<AnimatedNightWolfProps> = ({
             ease: "easeInOut"
           }}
           style={{
-            width: '48%',
-            height: '42%',
-            left: '10%',
-            top: '6%',
+            width: '63%',
+            height: '54%',
+            left: '5%',
+            top: '2%',
             zIndex: 5
           }}
         />

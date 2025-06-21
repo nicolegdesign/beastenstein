@@ -19,31 +19,6 @@
   pointer-events: none;
 }
 
-/* Layer ordering - back to front */
-.night-wolf-leg-left {
-  z-index: 1;
-}
-
-.night-wolf-leg-right {
-  z-index: 2;
-}
-
-.night-wolf-torso {
-  z-index: 3;
-}
-
-.night-wolf-arm-left {
-  z-index: 4;
-}
-
-.night-wolf-arm-right {
-  z-index: 5;
-}
-
-.night-wolf-head {
-  z-index: 6;
-}
-
 /* Ensure proper layering for realistic depth */
 .night-wolf-leg-left,
 .night-wolf-leg-right {

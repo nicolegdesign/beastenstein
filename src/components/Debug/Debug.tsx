@@ -43,6 +43,25 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
       </div>
       
       <div className="debug-section">
+        <h3>Movement Debug</h3>
+        <div className="debug-options">
+          <label className="debug-option">
+            <input
+              type="checkbox"
+              checked={options.disableRandomMovement}
+              onChange={() => handleToggle('disableRandomMovement')}
+            />
+            <span className="debug-option-text">
+              Disable Random Beast Movement
+            </span>
+            <span className="debug-description">
+              Stops the beast from moving randomly around the game area for easier testing
+            </span>
+          </label>
+        </div>
+      </div>
+      
+      <div className="debug-section">
         <h3>⚠️ Reset Options</h3>
         <div className="debug-options">
           <div className="debug-reset-section">
