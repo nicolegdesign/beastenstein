@@ -1,0 +1,74 @@
+.animated-night-wolf {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.night-wolf-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.night-wolf-part {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Layer ordering - back to front */
+.night-wolf-leg-left {
+  z-index: 1;
+}
+
+.night-wolf-leg-right {
+  z-index: 2;
+}
+
+.night-wolf-torso {
+  z-index: 3;
+}
+
+.night-wolf-arm-left {
+  z-index: 4;
+}
+
+.night-wolf-arm-right {
+  z-index: 5;
+}
+
+.night-wolf-head {
+  z-index: 6;
+}
+
+/* Ensure proper layering for realistic depth */
+.night-wolf-leg-left,
+.night-wolf-leg-right {
+  filter: brightness(0.95); /* Slightly darker as back layer */
+}
+
+.night-wolf-torso {
+  /* Central body piece - normal brightness */
+}
+
+.night-wolf-arm-left,
+.night-wolf-arm-right,
+.night-wolf-head {
+  filter: brightness(1.05); /* Slightly brighter as front layers */
+}
+
+/* Mood-specific styling */
+.animated-night-wolf[data-mood="happy"] .night-wolf-part {
+  filter: brightness(1.1) saturate(1.2);
+}
+
+.animated-night-wolf[data-mood="sad"] .night-wolf-part {
+  filter: brightness(0.8) saturate(0.7);
+}
+
+.animated-night-wolf[data-mood="rest"] .night-wolf-part {
+  opacity: 0.9;
+}

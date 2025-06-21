@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BeastMood } from '../../types/game';
 import { getBeastById } from '../../types/beasts';
+import { AnimatedNightWolf } from '../AnimatedNightWolf/AnimatedNightWolf';
 import './Beast.css';
 
 interface BeastProps {
@@ -12,8 +13,9 @@ interface BeastProps {
 }
 
 export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId, disablePositioning = false }) => {
+  const beastConfig = getBeastById(beastId);
+  
   const getBeastImage = (): string => {
-    const beastConfig = getBeastById(beastId);
     if (!beastConfig) return './images/pet-normal.png'; // fallback
     
     if (isResting) return beastConfig.images.rest;
@@ -41,6 +43,22 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
     }
   };
 
+  const renderBeastContent = () => {
+    // Use animated SVG for Night Wolf
+    if (beastId === 'nightwolf') {
+      const animatedMood = isResting ? 'rest' : mood;
+      return (
+        <AnimatedNightWolf 
+          mood={animatedMood} 
+          size={500} // Adjust size as needed
+        />
+      );
+    }
+    
+    // Use static image for other beasts
+    return <img src={getBeastImage()} alt="Your Beast" />;
+  };
+
   return (
     <div 
       id="beast" 
@@ -50,7 +68,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
         top: `${position.y}px`
       }}
     >
-      <img src={getBeastImage()} alt="Your Beast" />
+      {renderBeastContent()}
     </div>
   );
 };

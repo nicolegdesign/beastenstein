@@ -45,6 +45,22 @@ export const BEASTS: BeastConfig[] = [
       magic: 8,
     },
   },
+  {
+    id: 'nightwolf',
+    name: 'Night Wolf',
+    images: {
+      normal: './images/beasts/night-wolf/night-wolf.svg',
+      happy: './images/beasts/night-wolf/night-wolf.svg',
+      sad: './images/beasts/night-wolf/night-wolf.svg',
+      rest: './images/beasts/night-wolf/night-wolf.svg',
+    },
+    defaultStats: {
+      attack: 5,
+      defense: 5,
+      speed: 5,
+      magic: 5,
+    },
+  },
 ];
 
 export const getBeastById = (id: string): BeastConfig | undefined => {

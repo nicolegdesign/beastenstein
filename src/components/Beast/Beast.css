@@ -10,7 +10,7 @@
 }
 
 .beast img {
-  width: 150px;
+  width: 250px;
   border-radius: 10px;
   transition: all 0.3s ease;
 }
@@ -55,13 +55,13 @@
 
 /* Animation classes */
 .beast-happy {
-  animation: bounce-happy 1s infinite;
+  /* animation: bounce-happy 1s infinite; */
 }
 
 .beast-normal {
-  animation: bounce-normal 2s infinite;
+  /* animation: bounce-normal 2s infinite; */
 }
 
 .beast-sad {
-  animation: bounce-slow 3s infinite;
+  /* animation: bounce-slow 3s infinite; */
 }
