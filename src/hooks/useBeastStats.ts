@@ -6,11 +6,12 @@ export const useBeastStats = (
   initialStats: BeastStats = { hunger: 50, happiness: 50, energy: 50, health: 100, level: 1, age: 0 }, 
   beastId?: string,
   options?: GameOptions,
-  createdAt?: number
+  createdAt?: number,
+  initialExperience: number = 0
 ) => {
   const [stats, setStats] = useState<BeastStats>(initialStats);
   const [isResting, setIsResting] = useState(false);
-  const [experience, setExperience] = useState(0);
+  const [experience, setExperience] = useState(initialExperience);
   const restIntervalRef = useRef<number | null>(null);
   const agingIntervalRef = useRef<number | null>(null);
   // const healthIntervalRef = useRef<number | null>(null); // Disabled for now
@@ -20,10 +21,10 @@ export const useBeastStats = (
   useEffect(() => {
     if (beastId && beastId !== previousBeastIdRef.current) {
       setStats(initialStats);
-      setExperience(0);
+      setExperience(initialExperience);
       previousBeastIdRef.current = beastId;
     }
-  }, [beastId, initialStats]);
+  }, [beastId, initialStats, initialExperience]);
 
   // Aging system - calculate age based on real time elapsed since creation
   useEffect(() => {

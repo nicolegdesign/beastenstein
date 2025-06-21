@@ -8,12 +8,14 @@ interface SidebarBeastSelectorProps {
   currentBeastId: string;
   onBeastChange: (beastId: string) => void;
   beastData?: Record<string, IndividualBeastData>;
+  onCreateBeast?: () => void;
 }
 
 export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({ 
   currentBeastId, 
   onBeastChange, 
-  beastData 
+  beastData,
+  onCreateBeast 
 }) => {
   return (
     <div className="sidebar-beast-selector">
@@ -40,6 +42,18 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
             </button>
           );
         })}
+        
+        {/* Create New Beast Button */}
+        <button
+          className="sidebar-create-beast-button"
+          onClick={() => onCreateBeast?.()}
+          title="Create New Beast"
+        >
+          <div className="plus-icon">+</div>
+          <div className="sidebar-beast-info">
+            <span className="sidebar-beast-name">Create Beast</span>
+          </div>
+        </button>
       </div>
     </div>
   );

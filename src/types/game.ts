@@ -20,6 +20,7 @@ export interface IndividualBeastData extends BeastFullStats {
   name: string;
   isResting: boolean;
   createdAt: number; // timestamp when beast was first created
+  experience: number; // current experience points
 }
 
 export interface BeastState extends BeastStats {

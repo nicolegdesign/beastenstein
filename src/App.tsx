@@ -43,7 +43,8 @@ function App() {
         speed: 12,
         magic: 6,
         isResting: false,
-        createdAt: now
+        createdAt: now,
+        experience: 0
       },
       hobbes: {
         name: localStorage.getItem('beastName_hobbes') || 'Hobbes',
@@ -58,7 +59,8 @@ function App() {
         speed: 8,
         magic: 8,
         isResting: false,
-        createdAt: now
+        createdAt: now,
+        experience: 0
       }
     };
     
@@ -162,7 +164,7 @@ function App() {
     health: currentBeastData.health,
     level: currentBeastData.level,
     age: currentBeastData.age
-  }, currentBeastId, gameOptions, currentBeastData.createdAt);
+  }, currentBeastId, gameOptions, currentBeastData.createdAt, currentBeastData.experience);
 
   // Update the hook's resting state when switching beasts
   useEffect(() => {
@@ -217,7 +219,8 @@ function App() {
           speed: currentBeastData.speed,
           magic: currentBeastData.magic,
           isResting: isResting,
-          createdAt: currentBeastData.createdAt
+          createdAt: currentBeastData.createdAt,
+          experience: getExperience()
         };
         
         // Only update if the stats have actually changed
@@ -228,7 +231,8 @@ function App() {
           currentStats.health !== stats.health ||
           currentStats.level !== stats.level ||
           currentStats.age !== stats.age ||
-          currentStats.isResting !== isResting
+          currentStats.isResting !== isResting ||
+          currentStats.experience !== getExperience()
         ) {
           saveBeastData(currentBeastId, newData);
           return {
@@ -242,7 +246,7 @@ function App() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.createdAt, saveBeastData]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.createdAt, saveBeastData, getExperience]);
 
   // Level up detection and celebration
   useEffect(() => {
@@ -516,6 +520,10 @@ function App() {
         currentBeastId={currentBeastId}
         onBeastChange={handleBeastChange}
         beastData={beastData}
+        onCreateBeast={() => {
+          // TODO: Implement beast creation functionality
+          console.log('Create new beast - functionality to be implemented');
+        }}
       />
       
       {showBeastSelector && (
