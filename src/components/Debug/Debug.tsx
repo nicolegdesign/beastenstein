@@ -7,9 +7,10 @@ interface DebugProps {
   onOptionsChange: (newOptions: GameOptions) => void;
   onClose: () => void;
   isModal?: boolean;
+  onResetAllBeasts?: () => void;
 }
 
-export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false }) => {
+export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false, onResetAllBeasts }) => {
   const handleToggle = (key: keyof GameOptions) => {
     const newOptions = {
       ...options,
@@ -38,6 +39,24 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
               Shows a red border around the beast in Battle Arena for debugging positioning
             </span>
           </label>
+        </div>
+      </div>
+      
+      <div className="debug-section">
+        <h3>⚠️ Reset Options</h3>
+        <div className="debug-options">
+          <div className="debug-reset-section">
+            <p className="debug-description">
+              Reset all beasts to their base stats (Level 1, 50 hunger/happiness/energy, 100 health, 0 age)
+            </p>
+            <button 
+              onClick={onResetAllBeasts} 
+              className="debug-reset-btn"
+              disabled={!onResetAllBeasts}
+            >
+              🔄 Reset All Beasts to Base Stats
+            </button>
+          </div>
         </div>
       </div>
       

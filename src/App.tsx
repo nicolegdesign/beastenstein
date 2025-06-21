@@ -27,20 +27,37 @@ function App() {
   
   // Initialize individual beast data from localStorage or defaults
   const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
+    const now = Date.now();
     const defaultData: Record<string, IndividualBeastData> = {
       emi: {
         name: localStorage.getItem('beastName_emi') || 'Emi',
         hunger: 50,
         happiness: 50,
         energy: 50,
-        isResting: false
+        health: 100,
+        level: 1,
+        age: 0,
+        attack: 10,
+        defense: 8,
+        speed: 12,
+        magic: 6,
+        isResting: false,
+        createdAt: now
       },
       hobbes: {
         name: localStorage.getItem('beastName_hobbes') || 'Hobbes',
         hunger: 50,
         happiness: 50,
         energy: 50,
-        isResting: false
+        health: 100,
+        level: 1,
+        age: 0,
+        attack: 12,
+        defense: 10,
+        speed: 8,
+        magic: 8,
+        isResting: false,
+        createdAt: now
       }
     };
     
@@ -50,6 +67,10 @@ function App() {
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData);
+          // Migrate old data without createdAt timestamp
+          if (!parsed.createdAt) {
+            parsed.createdAt = now;
+          }
           defaultData[beastId] = { ...defaultData[beastId], ...parsed };
         } catch (error) {
           console.warn(`Failed to parse saved data for beast ${beastId}:`, error);
@@ -77,12 +98,6 @@ function App() {
       }
     }
     return DEFAULT_OPTIONS;
-  });
-  
-  const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
-    message: '', 
-    show: false, 
-    type: 'success' 
   });
   
   // Initialize inventory from localStorage or defaults
@@ -116,6 +131,15 @@ function App() {
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
   
+  const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
+    message: '', 
+    show: false, 
+    type: 'success' 
+  });
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [previousLevel, setPreviousLevel] = useState(currentBeastData.level);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  
   const {
     stats,
     isResting,
@@ -127,12 +151,17 @@ function App() {
     cleanup,
     fillHappiness,
     fillHunger,
-    getBeastMood
+    getBeastMood,
+    getExperience,
+    resetToBaseStats
   } = useBeastStats({
     hunger: currentBeastData.hunger,
     happiness: currentBeastData.happiness,
-    energy: currentBeastData.energy
-  }, currentBeastId, gameOptions);
+    energy: currentBeastData.energy,
+    health: currentBeastData.health,
+    level: currentBeastData.level,
+    age: currentBeastData.age
+  }, currentBeastId, gameOptions, currentBeastData.createdAt);
 
   // Update the hook's resting state when switching beasts
   useEffect(() => {
@@ -179,7 +208,15 @@ function App() {
           hunger: stats.hunger,
           happiness: stats.happiness,
           energy: stats.energy,
-          isResting: isResting
+          health: stats.health,
+          level: stats.level,
+          age: stats.age,
+          attack: currentBeastData.attack,
+          defense: currentBeastData.defense,
+          speed: currentBeastData.speed,
+          magic: currentBeastData.magic,
+          isResting: isResting,
+          createdAt: currentBeastData.createdAt
         };
         
         // Only update if the stats have actually changed
@@ -187,6 +224,9 @@ function App() {
           currentStats.hunger !== stats.hunger ||
           currentStats.happiness !== stats.happiness ||
           currentStats.energy !== stats.energy ||
+          currentStats.health !== stats.health ||
+          currentStats.level !== stats.level ||
+          currentStats.age !== stats.age ||
           currentStats.isResting !== isResting
         ) {
           saveBeastData(currentBeastId, newData);
@@ -201,7 +241,37 @@ function App() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, isResting, currentBeastId, currentBeastData.name, saveBeastData]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.createdAt, saveBeastData]);
+
+  // Level up detection and celebration
+  useEffect(() => {
+    // Don't trigger level up animation on initial load or if previous level is invalid
+    if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0) {
+      setShowLevelUp(true);
+      setToast({
+        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}!`,
+        show: true,
+        type: 'success'
+      });
+      
+      // Hide level up effect after animation
+      setTimeout(() => {
+        setShowLevelUp(false);
+      }, 3000);
+    }
+    setPreviousLevel(stats.level);
+    
+    // Mark that initial load is complete
+    if (isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [stats.level, previousLevel, currentBeastData.name, isInitialLoad]);
+
+  // Initialize previous level when switching beasts
+  useEffect(() => {
+    setPreviousLevel(currentBeastData.level);
+    setIsInitialLoad(true); // Reset initial load flag when switching beasts
+  }, [currentBeastId, currentBeastData.level]);
 
   // Menu handlers
   const handleSelectBeast = useCallback(() => {
@@ -348,6 +418,58 @@ function App() {
     createTennisBall();
   }, [play, createTennisBall]);
 
+  const handleResetAllBeasts = useCallback(() => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "⚠️ Are you sure you want to reset ALL beasts to base stats?\n\n" +
+      "This will:\n" +
+      "• Set all stats to base values (Level 1, 50 hunger/happiness/energy, 100 health, 0 age)\n" +
+      "• Keep beast names and combat stats\n" +
+      "• Reset creation time to now\n\n" +
+      "This action cannot be undone!"
+    );
+    
+    if (!confirmed) return;
+    
+    const now = Date.now();
+    
+    setBeastData(prev => {
+      const resetData: Record<string, IndividualBeastData> = {};
+      
+      Object.keys(prev).forEach(beastId => {
+        const currentBeast = prev[beastId];
+        resetData[beastId] = {
+          ...currentBeast,
+          hunger: 50,
+          happiness: 50,
+          energy: 50,
+          health: 100,
+          level: 1,
+          age: 0,
+          isResting: false,
+          createdAt: now
+        };
+        
+        // Save to localStorage
+        localStorage.setItem(`beastData_${beastId}`, JSON.stringify(resetData[beastId]));
+      });
+      
+      return resetData;
+    });
+
+    // Immediately reset the current beast's stats in the hook
+    resetToBaseStats();
+    
+    setToast({
+      message: '🔄 All beasts have been reset to base stats!',
+      show: true,
+      type: 'info'
+    });
+    
+    // Close debug panel
+    setShowDebug(false);
+  }, [resetToBaseStats]);
+
   return (
     <div className="App">      <Menu 
         onSelectBeast={handleSelectBeast}
@@ -400,13 +522,34 @@ function App() {
           onOptionsChange={handleOptionsChange}
           onClose={() => setShowDebug(false)}
           isModal={true}
+          onResetAllBeasts={handleResetAllBeasts}
         />
       )}
       
       <div id="stats-container">
+        <StatusBar label="Health" value={stats.health} id="health" />
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
         <StatusBar label="Energy" value={stats.energy} id="energy" />
+        
+        <div className="beast-info">
+          <div className={`info-item ${
+            stats.health <= 20 ? 'health-critical' : 
+            stats.health <= 50 ? 'health-warning' : 
+            'health-good'
+          }`}>
+            <label>Level:</label>
+            <span>{stats.level}</span>
+          </div>
+          <div className="info-item">
+            <label>Age:</label>
+            <span>{stats.age} days</span>
+          </div>
+          <div className="info-item exp-progress">
+            <label>EXP:</label>
+            <span>{getExperience()}/{stats.level * 100}</span>
+          </div>
+        </div>
       </div>
 
       {inBattleArena ? (
@@ -447,6 +590,12 @@ function App() {
         type={toast.type}
         onClose={() => setToast({ ...toast, show: false })}
       />
+
+      {showLevelUp && (
+        <div className="level-up-effect">
+          🎉 LEVEL UP! 🎉
+        </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,25 @@
+export interface BeastCombatStats {
+  attack: number;
+  defense: number;
+  speed: number;
+  magic: number;
+}
+
 export interface BeastStats {
   hunger: number;
   happiness: number;
   energy: number;
+  health: number;
+  level: number;
+  age: number; // in days
 }
 
-export interface IndividualBeastData extends BeastStats {
+export interface BeastFullStats extends BeastStats, BeastCombatStats {}
+
+export interface IndividualBeastData extends BeastFullStats {
   name: string;
   isResting: boolean;
+  createdAt: number; // timestamp when beast was first created
 }
 
 export interface BeastState extends BeastStats {

@@ -52,9 +52,12 @@ export const BeastSelector: React.FC<BeastSelectorProps> = ({
                   <span className="beast-name">{displayName}</span>
                   {data && (
                     <div className="beast-stats">
+                      <div className="stat">❤️ {data.health}</div>
                       <div className="stat">🍖 {data.hunger}</div>
                       <div className="stat">😊 {data.happiness}</div>
                       <div className="stat">⚡ {data.energy}</div>
+                      <div className="stat">Lv.{data.level}</div>
+                      <div className="stat">{data.age}d</div>
                     </div>
                   )}
                 </div>

@@ -144,3 +144,52 @@
   color: white;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
+
+/* Reset section styles */
+.debug-reset-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(220, 53, 69, 0.1);
+  border: 2px solid rgba(220, 53, 69, 0.3);
+  border-radius: 10px;
+}
+
+.debug-reset-btn {
+  background: linear-gradient(145deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.debug-reset-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #c82333, #bd2130);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.debug-reset-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.debug-reset-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.debug-reset-section .debug-description {
+  margin: 0;
+  font-size: 0.9em;
+  color: #ffcccb;
+  text-align: center;
+}
