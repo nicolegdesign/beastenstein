@@ -4,6 +4,7 @@ import { EditableName } from './components/EditableName/EditableName';
 import { BeastDen } from './components/BeastDen/BeastDen';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { BeastSelector } from './components/BeastSelector/BeastSelector';
+import { SidebarBeastSelector } from './components/SidebarBeastSelector/SidebarBeastSelector';
 import { Menu } from './components/Menu/Menu';
 import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
@@ -509,6 +510,13 @@ function App() {
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
         <StatusBar label="Energy" value={stats.energy} id="energy" />
       </div>
+
+      {/* Sidebar Beast Selector */}
+      <SidebarBeastSelector
+        currentBeastId={currentBeastId}
+        onBeastChange={handleBeastChange}
+        beastData={beastData}
+      />
       
       {showBeastSelector && (
         <BeastSelector 
