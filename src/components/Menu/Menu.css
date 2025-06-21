@@ -8,7 +8,7 @@
 .menu-button {
   width: 50px;
   height: 50px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(42, 42, 42, 0.95);
   border: 2px solid #4CAF50;
   border-radius: 12px;
   cursor: pointer;
@@ -18,13 +18,13 @@
   justify-content: center;
   gap: 4px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .menu-button:hover {
-  background: #f0f8f0;
+  background: rgba(58, 58, 58, 0.95);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 .menu-button.open {
@@ -34,7 +34,7 @@
 .hamburger-line {
   width: 25px;
   height: 3px;
-  background: #333;
+  background: #ffffff;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -59,10 +59,10 @@
   position: absolute;
   top: 60px;
   left: 0;
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(42, 42, 42, 0.98);
   border: 2px solid #4CAF50;
   border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
   min-width: 200px;
   overflow: hidden;
   animation: menuSlideIn 0.3s ease-out;
@@ -92,16 +92,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #333;
+  color: #ffffff;
 }
 
 .menu-item:hover {
-  background: #f0f8f0;
+  background: rgba(76, 175, 80, 0.2);
   color: #4CAF50;
 }
 
 .menu-item:not(:last-child) {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .menu-overlay {
