@@ -471,7 +471,8 @@ function App() {
   }, [resetToBaseStats]);
 
   return (
-    <div className="App">      <Menu 
+    <div className="App">
+      <Menu 
         onSelectBeast={handleSelectBeast}
         onOptions={handleOptions}
         onSave={handleSave}
@@ -481,12 +482,33 @@ function App() {
         inBattleArena={inBattleArena}
       />
 
-      <h1><EditableName 
-        key={currentBeastId}
-        initialName={currentBeastData.name} 
-        onNameChange={handleNameChange} 
-        beastId={currentBeastId} 
-      /></h1>
+      
+
+      {/* Beast name and info in upper left */}
+      <div className="beast-header">
+        <h1><EditableName 
+          key={currentBeastId}
+          initialName={currentBeastData.name} 
+          onNameChange={handleNameChange} 
+          beastId={currentBeastId} 
+        /></h1>
+        
+        <div className="beast-info-plate">
+          <div className="info-text">
+            <span>LEVEL {stats.level}</span>
+            <span>AGE {stats.age}</span>
+            <span>EXP {getExperience()}/{stats.level * 100}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Top stats bar - compact horizontal layout */}
+      <div id="top-stats-container">
+        <StatusBar label="Health" value={stats.health} id="health" />
+        <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
+        <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
+        <StatusBar label="Energy" value={stats.energy} id="energy" />
+      </div>
       
       {showBeastSelector && (
         <BeastSelector 
@@ -526,32 +548,6 @@ function App() {
         />
       )}
       
-      <div id="stats-container">
-        <StatusBar label="Health" value={stats.health} id="health" />
-        <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
-        <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
-        <StatusBar label="Energy" value={stats.energy} id="energy" />
-        
-        <div className="beast-info">
-          <div className={`info-item ${
-            stats.health <= 20 ? 'health-critical' : 
-            stats.health <= 50 ? 'health-warning' : 
-            'health-good'
-          }`}>
-            <label>Level:</label>
-            <span>{stats.level}</span>
-          </div>
-          <div className="info-item">
-            <label>Age:</label>
-            <span>{stats.age} days</span>
-          </div>
-          <div className="info-item exp-progress">
-            <label>EXP:</label>
-            <span>{getExperience()}/{stats.level * 100}</span>
-          </div>
-        </div>
-      </div>
-
       {inBattleArena ? (
         <BattleArena
           beastId={currentBeastId}

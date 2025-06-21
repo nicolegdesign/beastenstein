@@ -1,6 +1,6 @@
 body {
-  font-family: sans-serif;
-  background-color: #f0f8ff;
+  font-family: 'Nunito', sans-serif;
+  background-color: #1d1d23;
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -17,80 +17,85 @@ body {
   box-sizing: border-box;
 }
 
-/* Stats UI positioned outside beast den */
-#stats-container {
+/* Top stats bar - compact horizontal layout */
+#top-stats-container {
   display: flex;
   justify-content: center;
-  gap: 30px;
-  margin: 20px 0;
+  gap: 15px;
+  margin: 10px 0;
   flex-wrap: wrap;
-}
-
-/* Beast info section */
-.beast-info {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
-  padding: 8px 12px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.info-item label {
-  font-weight: bold;
-  color: #2c3e50;
+/* Beast header with name and info positioned in upper left */
+.beast-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  margin: 15px 0;
+  padding: 0 20px;
+}
+
+.beast-header h1 {
   margin: 0;
+  font-size: 1.5em;
 }
 
-.info-item span {
-  color: #34495e;
-  font-weight: 500;
+/* Beast info plate - styled like the name plate */
+.beast-info-plate {
+  display: inline-block;
+  position: relative;
+  background: linear-gradient(145deg, #b8860b, #daa520);
+  border: 3px solid #b8860b;
+  border-radius: 12px;
+  padding: 7px 16px;
+  box-shadow: 
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  text-align: center;
 }
 
-/* Experience progress indicator */
-.beast-info .exp-progress {
-  background: rgba(255, 215, 0, 0.2);
-  border: 1px solid rgba(255, 215, 0, 0.4);
+.beast-info-plate::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #b8860b, #daa520, #b8860b);
+  border-radius: 14px;
+  z-index: -1;
 }
 
-.beast-info .exp-progress label {
-  color: #b8860b;
+.beast-info-plate::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  border-radius: 1px;
 }
 
-.beast-info .exp-progress span {
-  color: #daa520;
+.info-text {
+  display: flex;
+  gap: 15px;
+  align-items: center;
   font-weight: bold;
+  font-size: 0.9em;
+  color: #2c3e50;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
 }
 
-/* Health status indicators */
-.beast-info .health-critical {
-  background: rgba(220, 53, 69, 0.2);
-  border: 1px solid rgba(220, 53, 69, 0.4);
-  animation: healthPulse 2s infinite;
-}
-
-.beast-info .health-warning {
-  background: rgba(255, 193, 7, 0.2);
-  border: 1px solid rgba(255, 193, 7, 0.4);
-}
-
-.beast-info .health-good {
-  background: rgba(40, 167, 69, 0.2);
-  border: 1px solid rgba(40, 167, 69, 0.4);
-}
-
-@keyframes healthPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+.info-text span {
+  white-space: nowrap;
 }
 
 /* Level up celebration effect */
