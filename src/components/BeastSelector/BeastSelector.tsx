@@ -1,6 +1,6 @@
 import React from 'react';
-import { BEASTS } from '../../types/pets';
-import type { BeastConfig } from '../../types/pets';
+import { BEASTS } from '../../types/beasts';
+import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
 import './BeastSelector.css';
 

@@ -13,7 +13,7 @@ import { Debug } from './components/Debug/Debug';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
-import { getBeastById } from './types/pets';
+import { getBeastById } from './types/beasts';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
 import type { IndividualBeastData } from './types/game';

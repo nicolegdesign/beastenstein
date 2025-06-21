@@ -13,7 +13,7 @@ export const useBeastStats = (
   const [experience, setExperience] = useState(0);
   const restIntervalRef = useRef<number | null>(null);
   const agingIntervalRef = useRef<number | null>(null);
-  const healthIntervalRef = useRef<number | null>(null);
+  // const healthIntervalRef = useRef<number | null>(null); // Disabled for now
   const previousBeastIdRef = useRef(beastId);
 
   // Update stats when switching beasts (only when beastId changes)
@@ -55,41 +55,41 @@ export const useBeastStats = (
     };
   }, [options?.disableStatDecay, createdAt]);
 
-  // Health system - health decreases when stats are very low, recovers when good
-  useEffect(() => {
-    if (options?.disableStatDecay) {
-      return;
-    }
+  // Health system - DISABLED (health remains stable for now, will be used in future battle features)
+  // useEffect(() => {
+  //   if (options?.disableStatDecay) {
+  //     return;
+  //   }
 
-    healthIntervalRef.current = window.setInterval(() => {
-      setStats(prev => {
-        let healthChange = 0;
-        const criticalStats = [prev.hunger, prev.happiness, prev.energy];
-        const lowStats = criticalStats.filter(stat => stat < 20).length;
-        const goodStats = criticalStats.filter(stat => stat > 70).length;
+  //   healthIntervalRef.current = window.setInterval(() => {
+  //     setStats(prev => {
+  //       let healthChange = 0;
+  //       const criticalStats = [prev.hunger, prev.happiness, prev.energy];
+  //       const lowStats = criticalStats.filter(stat => stat < 20).length;
+  //       const goodStats = criticalStats.filter(stat => stat > 70).length;
 
-        if (lowStats >= 2) {
-          // Multiple low stats = health decline
-          healthChange = -2;
-        } else if (lowStats === 1) {
-          // One low stat = slow health decline
-          healthChange = -1;
-        } else if (goodStats >= 2) {
-          // Multiple good stats = health recovery
-          healthChange = 1;
-        }
+  //       if (lowStats >= 2) {
+  //         // Multiple low stats = health decline
+  //         healthChange = -2;
+  //       } else if (lowStats === 1) {
+  //         // One low stat = slow health decline
+  //         healthChange = -1;
+  //       } else if (goodStats >= 2) {
+  //         // Multiple good stats = health recovery
+  //         healthChange = 1;
+  //       }
 
-        const newHealth = Math.max(0, Math.min(100, prev.health + healthChange));
-        return { ...prev, health: newHealth };
-      });
-    }, 30000); // Check health every 30 seconds
+  //       const newHealth = Math.max(0, Math.min(100, prev.health + healthChange));
+  //       return { ...prev, health: newHealth };
+  //     });
+  //   }, 30000); // Check health every 30 seconds
 
-    return () => {
-      if (healthIntervalRef.current) {
-        clearInterval(healthIntervalRef.current);
-      }
-    };
-  }, [options?.disableStatDecay]);
+  //   return () => {
+  //     if (healthIntervalRef.current) {
+  //       clearInterval(healthIntervalRef.current);
+  //     }
+  //   };
+  // }, [options?.disableStatDecay]);
 
   // Leveling system - level up based on experience points
   useEffect(() => {

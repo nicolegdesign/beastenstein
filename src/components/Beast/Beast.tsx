@@ -1,6 +1,6 @@
 import React from 'react';
 import type { BeastMood } from '../../types/game';
-import { getBeastById } from '../../types/pets';
+import { getBeastById } from '../../types/beasts';
 import './Beast.css';
 
 interface BeastProps {
