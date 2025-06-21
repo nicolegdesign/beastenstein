@@ -15,7 +15,10 @@ export const usePooManager = (
   const [poos, setPoos] = useState<PooItem[]>([]);
 
   const spawnPoo = useCallback(() => {
-    if (!gameAreaRef.current) return;
+    if (!gameAreaRef.current) {
+      console.log('Poo spawn skipped: no game area ref');
+      return;
+    }
 
     const gameArea = gameAreaRef.current;
     const rect = gameArea.getBoundingClientRect();
@@ -32,6 +35,7 @@ export const usePooManager = (
       y
     };
 
+    console.log('Spawning poo:', newPoo);
     setPoos(prev => [...prev, newPoo]);
   }, [gameAreaRef]);
 
@@ -45,15 +49,20 @@ export const usePooManager = (
     setPoos([]);
   }, []);
 
-  // Poo spawning timer - spawn poo every 60-120 seconds when not resting (unless disabled)
+  // Poo spawning timer - spawn poo every 10-60 seconds when not resting (unless disabled)
   useEffect(() => {
-    if (isResting || options?.disablePooSpawning) return;
+    console.log('Poo manager effect:', { isResting, disablePooSpawning: options?.disablePooSpawning });
+    if (isResting || options?.disablePooSpawning) {
+      console.log('Poo spawning disabled:', { isResting, disablePooSpawning: options?.disablePooSpawning });
+      return;
+    }
 
-    const minDelay = 60000; // 30 seconds
-    const maxDelay = 1200000; // 60 seconds
+    const minDelay = 60000; // 60 seconds
+    const maxDelay = 1200000; // 120 seconds
     
     const scheduleNextPoo = () => {
       const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+      console.log(`Next poo scheduled in ${delay / 1000} seconds`);
       return setTimeout(() => {
         spawnPoo();
         scheduleNextPoo();
