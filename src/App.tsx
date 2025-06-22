@@ -10,6 +10,7 @@ import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
 import { BattleArena } from './components/BattleArena/BattleArena';
+import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
 import { InventoryProvider } from './contexts/InventoryContext';
 import { useBeastStats } from './hooks/useBeastStats';
@@ -197,6 +198,7 @@ function App() {
   const [showOptions, setShowOptions] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [inBattleArena, setInBattleArena] = useState(false);
+  const [inAdventure, setInAdventure] = useState(false);
   const [showMausoleum, setShowMausoleum] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
   const [showSteakAnimation, setShowSteakAnimation] = useState(false);
@@ -731,6 +733,10 @@ function App() {
     setInBattleArena(prev => !prev);
   }, []);
 
+  const handleAdventure = useCallback(() => {
+    setInAdventure(prev => !prev);
+  }, []);
+
   const handleDebug = useCallback(() => {
     setShowDebug(true);
   }, []);
@@ -966,8 +972,10 @@ function App() {
         onSave={handleSave}
         onInventory={handleInventory}
         onBattleArena={handleBattleArena}
+        onAdventure={handleAdventure}
         onDebug={handleDebug}
         inBattleArena={inBattleArena}
+        inAdventure={inAdventure}
       />
 
       {/* Beast name and info in upper left */}
@@ -1066,6 +1074,18 @@ function App() {
           beastId={currentBeastId}
           beastMood={getBeastMood()}
           showBeastBorder={gameOptions.showBeastBorder}
+        />
+      ) : inAdventure ? (
+        <Adventure
+          currentBeastId={currentBeastId}
+          playerStats={{
+            attack: currentBeastData.attack,
+            defense: currentBeastData.defense,
+            speed: currentBeastData.speed,
+            magic: currentBeastData.magic,
+            health: currentBeastData.health
+          }}
+          onClose={() => setInAdventure(false)}
         />
       ) : (
         <>

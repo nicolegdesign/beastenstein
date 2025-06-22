@@ -26,7 +26,7 @@ const createDefaultInventory = (): BeastPartInventory => {
   ];
   
   partIds.forEach(id => {
-    parts[id] = 1; // Start with 1 for testing, change to 99 later
+    parts[id] = 99; // Changed to 99 for testing
   });
   
   // Arm and leg sets
@@ -36,7 +36,7 @@ const createDefaultInventory = (): BeastPartInventory => {
   ];
   
   setIds.forEach(id => {
-    sets[id] = 1; // Start with 1 for testing, change to 99 later
+    sets[id] = 99; // Changed to 99 for testing
   });
   
   // Soul essences
@@ -45,7 +45,7 @@ const createDefaultInventory = (): BeastPartInventory => {
   ];
   
   soulIds.forEach(id => {
-    soulEssences[id] = 1; // Start with 1 for testing, change to 99 later
+    soulEssences[id] = 99; // Changed to 99 for testing
   });
   
   return { parts, sets, soulEssences };
