@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BEASTS } from '../../types/beasts';
 import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
@@ -67,6 +67,87 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
   refreshTrigger
 }) => {
   const [customBeasts, setCustomBeasts] = useState<CustomBeast[]>([]);
+  const [draggedBeastId, setDraggedBeastId] = useState<string | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Load and save beast order from localStorage
+  const getBeastOrder = (): string[] => {
+    const stored = localStorage.getItem('beastOrder');
+    return stored ? JSON.parse(stored) : [];
+  };
+
+  const saveBeastOrder = (order: string[]) => {
+    localStorage.setItem('beastOrder', JSON.stringify(order));
+  };
+
+  // Sort beasts according to saved order
+  const sortBeastsByOrder = useCallback((beasts: CustomBeast[]): CustomBeast[] => {
+    const order = getBeastOrder();
+    const beastMap = new Map(beasts.map(beast => [beast.id, beast]));
+    const orderedBeasts: CustomBeast[] = [];
+    const unorderedBeasts: CustomBeast[] = [];
+
+    // Add beasts in saved order
+    order.forEach(id => {
+      const beast = beastMap.get(id);
+      if (beast) {
+        orderedBeasts.push(beast);
+        beastMap.delete(id);
+      }
+    });
+
+    // Add any remaining beasts that weren't in the saved order
+    beastMap.forEach(beast => unorderedBeasts.push(beast));
+
+    return [...orderedBeasts, ...unorderedBeasts];
+  }, []);
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, beastId: string) => {
+    setDraggedBeastId(beastId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (!draggedBeastId) return;
+
+    const newBeasts = [...customBeasts];
+    const draggedIndex = newBeasts.findIndex(beast => beast.id === draggedBeastId);
+    
+    if (draggedIndex === -1 || draggedIndex === dropIndex) {
+      setDraggedBeastId(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Remove dragged beast and insert at new position
+    const [draggedBeast] = newBeasts.splice(draggedIndex, 1);
+    newBeasts.splice(dropIndex, 0, draggedBeast);
+
+    // Update state and save order
+    setCustomBeasts(newBeasts);
+    saveBeastOrder(newBeasts.map(beast => beast.id));
+    
+    setDraggedBeastId(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedBeastId(null);
+    setDragOverIndex(null);
+  };
 
   // Load custom beasts from localStorage
   useEffect(() => {
@@ -93,11 +174,13 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
         }
       }
       
-      setCustomBeasts(customBeastsList);
+      // Sort beasts according to saved order
+      const sortedBeasts = sortBeastsByOrder(customBeastsList);
+      setCustomBeasts(sortedBeasts);
     };
 
     loadCustomBeasts();
-  }, [refreshTrigger]); // Refresh when refreshTrigger changes
+  }, [refreshTrigger, sortBeastsByOrder]); // Refresh when refreshTrigger changes
   return (
     <div className="sidebar-beast-selector">
       <h4 className="sidebar-title">Your Beasts</h4>
@@ -126,16 +209,24 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
         })}
 
         {/* Custom Beasts */}
-        {customBeasts.map((customBeast) => {
+        {customBeasts.map((customBeast, index) => {
           const data = beastData?.[customBeast.id];
           const displayName = data?.name || customBeast.name;
+          const isDragging = draggedBeastId === customBeast.id;
+          const isDragOver = dragOverIndex === index;
           
           return (
             <button
               key={customBeast.id}
-              className={`sidebar-beast-button ${currentBeastId === customBeast.id ? 'active' : ''}`}
+              draggable
+              className={`sidebar-beast-button ${currentBeastId === customBeast.id ? 'active' : ''} ${isDragging ? 'dragging' : ''} ${isDragOver ? 'drag-over' : ''}`}
               onClick={() => onBeastChange(customBeast.id)}
-              title={`Switch to ${displayName}`}
+              onDragStart={(e) => handleDragStart(e, customBeast.id)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+              title={`Switch to ${displayName} (drag to reorder)`}
             >
               {/* Use the head image for custom beasts */}
               <img src={customBeast.head?.imagePath || './images/pet-normal.png'} alt={displayName} />

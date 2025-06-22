@@ -43,6 +43,7 @@
   text-align: left;
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 .sidebar-beast-button:hover {
@@ -183,6 +184,45 @@
 .sidebar-create-beast-button.disabled:hover .plus-icon {
   background: rgba(128, 128, 128, 0.2);
   color: #888;
+}
+
+/* Drag and Drop Styles */
+.sidebar-beast-button[draggable="true"] {
+  cursor: grab;
+}
+
+.sidebar-beast-button[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.sidebar-beast-button.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  cursor: grabbing;
+}
+
+.sidebar-beast-button.drag-over {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.sidebar-beast-button.drag-over::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #4CAF50;
+  border-radius: 2px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Mobile responsiveness */
