@@ -21,6 +21,7 @@ export interface IndividualBeastData extends BeastFullStats {
   isResting: boolean;
   createdAt: number; // timestamp when beast was first created
   experience: number; // current experience points
+  maxLevel: number; // maximum level based on soul essence used
 }
 
 export interface BeastState extends BeastStats {

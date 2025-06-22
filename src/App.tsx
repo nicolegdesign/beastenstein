@@ -52,6 +52,24 @@ interface CustomBeastData {
   soulEssence: SoulEssence;
 }
 
+// Function to get max level based on soul essence
+const getMaxLevelFromSoul = (soulId: string): number => {
+  switch (soulId) {
+    case 'dim-soul':
+      return 5;
+    case 'glowing-soul':
+      return 10;
+    case 'bright-soul':
+      return 15;
+    case 'brilliant-soul':
+      return 20;
+    case 'luminescent-soul':
+      return 25;
+    default:
+      return 5; // Default to dim soul level
+  }
+};
+
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   
@@ -99,7 +117,8 @@ function App() {
         magic: 6,
         isResting: false,
         createdAt: now,
-        experience: 0
+        experience: 0,
+        maxLevel: 5  // Dim soul max level
       };
       
       // Save the default beast data
@@ -259,7 +278,7 @@ function App() {
     loadCustomBeastData();
   }, []); // Run only once on component mount
   
-  // Migration function to add gender and personality to existing custom beasts
+  // Migration function to add gender, personality, and maxLevel to existing custom beasts
   useEffect(() => {
     const migrateExistingBeasts = () => {
       // Get all custom beast keys from localStorage
@@ -297,6 +316,48 @@ function App() {
           console.warn(`Failed to migrate beast ${key}:`, error);
         }
       }
+      
+      // Also migrate beast data to add maxLevel
+      const beastDataKeys = Object.keys(localStorage).filter(key => key.startsWith('beastData_'));
+      
+      for (const key of beastDataKeys) {
+        try {
+          const beastDataString = localStorage.getItem(key);
+          if (beastDataString) {
+            const beastData = JSON.parse(beastDataString);
+            
+            // If the beast doesn't have maxLevel, determine it from soul essence
+            if (typeof beastData.maxLevel === 'undefined') {
+              const beastId = key.replace('beastData_', '');
+              const customBeastKey = `customBeast_${beastId}`;
+              const customBeastString = localStorage.getItem(customBeastKey);
+              
+              let maxLevel = 5; // Default to dim soul level
+              if (customBeastString) {
+                try {
+                  const customBeast = JSON.parse(customBeastString);
+                  if (customBeast.soulEssence?.id) {
+                    maxLevel = getMaxLevelFromSoul(customBeast.soulEssence.id);
+                  }
+                } catch (e) {
+                  console.warn(`Failed to parse custom beast for maxLevel migration: ${customBeastKey}`, e);
+                }
+              }
+              
+              beastData.maxLevel = maxLevel;
+              localStorage.setItem(key, JSON.stringify(beastData));
+              
+              // Update the state as well
+              setBeastData(prev => ({
+                ...prev,
+                [beastId]: { ...prev[beastId], maxLevel }
+              }));
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to migrate beast data ${key}:`, error);
+        }
+      }
     };
 
     migrateExistingBeasts();
@@ -332,7 +393,7 @@ function App() {
     health: currentBeastData?.health || 100,
     level: currentBeastData?.level || 1,
     age: currentBeastData?.age || 0
-  }, currentBeastId, gameOptions, currentBeastData?.createdAt || Date.now(), currentBeastData?.experience || 0);
+  }, currentBeastId, gameOptions, currentBeastData?.createdAt || Date.now(), currentBeastData?.experience || 0, currentBeastData?.maxLevel || 5);
 
   // Update the hook's resting state when switching beasts
   useEffect(() => {
@@ -412,7 +473,8 @@ function App() {
       magic: modifiedStats.magic,
       isResting: false,
       createdAt: now,
-      experience: 0
+      experience: 0,
+      maxLevel: getMaxLevelFromSoul(customBeast.soulEssence.id)
     };
 
     // Add to beast data
@@ -463,7 +525,8 @@ function App() {
           magic: currentBeastData.magic,
           isResting: isResting,
           createdAt: currentBeastData.createdAt,
-          experience: getExperience()
+          experience: getExperience(),
+          maxLevel: currentBeastData.maxLevel || 5  // Preserve existing maxLevel or default to 5
         };
         
         // Only update if the stats have actually changed
@@ -489,7 +552,7 @@ function App() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.createdAt, saveBeastData, getExperience]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.maxLevel, currentBeastData.createdAt, saveBeastData, getExperience]);
 
   // Level up detection and celebration
   useEffect(() => {
@@ -500,6 +563,27 @@ function App() {
         message: `🎉 ${currentBeastData.name} reached Level ${stats.level}!`,
         show: true,
         type: 'success'
+      });
+      
+      // Increase all combat stats by 1 for each level gained
+      const levelsGained = stats.level - previousLevel;
+      const statIncrease = levelsGained * 1; // +1 per level
+      
+      setBeastData(prev => {
+        const updatedData = {
+          ...prev[currentBeastId],
+          attack: prev[currentBeastId].attack + statIncrease,
+          defense: prev[currentBeastId].defense + statIncrease,
+          speed: prev[currentBeastId].speed + statIncrease,
+          magic: prev[currentBeastId].magic + statIncrease
+        };
+        
+        saveBeastData(currentBeastId, updatedData);
+        
+        return {
+          ...prev,
+          [currentBeastId]: updatedData
+        };
       });
       
       // Hide level up effect after animation
@@ -513,7 +597,7 @@ function App() {
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [stats.level, previousLevel, currentBeastData.name, isInitialLoad]);
+  }, [stats.level, previousLevel, currentBeastData.name, isInitialLoad, currentBeastId, saveBeastData]);
 
   // Initialize previous level when switching beasts
   useEffect(() => {
@@ -914,7 +998,7 @@ function App() {
                 ) : null;
               })()}
             </span>
-            <span>LEVEL {stats.level}</span>
+            <span>LEVEL {stats.level}/{currentBeastData.maxLevel || 5}</span>
             <span>AGE {stats.age}</span>
             <span>EXP {getExperience()}/{stats.level * 100}</span>
           </div>

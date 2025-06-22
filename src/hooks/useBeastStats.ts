@@ -7,7 +7,8 @@ export const useBeastStats = (
   beastId?: string,
   options?: GameOptions,
   createdAt?: number,
-  initialExperience: number = 0
+  initialExperience: number = 0,
+  maxLevel: number = 50
 ) => {
   const [stats, setStats] = useState<BeastStats>(initialStats);
   const [isResting, setIsResting] = useState(false);
@@ -95,14 +96,14 @@ export const useBeastStats = (
   // Leveling system - level up based on experience points
   useEffect(() => {
     const expNeeded = stats.level * 100; // 100 exp per level
-    if (experience >= expNeeded && stats.level < 50) { // Max level 50
+    if (experience >= expNeeded && stats.level < maxLevel) { // Use maxLevel parameter
       setStats(prev => ({
         ...prev,
         level: prev.level + 1
       }));
       setExperience(0); // Reset experience after leveling
     }
-  }, [experience, stats.level]);
+  }, [experience, stats.level, maxLevel]);
 
   // Auto-decay stats every 3 seconds (unless disabled)
   useEffect(() => {
@@ -158,8 +159,11 @@ export const useBeastStats = (
       hunger: Math.min(100, prev.hunger + 15),
       happiness: Math.min(100, prev.happiness + 5)
     }));
-    setExperience(prev => prev + 10); // Gain experience for feeding
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 10); // Gain experience for feeding
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const play = useCallback(() => {
     if (isResting) return;
@@ -168,8 +172,11 @@ export const useBeastStats = (
       happiness: Math.min(100, prev.happiness + 10),
       energy: Math.max(0, prev.energy - 15)
     }));
-    setExperience(prev => prev + 15); // Gain experience for playing
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 15); // Gain experience for playing
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const startRest = useCallback(() => {
     if (isResting) return;
@@ -182,8 +189,11 @@ export const useBeastStats = (
       ...prev,
       happiness: Math.min(100, prev.happiness + 3)
     }));
-    setExperience(prev => prev + 5); // Gain experience for traveling
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 5); // Gain experience for traveling
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const cleanup = useCallback(() => {
     if (isResting) return;
@@ -191,8 +201,11 @@ export const useBeastStats = (
       ...prev,
       happiness: Math.min(100, prev.happiness + 10)
     }));
-    setExperience(prev => prev + 8); // Gain experience for cleaning
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 8); // Gain experience for cleaning
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   // Item effect functions for powerful boosts
   const fillHappiness = useCallback(() => {
@@ -201,8 +214,11 @@ export const useBeastStats = (
       ...prev,
       happiness: 100
     }));
-    setExperience(prev => prev + 20); // Bonus experience for using items
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 20); // Bonus experience for using items
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const fillHunger = useCallback(() => {
     if (isResting) return;
@@ -210,8 +226,11 @@ export const useBeastStats = (
       ...prev,
       hunger: 100
     }));
-    setExperience(prev => prev + 20); // Bonus experience for using items
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 20); // Bonus experience for using items
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const fillEnergy = useCallback(() => {
     if (isResting) return;
@@ -219,8 +238,11 @@ export const useBeastStats = (
       ...prev,
       energy: 100
     }));
-    setExperience(prev => prev + 20); // Bonus experience for using items
-  }, [isResting]);
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 20); // Bonus experience for using items
+    }
+  }, [isResting, stats.level, maxLevel]);
 
   const getBeastMood = useCallback((): BeastMood => {
     if (stats.happiness >= 80) return 'happy';
