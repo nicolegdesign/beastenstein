@@ -48,7 +48,7 @@ interface MausoleumProps {
   onCreateBeast: (beast: CustomBeast) => void;
 }
 
-// Available beast parts from existing beasts
+// Available beast parts from existing beasts (head and torso only)
 const AVAILABLE_PARTS: BeastPart[] = [
   // Night Wolf parts
   {
@@ -65,34 +65,6 @@ const AVAILABLE_PARTS: BeastPart[] = [
     type: 'torso',
     rarity: 'common'
   },
-  {
-    id: 'nightwolf-arm-l',
-    name: 'Night Wolf Left Arm',
-    imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-    type: 'armLeft',
-    rarity: 'common'
-  },
-  {
-    id: 'nightwolf-arm-r',
-    name: 'Night Wolf Right Arm',
-    imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-    type: 'armRight',
-    rarity: 'common'
-  },
-  {
-    id: 'nightwolf-leg-l',
-    name: 'Night Wolf Left Leg',
-    imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-    type: 'legLeft',
-    rarity: 'common'
-  },
-  {
-    id: 'nightwolf-leg-r',
-    name: 'Night Wolf Right Leg',
-    imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-    type: 'legRight',
-    rarity: 'common'
-  },
   // Mountain Dragon parts
   {
     id: 'mountaindragon-head',
@@ -106,34 +78,6 @@ const AVAILABLE_PARTS: BeastPart[] = [
     name: 'Mountain Dragon Torso',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg',
     type: 'torso',
-    rarity: 'common'
-  },
-  {
-    id: 'mountaindragon-arm-l',
-    name: 'Mountain Dragon Left Arm',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
-    type: 'armLeft',
-    rarity: 'common'
-  },
-  {
-    id: 'mountaindragon-arm-r',
-    name: 'Mountain Dragon Right Arm',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
-    type: 'armRight',
-    rarity: 'common'
-  },
-  {
-    id: 'mountaindragon-leg-l',
-    name: 'Mountain Dragon Left Leg',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
-    type: 'legLeft',
-    rarity: 'common'
-  },
-  {
-    id: 'mountaindragon-leg-r',
-    name: 'Mountain Dragon Right Leg',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
-    type: 'legRight',
     rarity: 'common'
   },
 ];
@@ -317,6 +261,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
 
   const handleCreate = () => {
     if (isComplete()) {
+      console.log("Trying to create with:", selectedParts);
       // Check if we can create the beast with current inventory
       const canCreate = canCreateBeast(
         selectedParts.head!.id,
@@ -366,6 +311,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         legRight: selectedParts.legRight!,
         soulEssence: selectedParts.soulEssence!,
       });
+      console.log("Consumed?", consumed);
     }
   };
 

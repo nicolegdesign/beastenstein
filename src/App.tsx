@@ -11,6 +11,7 @@ import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
 import { BattleArena } from './components/BattleArena/BattleArena';
 import { Debug } from './components/Debug/Debug';
+import { InventoryProvider } from './contexts/InventoryContext';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
@@ -957,7 +958,8 @@ function App() {
   }, [resetToBaseStats, setToast, setShowDebug]);
 
   return (
-    <div className="App">
+    <InventoryProvider>
+      <div className="App">
       <Menu 
         onSelectBeast={handleSelectBeast}
         onOptions={handleOptions}
@@ -1112,7 +1114,8 @@ function App() {
           🎉 LEVEL UP! 🎉
         </div>
       )}
-    </div>
+      </div>
+    </InventoryProvider>
   );
 }
 
