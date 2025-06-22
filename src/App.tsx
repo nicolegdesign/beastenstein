@@ -5,6 +5,7 @@ import { BeastDen } from './components/BeastDen/BeastDen';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { BeastSelector } from './components/BeastSelector/BeastSelector';
 import { SidebarBeastSelector } from './components/SidebarBeastSelector/SidebarBeastSelector';
+import { Mausoleum } from './components/Mausoleum/Mausoleum';
 import { Menu } from './components/Menu/Menu';
 import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
@@ -21,6 +22,24 @@ import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import './App.css';
+
+interface BeastPart {
+  id: string;
+  name: string;
+  source: string;
+  imagePath: string;
+  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+}
+
+interface CustomBeastData {
+  name: string;
+  head: BeastPart;
+  torso: BeastPart;
+  armLeft: BeastPart;
+  armRight: BeastPart;
+  legLeft: BeastPart;
+  legRight: BeastPart;
+}
 
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
@@ -121,6 +140,8 @@ function App() {
   const [showOptions, setShowOptions] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [inBattleArena, setInBattleArena] = useState(false);
+  const [showMausoleum, setShowMausoleum] = useState(false);
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
   
   // Initialize game options from localStorage or defaults
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
@@ -165,6 +186,40 @@ function App() {
   
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
+
+  // Load custom beast data from localStorage on app initialization
+  useEffect(() => {
+    const loadCustomBeastData = () => {
+      const customBeastData: Record<string, IndividualBeastData> = {};
+      
+      // Scan localStorage for custom beast data entries
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('beastData_custom_')) {
+          try {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const parsedData = JSON.parse(data);
+              const beastId = key.replace('beastData_', '');
+              customBeastData[beastId] = parsedData;
+            }
+          } catch (error) {
+            console.warn(`Failed to parse custom beast data for key ${key}:`, error);
+          }
+        }
+      }
+      
+      // Add custom beast data to beastData state if any found
+      if (Object.keys(customBeastData).length > 0) {
+        setBeastData(prev => ({
+          ...prev,
+          ...customBeastData
+        }));
+      }
+    };
+
+    loadCustomBeastData();
+  }, []); // Run only once on component mount
   
   const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
     message: '', 
@@ -172,7 +227,7 @@ function App() {
     type: 'success' 
   });
   const [showLevelUp, setShowLevelUp] = useState(false);
-  const [previousLevel, setPreviousLevel] = useState(currentBeastData.level);
+  const [previousLevel, setPreviousLevel] = useState(currentBeastData?.level || 1);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   
   const {
@@ -190,18 +245,18 @@ function App() {
     getExperience,
     resetToBaseStats
   } = useBeastStats({
-    hunger: currentBeastData.hunger,
-    happiness: currentBeastData.happiness,
-    energy: currentBeastData.energy,
-    health: currentBeastData.health,
-    level: currentBeastData.level,
-    age: currentBeastData.age
-  }, currentBeastId, gameOptions, currentBeastData.createdAt, currentBeastData.experience);
+    hunger: currentBeastData?.hunger || 50,
+    happiness: currentBeastData?.happiness || 50,
+    energy: currentBeastData?.energy || 50,
+    health: currentBeastData?.health || 100,
+    level: currentBeastData?.level || 1,
+    age: currentBeastData?.age || 0
+  }, currentBeastId, gameOptions, currentBeastData?.createdAt || Date.now(), currentBeastData?.experience || 0);
 
   // Update the hook's resting state when switching beasts
   useEffect(() => {
-    setIsResting(currentBeastData.isResting);
-  }, [currentBeastId, currentBeastData.isResting, setIsResting]);
+    setIsResting(currentBeastData?.isResting || false);
+  }, [currentBeastId, currentBeastData?.isResting, setIsResting]);
 
   const { position } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
@@ -209,11 +264,13 @@ function App() {
 
   const handleBeastChange = useCallback((beastId: string) => {
     const beastConfig = getBeastById(beastId);
-    if (beastConfig) {
+    const hasCustomBeastData = beastData[beastId]; // Check if custom beast data exists
+    
+    if (beastConfig || hasCustomBeastData) {
       setCurrentBeastId(beastId);
       setShowBeastSelector(false); // Close selector after selection
     }
-  }, []);
+  }, [beastData]);
 
   const handleNameChange = useCallback((newName: string) => {
     setBeastData(prev => ({
@@ -227,6 +284,53 @@ function App() {
     // Also save to localStorage for the EditableName component
     localStorage.setItem(`beastName_${currentBeastId}`, newName);
   }, [currentBeastId]);
+
+  const handleCreateCustomBeast = useCallback((customBeast: CustomBeastData) => {
+    // Create a new custom beast ID
+    const customBeastId = `custom_${Date.now()}`;
+    const now = Date.now();
+    
+    // Create new beast data with base stats
+    const newBeastData: IndividualBeastData = {
+      name: customBeast.name,
+      hunger: 50,
+      happiness: 50,
+      energy: 50,
+      health: 100,
+      level: 1,
+      age: 0,
+      attack: 6,  // Balanced stats for custom beasts
+      defense: 6,
+      speed: 6,
+      magic: 6,
+      isResting: false,
+      createdAt: now,
+      experience: 0
+    };
+
+    // Add to beast data
+    setBeastData(prev => ({
+      ...prev,
+      [customBeastId]: newBeastData
+    }));
+
+    // Save custom beast configuration
+    localStorage.setItem(`customBeast_${customBeastId}`, JSON.stringify(customBeast));
+    
+    // Trigger sidebar refresh to show the new custom beast
+    setSidebarRefreshTrigger(prev => prev + 1);
+    
+    // Switch to the new beast and close mausoleum
+    setCurrentBeastId(customBeastId);
+    setShowMausoleum(false);
+    
+    // Show success message
+    setToast({
+      message: `${customBeast.name} has been created!`,
+      show: true,
+      type: 'success'
+    });
+  }, []);
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
@@ -509,15 +613,29 @@ function App() {
 
   return (
     <div className="App">
-      <Menu 
-        onSelectBeast={handleSelectBeast}
-        onOptions={handleOptions}
-        onSave={handleSave}
-        onInventory={handleInventory}
-        onBattleArena={handleBattleArena}
-        onDebug={handleDebug}
-        inBattleArena={inBattleArena}
-      />
+      {/* Don't render if beast data isn't loaded yet */}
+      {!currentBeastData ? (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh', 
+          color: 'white', 
+          fontSize: '18px' 
+        }}>
+          Loading beast data...
+        </div>
+      ) : (
+        <>
+          <Menu 
+            onSelectBeast={handleSelectBeast}
+            onOptions={handleOptions}
+            onSave={handleSave}
+            onInventory={handleInventory}
+            onBattleArena={handleBattleArena}
+            onDebug={handleDebug}
+            inBattleArena={inBattleArena}
+          />
 
       
 
@@ -553,9 +671,9 @@ function App() {
         onBeastChange={handleBeastChange}
         beastData={beastData}
         onCreateBeast={() => {
-          // TODO: Implement beast creation functionality
-          console.log('Create new beast - functionality to be implemented');
+          setShowMausoleum(true);
         }}
+        refreshTrigger={sidebarRefreshTrigger}
       />
       
       {showBeastSelector && (
@@ -593,6 +711,13 @@ function App() {
           onClose={() => setShowDebug(false)}
           isModal={true}
           onResetAllBeasts={handleResetAllBeasts}
+        />
+      )}
+      
+      {showMausoleum && (
+        <Mausoleum
+          onClose={() => setShowMausoleum(false)}
+          onCreateBeast={handleCreateCustomBeast}
         />
       )}
       
@@ -639,6 +764,8 @@ function App() {
         <div className="level-up-effect">
           🎉 LEVEL UP! 🎉
         </div>
+      )}
+        </>
       )}
     </div>
   );

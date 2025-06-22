@@ -89,6 +89,31 @@
   font-weight: 500;
 }
 
+/* Custom Beast Styles */
+.custom-beast-preview {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #8B5CF6, #A855F7);
+  border: 2px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.custom-beast-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+.custom-beast-indicator {
+  font-size: 0.6em;
+  color: #A855F7;
+  font-weight: 500;
+  font-style: italic;
+}
+
 /* Create Beast Button */
 .sidebar-create-beast-button {
   display: flex;
@@ -158,6 +183,15 @@
     height: 28px;
   }
   
+  .custom-beast-preview {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .custom-beast-icon {
+    font-size: 14px;
+  }
+  
   .sidebar-create-beast-button {
     padding: 6px;
     gap: 6px;
@@ -175,5 +209,9 @@
   
   .sidebar-beast-level {
     font-size: 0.6em;
+  }
+  
+  .custom-beast-indicator {
+    font-size: 0.55em;
   }
 }

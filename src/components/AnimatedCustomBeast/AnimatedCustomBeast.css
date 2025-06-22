@@ -1,0 +1,74 @@
+.animated-custom-beast {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-beast-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-beast-part {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Layer ordering - back to front */
+.custom-beast-leg-left {
+  z-index: 1;
+}
+
+.custom-beast-leg-right {
+  z-index: 2;
+}
+
+.custom-beast-torso {
+  z-index: 3;
+}
+
+.custom-beast-arm-left {
+  z-index: 4;
+}
+
+.custom-beast-arm-right {
+  z-index: 5;
+}
+
+.custom-beast-head {
+  z-index: 6;
+}
+
+/* Ensure proper layering for realistic depth */
+.custom-beast-leg-left,
+.custom-beast-leg-right {
+  filter: brightness(0.95); /* Slightly darker as back layer */
+}
+
+.custom-beast-torso {
+  filter: brightness(1);
+}
+
+.custom-beast-arm-left,
+.custom-beast-arm-right,
+.custom-beast-head {
+  filter: brightness(1.05); /* Slightly brighter as front layers */
+}
+
+/* Mood-specific styling */
+.animated-custom-beast[data-mood="happy"] .custom-beast-part {
+  filter: brightness(1.1) saturate(1.2);
+}
+
+.animated-custom-beast[data-mood="sad"] .custom-beast-part {
+  filter: brightness(0.8) saturate(0.7);
+}
+
+.animated-custom-beast[data-mood="rest"] .custom-beast-part {
+  opacity: 0.9;
+}

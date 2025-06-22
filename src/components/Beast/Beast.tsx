@@ -3,6 +3,7 @@ import type { BeastMood } from '../../types/game';
 import { getBeastById } from '../../types/beasts';
 import { AnimatedNightWolf } from '../AnimatedNightWolf/AnimatedNightWolf';
 import { AnimatedMountainDragon } from '../AnimatedMountainDragon/AnimatedMountainDragon';
+import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import './Beast.css';
 
 interface BeastProps {
@@ -65,6 +66,26 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
           size={500} // Adjust size as needed
         />
       );
+    }
+    
+    // Use animated SVG for custom beasts
+    if (beastId.startsWith('custom_')) {
+      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+      if (customBeastData) {
+        try {
+          const customBeast = JSON.parse(customBeastData);
+          const animatedMood = isResting ? 'rest' : mood;
+          return (
+            <AnimatedCustomBeast 
+              mood={animatedMood} 
+              size={500}
+              customBeast={customBeast}
+            />
+          );
+        } catch (e) {
+          console.error('Failed to parse custom beast data:', e);
+        }
+      }
     }
     
     // Use static image for other beasts

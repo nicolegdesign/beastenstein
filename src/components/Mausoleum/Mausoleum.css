@@ -1,0 +1,365 @@
+.mausoleum {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mausoleum-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.mausoleum-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mausoleum-content {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 3px solid #8b5cf6;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+}
+
+.mausoleum-header {
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.mausoleum-header h1 {
+  font-family: 'Pirata One', cursive;
+  font-size: 2.5rem;
+  color: #8b5cf6;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.mausoleum-header p {
+  color: #d1d5db;
+  font-size: 1.1rem;
+  margin: 10px 0 0 0;
+}
+
+.mausoleum-close-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mausoleum-close-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.mausoleum-creator {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  min-height: 600px;
+}
+
+/* Beast Preview */
+.beast-preview {
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px solid #8b5cf6;
+  border-radius: 15px;
+  padding: 20px;
+}
+
+.beast-preview h3 {
+  color: #8b5cf6;
+  text-align: center;
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+}
+
+.preview-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.preview-part {
+  position: absolute;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Preview part positioning (matching animation positioning) */
+.preview-head {
+  width: 63%;
+  height: 54%;
+  left: 5%;
+  top: 2%;
+  z-index: 5;
+}
+
+.preview-torso {
+  width: 55%;
+  height: 65%;
+  left: 22.5%;
+  bottom: 18%;
+  z-index: 4;
+}
+
+.preview-arm-left {
+  width: 45%;
+  height: 39%;
+  left: 9%;
+  top: 24%;
+  z-index: 3;
+}
+
+.preview-arm-right {
+  width: 45%;
+  height: 39%;
+  right: 26%;
+  top: 17%;
+  z-index: 6;
+}
+
+.preview-leg-left {
+  width: 46%;
+  height: 49%;
+  left: 59%;
+  bottom: 0%;
+  z-index: 2;
+}
+
+.preview-leg-right {
+  width: 42%;
+  height: 45%;
+  right: 34%;
+  bottom: 0%;
+  z-index: 1;
+}
+
+/* Part Selection */
+.part-selection {
+  background: rgba(59, 130, 246, 0.1);
+  border: 2px solid #3b82f6;
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.part-tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.part-tab {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.part-tab:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.part-tab.active {
+  background: #3b82f6;
+  color: white;
+}
+
+.tab-indicator {
+  margin-left: 5px;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 350px;
+}
+
+.part-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.part-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #6b7280;
+}
+
+.part-option.selected {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.part-image {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.part-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.part-name {
+  font-size: 0.8rem;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.part-source {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Beast Creation */
+.beast-creation {
+  grid-column: 1 / -1;
+  background: rgba(16, 185, 129, 0.1);
+  border: 2px solid #10b981;
+  border-radius: 15px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.beast-name-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.beast-name-input label {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.beast-name-input input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: white;
+  font-size: 1rem;
+  max-width: 300px;
+}
+
+.beast-name-input input:focus {
+  outline: none;
+  border-color: #34d399;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+}
+
+.create-beast-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.create-beast-btn.disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.create-beast-btn.ready:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .mausoleum-creator {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .preview-container {
+    height: 300px;
+  }
+  
+  .beast-creation {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .mausoleum-content {
+    padding: 20px;
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .mausoleum-header h1 {
+    font-size: 2rem;
+  }
+  
+  .part-tabs {
+    justify-content: center;
+  }
+  
+  .parts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+  }
+}
