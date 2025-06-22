@@ -29,6 +29,14 @@ interface BeastPart {
   type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
 }
 
+interface SoulEssence {
+  id: string;
+  name: string;
+  description: string;
+  imagePath: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+}
+
 interface CustomBeastData {
   name: string;
   head: BeastPart;
@@ -37,6 +45,7 @@ interface CustomBeastData {
   armRight: BeastPart;
   legLeft: BeastPart;
   legRight: BeastPart;
+  soulEssence: SoulEssence;
 }
 
 function App() {
@@ -136,6 +145,13 @@ function App() {
           source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
           type: 'legRight' as const
+        },
+        soulEssence: {
+          id: 'dim-soul',
+          name: 'Dim Soul',
+          description: 'A faint glimmer of spiritual energy',
+          imagePath: './images/items/dim-soul.png',
+          rarity: 'common' as const
         }
       };
       

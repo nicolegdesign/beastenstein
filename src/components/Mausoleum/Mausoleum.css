@@ -162,6 +162,25 @@
   z-index: 1;
 }
 
+/* Set Preview Styles */
+.set-preview {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.set-preview .part-image {
+  width: 45px;
+  height: 45px;
+  margin-bottom: 0;
+}
+
+.set-preview .set-left {
+  transform: scaleX(-1); /* Mirror the left arm/leg for symmetry */
+}
+
 /* Part Selection */
 .part-selection {
   background: rgba(59, 130, 246, 0.1);
@@ -324,6 +343,137 @@
   background: #059669;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Soul Essence Styles */
+.soul-option {
+  position: relative;
+  overflow: hidden;
+}
+
+.soul-image {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+.soul-rarity {
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+/* Rarity color schemes */
+.rarity-common {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.2);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+.rarity-uncommon {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.rarity-rare {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.rarity-epic {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.rarity-legendary {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  animation: legendary-glow 2s infinite alternate;
+}
+
+@keyframes legendary-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(245, 158, 11, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+  }
+}
+
+/* Soul option hover effects */
+.soul-option:hover .soul-image {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.5));
+}
+
+.soul-option.selected .soul-image {
+  filter: drop-shadow(0 0 15px currentColor);
+}
+
+.soul-option.rarity-legendary .soul-image {
+  animation: legendary-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes legendary-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Soul Essence Preview */
+.preview-soul-essence {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+}
+
+.preview-soul-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3));
+}
+
+.preview-soul-name {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.preview-soul-essence .rarity-legendary .preview-soul-image {
+  animation: legendary-preview-glow 1s infinite alternate;
+}
+
+@keyframes legendary-preview-glow {
+  0% {
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.8));
+  }
 }
 
 /* Responsive Design */
