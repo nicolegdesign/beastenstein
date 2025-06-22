@@ -554,6 +554,44 @@ function App() {
     }, 2500);
   }, [isResting]);
 
+  const handleSendToFarm = useCallback(() => {
+    const beastName = currentBeastData?.name || 'Beast';
+    const confirmed = window.confirm(
+      `Are you sure you want to send ${beastName} to the farm? This will permanently delete this beast and cannot be undone.`
+    );
+    
+    if (!confirmed) return;
+
+    // Remove beast data from state
+    setBeastData(prev => {
+      const newData = { ...prev };
+      delete newData[currentBeastId];
+      return newData;
+    });
+
+    // Remove from localStorage
+    localStorage.removeItem(`beastData_${currentBeastId}`);
+    localStorage.removeItem(`beastName_${currentBeastId}`);
+    
+    // If it's a custom beast, also remove the custom beast config
+    if (currentBeastId.startsWith('custom_')) {
+      localStorage.removeItem(`customBeast_${currentBeastId}`);
+    }
+
+    // Switch to a default beast (Emi) 
+    setCurrentBeastId('emi');
+    
+    // Trigger sidebar refresh to update the beast list
+    setSidebarRefreshTrigger(prev => prev + 1);
+    
+    // Show confirmation message
+    setToast({
+      message: `${beastName} has been sent to the farm 🚜`,
+      show: true,
+      type: 'info'
+    });
+  }, [currentBeastId, currentBeastData, setBeastData, setSidebarRefreshTrigger, setToast]);
+
   const handlePlay = useCallback(() => {
     play();
     createTennisBall();
@@ -602,14 +640,14 @@ function App() {
     resetToBaseStats();
     
     setToast({
-      message: '🔄 All beasts have been reset to base stats!',
+      message: 'Beast has been reset to default stats!',
       show: true,
       type: 'info'
     });
     
     // Close debug panel
     setShowDebug(false);
-  }, [resetToBaseStats]);
+  }, [resetToBaseStats, setToast, setShowDebug]);
 
   return (
     <div className="App">
@@ -748,6 +786,7 @@ function App() {
             onPlay={handlePlay}
             onRest={startRest}
             onTravel={handleTravel}
+            onSendToFarm={handleSendToFarm}
             isResting={isResting}
           />
         </>
