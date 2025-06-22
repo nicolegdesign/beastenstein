@@ -144,28 +144,28 @@ function App() {
           rarity: 'common' as const
         },
         armLeft: {
-          id: 'nightwolf-arm-l',
+          id: 'nightwolf-arms-left',
           name: 'Night Wolf Left Arm',
           imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
           type: 'armLeft' as const,
           rarity: 'common' as const
         },
         armRight: {
-          id: 'nightwolf-arm-r',
+          id: 'nightwolf-arms-right',
           name: 'Night Wolf Right Arm',
           imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
           type: 'armRight' as const,
           rarity: 'common' as const
         },
         legLeft: {
-          id: 'nightwolf-leg-l',
+          id: 'nightwolf-legs-left',
           name: 'Night Wolf Left Leg',
           imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
           type: 'legLeft' as const,
           rarity: 'common' as const
         },
         legRight: {
-          id: 'nightwolf-leg-r',
+          id: 'nightwolf-legs-right',
           name: 'Night Wolf Right Leg',
           imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
           type: 'legRight' as const,

@@ -304,6 +304,35 @@
   background-color: #f59e0b;
 }
 
+/* Part quantity display */
+.part-quantity {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-align: center;
+  min-width: 30px;
+}
+
+.part-quantity.out-of-stock {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Out of stock styling */
+.part-option.out-of-stock {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  filter: grayscale(0.5);
+}
+
+.part-option.out-of-stock:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
 /* Beast Creation */
 .beast-creation {
   grid-column: 1 / -1;

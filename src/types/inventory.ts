@@ -38,3 +38,20 @@ export const DEFAULT_ITEMS: InventoryItem[] = [
     effect: 'hunger'
   }
 ];
+
+// Beast part inventory types
+export interface PartInventoryItem {
+  id: string;
+  quantity: number;
+}
+
+export interface SoulEssenceInventoryItem {
+  id: string;
+  quantity: number;
+}
+
+export interface BeastPartInventory {
+  parts: Record<string, number>; // partId -> quantity (head, torso only)
+  sets: Record<string, number>; // setId -> quantity (arm sets, leg sets)
+  soulEssences: Record<string, number>; // soulEssenceId -> quantity
+}
