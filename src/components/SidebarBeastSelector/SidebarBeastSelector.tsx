@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BEASTS } from '../../types/beasts';
 import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
+import type { Personality } from '../../data/personalities';
 import './SidebarBeastSelector.css';
 
 // Maximum number of beasts allowed
@@ -11,6 +12,7 @@ interface CustomBeast {
   id: string;
   name: string;
   gender: 'male' | 'female';
+  personality: Personality;
   head: {
     id: string;
     name: string;

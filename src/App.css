@@ -101,11 +101,14 @@ body {
 
 .species-text {
   font-family: 'Nunito', sans-serif;
-  font-style: italic;
   font-weight: 400;
   /* Fallback for better italic support */
   -webkit-font-feature-settings: "kern" 1;
   font-feature-settings: "kern" 1;
+}
+
+.personality-text {
+  margin-right: 5px;
 }
 
 .species-text .gender-symbol {

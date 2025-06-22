@@ -16,9 +16,11 @@ import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
+import { getRandomPersonality, getDefaultPersonality } from './data/personalities';
 import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
+import type { Personality } from './data/personalities';
 import './App.css';
 
 interface BeastPart {
@@ -40,6 +42,7 @@ interface SoulEssence {
 interface CustomBeastData {
   name: string;
   gender: 'male' | 'female';
+  personality: Personality;
   head: BeastPart;
   torso: BeastPart;
   armLeft: BeastPart;
@@ -90,7 +93,7 @@ function App() {
         health: 100,
         level: 1,
         age: 0,
-        attack: 6,
+        attack: 7,  // Base 6 + 1 from Brave personality
         defense: 6,
         speed: 6,
         magic: 6,
@@ -106,6 +109,7 @@ function App() {
       const defaultCustomBeast = {
         name: 'Night Wolf',
         gender: 'male' as const,
+        personality: getDefaultPersonality(),
         head: {
           id: 'nightwolf-head',
           name: 'Night Wolf Head',
@@ -255,7 +259,7 @@ function App() {
     loadCustomBeastData();
   }, []); // Run only once on component mount
   
-  // Migration function to add gender to existing custom beasts
+  // Migration function to add gender and personality to existing custom beasts
   useEffect(() => {
     const migrateExistingBeasts = () => {
       // Get all custom beast keys from localStorage
@@ -266,14 +270,26 @@ function App() {
           const customBeastData = localStorage.getItem(key);
           if (customBeastData) {
             const customBeast = JSON.parse(customBeastData);
+            let shouldSave = false;
             
             // If the beast doesn't have a gender, assign one based on name
             if (!customBeast.gender) {
               // Default Night Wolf is male, others are random
               customBeast.gender = customBeast.name === 'Night Wolf' ? 'male' : 
                                    (Math.random() < 0.5 ? 'male' : 'female');
-              
-              // Save the updated beast data
+              shouldSave = true;
+            }
+            
+            // If the beast doesn't have a personality, assign one based on name
+            if (!customBeast.personality) {
+              // Default Night Wolf gets Brave personality, others get random
+              customBeast.personality = customBeast.name === 'Night Wolf' ? 
+                                        getDefaultPersonality() : getRandomPersonality();
+              shouldSave = true;
+            }
+            
+            // Save the updated beast data if changes were made
+            if (shouldSave) {
               localStorage.setItem(key, JSON.stringify(customBeast));
             }
           }
@@ -366,7 +382,22 @@ function App() {
     const customBeastId = `custom_${Date.now()}`;
     const now = Date.now();
     
-    // Create new beast data with base stats
+    // Create new beast data with base stats + personality modifiers
+    const baseStats = {
+      attack: 6,  // Balanced stats for custom beasts
+      defense: 6,
+      speed: 6,
+      magic: 6,
+    };
+    
+    // Apply personality stat modifiers
+    const modifiedStats = {
+      attack: baseStats.attack + (customBeast.personality.statModifiers.attack || 0),
+      defense: baseStats.defense + (customBeast.personality.statModifiers.defense || 0),
+      speed: baseStats.speed + (customBeast.personality.statModifiers.speed || 0),
+      magic: baseStats.magic + (customBeast.personality.statModifiers.magic || 0),
+    };
+    
     const newBeastData: IndividualBeastData = {
       name: customBeast.name,
       hunger: 50,
@@ -375,10 +406,10 @@ function App() {
       health: 100,
       level: 1,
       age: 0,
-      attack: 6,  // Balanced stats for custom beasts
-      defense: 6,
-      speed: 6,
-      magic: 6,
+      attack: modifiedStats.attack,
+      defense: modifiedStats.defense,
+      speed: modifiedStats.speed,
+      magic: modifiedStats.magic,
       isResting: false,
       createdAt: now,
       experience: 0
@@ -563,6 +594,22 @@ function App() {
       }
     }
     return { symbol: '', gender: '' };
+  }, []);
+
+  // Function to get personality name for a custom beast
+  const getBeastPersonality = useCallback((beastId: string): string => {
+    if (beastId.startsWith('custom_')) {
+      try {
+        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+        if (customBeastData) {
+          const customBeast = JSON.parse(customBeastData);
+          return customBeast.personality?.name || 'Unknown';
+        }
+      } catch (error) {
+        console.warn(`Failed to get personality for custom beast ${beastId}:`, error);
+      }
+    }
+    return '';
   }, []);
 
   // Menu handlers
@@ -849,6 +896,14 @@ function App() {
         <div className="beast-info-plate">
           <div className="info-text">
             <span className="species-text">
+              {(() => {
+                const personality = getBeastPersonality(currentBeastId);
+                return personality ? (
+                  <span className="personality-text">
+                    {personality}
+                  </span>
+                ) : null;
+              })()}
               {getBeastSpecies(currentBeastId)}
               {(() => {
                 const genderInfo = getBeastGender(currentBeastId);

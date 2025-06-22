@@ -87,6 +87,11 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
               <span className="stat-value">{combatStats.defense}</span>
             </div>
             <div className="stat-item">
+              <span className="stat-icon">⚡</span>
+              <span className="stat-label">Speed</span>
+              <span className="stat-value">{combatStats.speed}</span>
+            </div>
+            <div className="stat-item">
               <span className="stat-icon">🔮</span>
               <span className="stat-label">Magic</span>
               <span className="stat-value">{combatStats.magic}</span>

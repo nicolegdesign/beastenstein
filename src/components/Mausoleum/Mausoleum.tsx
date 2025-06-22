@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { getRandomPersonality } from '../../data/personalities';
+import type { Personality } from '../../data/personalities';
 import './Mausoleum.css';
 
 interface BeastPart {
@@ -30,6 +32,7 @@ interface SoulEssence {
 interface CustomBeast {
   name: string;
   gender: 'male' | 'female';
+  personality: Personality;
   head: BeastPart;
   torso: BeastPart;
   armLeft: BeastPart;
@@ -313,10 +316,13 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     if (isComplete()) {
       // Randomly assign gender (50/50 chance for male/female)
       const gender = Math.random() < 0.5 ? 'male' : 'female';
+      // Randomly assign personality
+      const personality = getRandomPersonality();
       
       onCreateBeast({
         name: beastName,
         gender: gender,
+        personality: personality,
         head: selectedParts.head!,
         torso: selectedParts.torso!,
         armLeft: selectedParts.armLeft!,
