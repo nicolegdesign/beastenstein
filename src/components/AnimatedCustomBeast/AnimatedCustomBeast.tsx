@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import type { BeastColorScheme } from '../../data/beastColors';
 import './AnimatedCustomBeast.css';
 
 interface AnimatedCustomBeastProps {
@@ -13,6 +14,7 @@ interface AnimatedCustomBeastProps {
     armRight: { imagePath: string };
     legLeft: { imagePath: string };
     legRight: { imagePath: string };
+    colorScheme?: BeastColorScheme;
   };
 }
 
@@ -21,6 +23,60 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
   size = 100,
   customBeast
 }) => {
+  // Function to calculate CSS filter values based on color scheme
+  const getColorFilterValues = (colorScheme: BeastColorScheme | undefined) => {
+    if (!colorScheme) return {};
+    
+    // Simple approach: map known color schemes to predefined filter values
+    const colorFilters: Record<string, Record<string, string | number>> = {
+      'natural': {
+        // No filters for natural - keep original colors
+      },
+      'shadow': {
+        '--beast-hue-rotation': '0deg',
+        '--beast-brightness': '0.4',
+        '--beast-contrast': '1.2'
+      },
+      'forest': {
+        '--beast-hue-rotation': '90deg',
+        '--beast-brightness': '0.8',
+        '--beast-contrast': '1.1'
+      },
+      'ocean': {
+        '--beast-hue-rotation': '200deg',
+        '--beast-brightness': '0.9',
+        '--beast-contrast': '1.1'
+      },
+      'crimson': {
+        '--beast-hue-rotation': '350deg',
+        '--beast-brightness': '1',
+        '--beast-contrast': '1.2'
+      },
+      'arctic': {
+        '--beast-hue-rotation': '200deg',
+        '--beast-brightness': '1.4',
+        '--beast-contrast': '0.8'
+      },
+      'golden': {
+        '--beast-hue-rotation': '50deg',
+        '--beast-brightness': '1.3',
+        '--beast-contrast': '1.1'
+      },
+      'ethereal': {
+        '--beast-hue-rotation': '280deg',
+        '--beast-brightness': '1.1',
+        '--beast-contrast': '1'
+      },
+      'cosmic': {
+        '--beast-hue-rotation': '260deg',
+        '--beast-brightness': '0.8',
+        '--beast-contrast': '1.3'
+      }
+    };
+    
+    return colorFilters[colorScheme.id] || colorFilters['natural'];
+  };
+
   // Adjust animation intensity based on mood
   const getAnimationScale = (): number => {
     switch (mood) {
@@ -39,12 +95,15 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
 
   return (
     <div 
-      className="animated-custom-beast"
+      className={`animated-custom-beast ${customBeast.colorScheme ? 'has-color-scheme' : ''}`}
+      data-mood={mood}
+      data-color-scheme={customBeast.colorScheme?.id}
       style={{ 
         width: size, 
         height: size * 1.2, // Maintain aspect ratio
-        position: 'relative'
-      }}
+        position: 'relative',
+        ...getColorFilterValues(customBeast.colorScheme)
+      } as React.CSSProperties}
     >
       <div className="custom-beast-container">
         

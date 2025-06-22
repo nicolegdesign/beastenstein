@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getRandomPersonality } from '../../data/personalities';
 import type { Personality } from '../../data/personalities';
+import { BEAST_COLOR_SCHEMES, getDefaultColorScheme } from '../../data/beastColors';
+import type { BeastColorScheme } from '../../data/beastColors';
 import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
 import './Mausoleum.css';
 
@@ -41,6 +43,7 @@ interface CustomBeast {
   legLeft: BeastPart;
   legRight: BeastPart;
   soulEssence: SoulEssence;
+  colorScheme: BeastColorScheme;
 }
 
 interface MausoleumProps {
@@ -173,8 +176,9 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     legLeft: undefined,
     legRight: undefined,
     soulEssence: undefined,
+    colorScheme: getDefaultColorScheme(),
   });
-  const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'soulEssence'>('head');
+  const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'soulEssence' | 'colorScheme'>('head');
 
   const getPartsOfType = (type: BeastPart['type']) => {
     return AVAILABLE_PARTS.filter(part => part.type === type);
@@ -248,6 +252,14 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     }));
   };
 
+  const selectColorScheme = (colorScheme: BeastColorScheme) => {
+    console.log('Selected color scheme:', colorScheme);
+    setSelectedParts(prev => ({
+      ...prev,
+      colorScheme: colorScheme
+    }));
+  };
+
   const isComplete = () => {
     return beastName.trim() !== '' && 
            selectedParts.head && 
@@ -256,7 +268,8 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
            selectedParts.armRight && 
            selectedParts.legLeft && 
            selectedParts.legRight &&
-           selectedParts.soulEssence;
+           selectedParts.soulEssence &&
+           selectedParts.colorScheme;
   };
 
   const handleCreate = () => {
@@ -310,9 +323,64 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         legLeft: selectedParts.legLeft!,
         legRight: selectedParts.legRight!,
         soulEssence: selectedParts.soulEssence!,
+        colorScheme: selectedParts.colorScheme!,
       });
       console.log("Consumed?", consumed);
     }
+  };
+
+  // Function to calculate CSS filter values based on color scheme
+  const getColorFilterValues = (colorScheme: BeastColorScheme | undefined) => {
+    if (!colorScheme) return {};
+    
+    // Simple approach: map known color schemes to predefined filter values
+    const colorFilters: Record<string, Record<string, string | number>> = {
+      'natural': {
+        // No filters for natural - keep original colors
+      },
+      'shadow': {
+        '--beast-hue-rotation': '0deg',
+        '--beast-brightness': '0.4',
+        '--beast-contrast': '1.2'
+      },
+      'forest': {
+        '--beast-hue-rotation': '90deg',
+        '--beast-brightness': '0.8',
+        '--beast-contrast': '1.1'
+      },
+      'ocean': {
+        '--beast-hue-rotation': '200deg',
+        '--beast-brightness': '0.9',
+        '--beast-contrast': '1.1'
+      },
+      'crimson': {
+        '--beast-hue-rotation': '350deg',
+        '--beast-brightness': '1',
+        '--beast-contrast': '1.2'
+      },
+      'arctic': {
+        '--beast-hue-rotation': '200deg',
+        '--beast-brightness': '1.4',
+        '--beast-contrast': '0.8'
+      },
+      'golden': {
+        '--beast-hue-rotation': '50deg',
+        '--beast-brightness': '1.3',
+        '--beast-contrast': '1.1'
+      },
+      'ethereal': {
+        '--beast-hue-rotation': '280deg',
+        '--beast-brightness': '1.1',
+        '--beast-contrast': '1'
+      },
+      'cosmic': {
+        '--beast-hue-rotation': '260deg',
+        '--beast-brightness': '0.8',
+        '--beast-contrast': '1.3'
+      }
+    };
+    
+    return colorFilters[colorScheme.id] || colorFilters['natural'];
   };
 
   const partTypes = [
@@ -321,6 +389,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     { key: 'armSet' as const, label: 'Arms' },
     { key: 'legSet' as const, label: 'Legs' },
     { key: 'soulEssence' as const, label: 'Soul Essence' },
+    { key: 'colorScheme' as const, label: 'Colors' },
   ];
 
   const hasSelectedSet = (setType: 'armSet' | 'legSet') => {
@@ -358,34 +427,64 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         <div className="mausoleum-creator">
           {/* Beast Preview */}
           <div className="beast-preview">
-            <h3>Beast Preview</h3>          <div className="preview-container">
-            {selectedParts.head && (
-              <img src={selectedParts.head.imagePath} alt="Head" className="preview-part preview-head" />
-            )}
-            {selectedParts.torso && (
-              <img src={selectedParts.torso.imagePath} alt="Torso" className="preview-part preview-torso" />
-            )}
-            {selectedParts.armLeft && (
-              <img src={selectedParts.armLeft.imagePath} alt="Left Arm" className="preview-part preview-arm-left" />
-            )}
-            {selectedParts.armRight && (
-              <img src={selectedParts.armRight.imagePath} alt="Right Arm" className="preview-part preview-arm-right" />
-            )}
-            {selectedParts.legLeft && (
-              <img src={selectedParts.legLeft.imagePath} alt="Left Leg" className="preview-part preview-leg-left" />
-            )}
-            {selectedParts.legRight && (
-              <img src={selectedParts.legRight.imagePath} alt="Right Leg" className="preview-part preview-leg-right" />
-            )}
-            
-            {/* Soul Essence Display */}
-            {selectedParts.soulEssence && (
-              <div className="preview-soul-essence">
-                <img src={selectedParts.soulEssence.imagePath} alt={selectedParts.soulEssence.name} className="preview-soul-image" />
-                
-              </div>
-            )}
-          </div>
+            <h3>Beast Preview</h3>
+            <div 
+              className={`preview-container ${selectedParts.colorScheme ? 'has-color-scheme' : ''}`}
+              data-color-scheme={selectedParts.colorScheme?.id}
+              style={getColorFilterValues(selectedParts.colorScheme) as React.CSSProperties}
+            >
+              {selectedParts.head && (
+                <img src={selectedParts.head.imagePath} alt="Head" className="preview-part preview-head" />
+              )}
+              {selectedParts.torso && (
+                <img src={selectedParts.torso.imagePath} alt="Torso" className="preview-part preview-torso" />
+              )}
+              {selectedParts.armLeft && (
+                <img src={selectedParts.armLeft.imagePath} alt="Left Arm" className="preview-part preview-arm-left" />
+              )}
+              {selectedParts.armRight && (
+                <img src={selectedParts.armRight.imagePath} alt="Right Arm" className="preview-part preview-arm-right" />
+              )}
+              {selectedParts.legLeft && (
+                <img src={selectedParts.legLeft.imagePath} alt="Left Leg" className="preview-part preview-leg-left" />
+              )}
+              {selectedParts.legRight && (
+                <img src={selectedParts.legRight.imagePath} alt="Right Leg" className="preview-part preview-leg-right" />
+              )}
+              
+              {/* Soul Essence Display */}
+              {selectedParts.soulEssence && (
+                <div className="preview-soul-essence">
+                  <img src={selectedParts.soulEssence.imagePath} alt={selectedParts.soulEssence.name} className="preview-soul-image" />
+                </div>
+              )}
+              
+              {/* Color Scheme Display */}
+              {selectedParts.colorScheme && (
+                <div className="preview-color-scheme">
+                  <div className="color-scheme-info">
+                    <span className="color-scheme-name">{selectedParts.colorScheme.name}</span>
+                    <div className="color-scheme-swatches">
+                      <div 
+                        className="color-swatch-mini primary" 
+                        style={{ backgroundColor: selectedParts.colorScheme.primary }}
+                        title={`Primary: ${selectedParts.colorScheme.primary}`}
+                      />
+                      <div 
+                        className="color-swatch-mini secondary" 
+                        style={{ backgroundColor: selectedParts.colorScheme.secondary }}
+                        title={`Secondary: ${selectedParts.colorScheme.secondary}`}
+                      />
+                      <div 
+                        className="color-swatch-mini accent" 
+                        style={{ backgroundColor: selectedParts.colorScheme.accent }}
+                        title={`Accent: ${selectedParts.colorScheme.accent}`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Part Selection */}
@@ -404,6 +503,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                   {partType.key === 'armSet' && hasSelectedSet('armSet') && <span className="tab-indicator">✓</span>}
                   {partType.key === 'legSet' && hasSelectedSet('legSet') && <span className="tab-indicator">✓</span>}
                   {partType.key === 'soulEssence' && selectedParts.soulEssence && <span className="tab-indicator">✓</span>}
+                  {partType.key === 'colorScheme' && selectedParts.colorScheme && <span className="tab-indicator">✓</span>}
                 </button>
               ))}
             </div>
@@ -504,6 +604,39 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                     </div>
                   );
                 })
+              }
+
+              {/* Render color schemes */}
+              {activePartType === 'colorScheme' && 
+                BEAST_COLOR_SCHEMES.map(colorScheme => (
+                  <div
+                    key={colorScheme.id}
+                    className={`part-option color-option ${selectedParts.colorScheme?.id === colorScheme.id ? 'selected' : ''} rarity-${colorScheme.rarity}`}
+                    onClick={() => selectColorScheme(colorScheme)}
+                  >
+                    <div className="color-preview">
+                      <div 
+                        className="color-swatch primary" 
+                        style={{ backgroundColor: colorScheme.primary }}
+                        title={`Primary: ${colorScheme.primary}`}
+                      />
+                      <div 
+                        className="color-swatch secondary" 
+                        style={{ backgroundColor: colorScheme.secondary }}
+                        title={`Secondary: ${colorScheme.secondary}`}
+                      />
+                      <div 
+                        className="color-swatch accent" 
+                        style={{ backgroundColor: colorScheme.accent }}
+                        title={`Accent: ${colorScheme.accent}`}
+                      />
+                    </div>
+                    <div className="part-info">
+                      <span className="part-name">{colorScheme.name}</span>
+                      <span className={`color-rarity rarity-${colorScheme.rarity}`}>{colorScheme.rarity}</span>
+                    </div>
+                  </div>
+                ))
               }
             </div>
           </div>

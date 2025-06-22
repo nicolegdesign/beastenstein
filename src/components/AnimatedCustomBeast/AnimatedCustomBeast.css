@@ -72,3 +72,62 @@
 .animated-custom-beast[data-mood="rest"] .custom-beast-part {
   opacity: 0.9;
 }
+
+/* Color scheme support */
+.animated-custom-beast.has-color-scheme .custom-beast-part {
+  filter: 
+    sepia(1) 
+    saturate(2) 
+    hue-rotate(var(--beast-hue-rotation, 0deg)) 
+    brightness(var(--beast-brightness, 1))
+    contrast(var(--beast-contrast, 1));
+  transition: filter 0.3s ease;
+}
+
+/* Natural color scheme - no filters applied */
+.animated-custom-beast.has-color-scheme[data-color-scheme="natural"] .custom-beast-part {
+  filter: none;
+}
+
+/* Maintain mood-specific styling with color schemes */
+.animated-custom-beast.has-color-scheme[data-mood="happy"] .custom-beast-part {
+  filter: 
+    sepia(1) 
+    saturate(2.5) 
+    hue-rotate(var(--beast-hue-rotation, 0deg)) 
+    brightness(calc(var(--beast-brightness, 1) * 1.1))
+    contrast(var(--beast-contrast, 1));
+}
+
+.animated-custom-beast.has-color-scheme[data-mood="sad"] .custom-beast-part {
+  filter: 
+    sepia(1) 
+    saturate(1.5) 
+    hue-rotate(var(--beast-hue-rotation, 0deg)) 
+    brightness(calc(var(--beast-brightness, 1) * 0.8))
+    contrast(var(--beast-contrast, 1));
+}
+
+.animated-custom-beast.has-color-scheme[data-mood="rest"] .custom-beast-part {
+  filter: 
+    sepia(1) 
+    saturate(2) 
+    hue-rotate(var(--beast-hue-rotation, 0deg)) 
+    brightness(var(--beast-brightness, 1))
+    contrast(var(--beast-contrast, 1));
+  opacity: 0.9;
+}
+
+/* Natural color scheme mood overrides - no filters, just mood effects */
+.animated-custom-beast.has-color-scheme[data-color-scheme="natural"][data-mood="happy"] .custom-beast-part {
+  filter: brightness(1.1) saturate(1.2);
+}
+
+.animated-custom-beast.has-color-scheme[data-color-scheme="natural"][data-mood="sad"] .custom-beast-part {
+  filter: brightness(0.8) saturate(0.7);
+}
+
+.animated-custom-beast.has-color-scheme[data-color-scheme="natural"][data-mood="rest"] .custom-beast-part {
+  filter: none;
+  opacity: 0.9;
+}

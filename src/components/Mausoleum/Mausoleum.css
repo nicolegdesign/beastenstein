@@ -108,6 +108,23 @@
   overflow: hidden;
 }
 
+/* Apply color scheme to beast parts using CSS filters */
+.preview-container.has-color-scheme .preview-part {
+  /* Use CSS filters to recolor the beast parts based on the selected color scheme */
+  filter: 
+    sepia(1) 
+    saturate(2) 
+    hue-rotate(var(--beast-hue-rotation, 0deg)) 
+    brightness(var(--beast-brightness, 1))
+    contrast(var(--beast-contrast, 1));
+  transition: filter 0.3s ease;
+}
+
+/* Natural color scheme - no filters applied */
+.preview-container.has-color-scheme[data-color-scheme="natural"] .preview-part {
+  filter: none;
+}
+
 .preview-part {
   position: absolute;
   object-fit: contain;
@@ -522,6 +539,92 @@
   100% {
     filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.8));
   }
+}
+
+/* Color Selection Styles */
+.color-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.color-option:hover {
+  transform: translateY(-2px);
+}
+
+.color-preview {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected .color-preview {
+  background: rgba(139, 92, 246, 0.3);
+  border: 2px solid #8b5cf6;
+}
+
+.color-option.selected .color-swatch {
+  border-color: #8b5cf6;
+}
+
+.color-rarity {
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Color scheme preview in beast preview */
+.preview-color-scheme {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.color-scheme-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-scheme-name {
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.color-scheme-swatches {
+  display: flex;
+  gap: 3px;
+}
+
+.color-swatch-mini {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Responsive Design */

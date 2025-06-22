@@ -18,10 +18,12 @@ import { usePooManager } from './hooks/usePooManager';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
 import { getRandomPersonality, getDefaultPersonality } from './data/personalities';
+import { getDefaultColorScheme } from './data/beastColors';
 import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import type { Personality } from './data/personalities';
+import type { BeastColorScheme } from './data/beastColors';
 import './App.css';
 
 interface BeastPart {
@@ -51,6 +53,7 @@ interface CustomBeastData {
   legLeft: BeastPart;
   legRight: BeastPart;
   soulEssence: SoulEssence;
+  colorScheme: BeastColorScheme;
 }
 
 // Function to get max level based on soul essence
@@ -178,7 +181,8 @@ function App() {
           description: 'A faint glimmer of spiritual energy',
           imagePath: './images/items/dim-soul.png',
           rarity: 'common' as const
-        }
+        },
+        colorScheme: getDefaultColorScheme()
       };
       
       localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
@@ -305,6 +309,12 @@ function App() {
               // Default Night Wolf gets Brave personality, others get random
               customBeast.personality = customBeast.name === 'Night Wolf' ? 
                                         getDefaultPersonality() : getRandomPersonality();
+              shouldSave = true;
+            }
+            
+            // If the beast doesn't have a color scheme, assign the default one
+            if (!customBeast.colorScheme) {
+              customBeast.colorScheme = getDefaultColorScheme();
               shouldSave = true;
             }
             

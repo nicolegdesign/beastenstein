@@ -3,6 +3,7 @@ import { BEASTS } from '../../types/beasts';
 import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
 import type { Personality } from '../../data/personalities';
+import type { BeastColorScheme } from '../../data/beastColors';
 import './SidebarBeastSelector.css';
 
 // Maximum number of beasts allowed
@@ -55,6 +56,7 @@ interface CustomBeast {
     type: 'legRight';
     rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
+  colorScheme?: BeastColorScheme;
 }
 
 interface SidebarBeastSelectorProps {
