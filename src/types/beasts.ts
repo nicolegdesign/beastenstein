@@ -61,6 +61,22 @@ export const BEASTS: BeastConfig[] = [
       magic: 5,
     },
   },
+  {
+    id: 'mountaindragon',
+    name: 'Mountain Dragon',
+    images: {
+      normal: './images/beasts/mountain-dragon/mountain-dragon-head.svg', // Using head as placeholder
+      happy: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
+      sad: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
+      rest: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
+    },
+    defaultStats: {
+      attack: 8,
+      defense: 12,
+      speed: 4,
+      magic: 10,
+    },
+  },
 ];
 
 export const getBeastById = (id: string): BeastConfig | undefined => {

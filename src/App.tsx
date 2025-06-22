@@ -77,6 +77,22 @@ function App() {
         isResting: false,
         createdAt: now,
         experience: 0
+      },
+      mountaindragon: {
+        name: localStorage.getItem('beastName_mountaindragon') || 'Mountain Dragon',
+        hunger: 50,
+        happiness: 50,
+        energy: 50,
+        health: 100,
+        level: 1,
+        age: 0,
+        attack: 5,
+        defense: 5,
+        speed: 5,
+        magic: 5,
+        isResting: false,
+        createdAt: now,
+        experience: 0
       }
     };
     

@@ -2,6 +2,7 @@ import React from 'react';
 import type { BeastMood } from '../../types/game';
 import { getBeastById } from '../../types/beasts';
 import { AnimatedNightWolf } from '../AnimatedNightWolf/AnimatedNightWolf';
+import { AnimatedMountainDragon } from '../AnimatedMountainDragon/AnimatedMountainDragon';
 import './Beast.css';
 
 interface BeastProps {
@@ -49,6 +50,17 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
       const animatedMood = isResting ? 'rest' : mood;
       return (
         <AnimatedNightWolf 
+          mood={animatedMood} 
+          size={500} // Adjust size as needed
+        />
+      );
+    }
+    
+    // Use animated SVG for Mountain Dragon
+    if (beastId === 'mountaindragon') {
+      const animatedMood = isResting ? 'rest' : mood;
+      return (
+        <AnimatedMountainDragon 
           mood={animatedMood} 
           size={500} // Adjust size as needed
         />
