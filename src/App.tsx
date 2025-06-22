@@ -3,7 +3,6 @@ import { StatusBar } from './components/StatusBar/StatusBar';
 import { EditableName } from './components/EditableName/EditableName';
 import { BeastDen } from './components/BeastDen/BeastDen';
 import { ActionButtons } from './components/ActionButtons/ActionButtons';
-import { BeastSelector } from './components/BeastSelector/BeastSelector';
 import { SidebarBeastSelector } from './components/SidebarBeastSelector/SidebarBeastSelector';
 import { Mausoleum } from './components/Mausoleum/Mausoleum';
 import { Menu } from './components/Menu/Menu';
@@ -15,7 +14,6 @@ import { Debug } from './components/Debug/Debug';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
-import { getBeastById } from './types/beasts';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
 import type { IndividualBeastData } from './types/game';
@@ -43,99 +41,116 @@ interface CustomBeastData {
 
 function App() {
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
-  const [currentBeastId, setCurrentBeastId] = useState('emi');
   
-  // Initialize individual beast data from localStorage or defaults
+  // Initialize individual beast data from localStorage (custom beasts only)
   const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
-    const now = Date.now();
-    const defaultData: Record<string, IndividualBeastData> = {
-      emi: {
-        name: localStorage.getItem('beastName_emi') || 'Emi',
+    const customBeastData: Record<string, IndividualBeastData> = {};
+    
+    // Load all custom beast data from localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('beastData_custom_')) {
+        try {
+          const beastId = key.replace('beastData_', '');
+          const savedData = localStorage.getItem(key);
+          if (savedData) {
+            const parsed = JSON.parse(savedData);
+            // Migrate old data without createdAt timestamp
+            if (!parsed.createdAt) {
+              parsed.createdAt = Date.now();
+            }
+            customBeastData[beastId] = parsed;
+          }
+        } catch (error) {
+          console.warn(`Failed to load beast data for ${key}:`, error);
+        }
+      }
+    }
+    
+    // If no custom beasts exist, create default Night Wolf
+    if (Object.keys(customBeastData).length === 0) {
+      const defaultBeastId = 'custom_default_nightwolf';
+      const now = Date.now();
+      
+      customBeastData[defaultBeastId] = {
+        name: 'Night Wolf',
         hunger: 50,
         happiness: 50,
         energy: 50,
         health: 100,
         level: 1,
         age: 0,
-        attack: 10,
-        defense: 8,
-        speed: 12,
+        attack: 6,
+        defense: 6,
+        speed: 6,
         magic: 6,
         isResting: false,
         createdAt: now,
         experience: 0
-      },
-      hobbes: {
-        name: localStorage.getItem('beastName_hobbes') || 'Hobbes',
-        hunger: 50,
-        happiness: 50,
-        energy: 50,
-        health: 100,
-        level: 1,
-        age: 0,
-        attack: 12,
-        defense: 10,
-        speed: 8,
-        magic: 8,
-        isResting: false,
-        createdAt: now,
-        experience: 0
-      },
-      nightwolf: {
-        name: localStorage.getItem('beastName_nightwolf') || 'Night Wolf',
-        hunger: 50,
-        happiness: 50,
-        energy: 50,
-        health: 100,
-        level: 1,
-        age: 0,
-        attack: 5,
-        defense: 5,
-        speed: 5,
-        magic: 5,
-        isResting: false,
-        createdAt: now,
-        experience: 0
-      },
-      mountaindragon: {
-        name: localStorage.getItem('beastName_mountaindragon') || 'Mountain Dragon',
-        hunger: 50,
-        happiness: 50,
-        energy: 50,
-        health: 100,
-        level: 1,
-        age: 0,
-        attack: 5,
-        defense: 5,
-        speed: 5,
-        magic: 5,
-        isResting: false,
-        createdAt: now,
-        experience: 0
-      }
-    };
-    
-    // Load saved beast data from localStorage
-    Object.keys(defaultData).forEach(beastId => {
-      const savedData = localStorage.getItem(`beastData_${beastId}`);
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          // Migrate old data without createdAt timestamp
-          if (!parsed.createdAt) {
-            parsed.createdAt = now;
-          }
-          defaultData[beastId] = { ...defaultData[beastId], ...parsed };
-        } catch (error) {
-          console.warn(`Failed to parse saved data for beast ${beastId}:`, error);
+      };
+      
+      // Save the default beast data
+      localStorage.setItem(`beastData_${defaultBeastId}`, JSON.stringify(customBeastData[defaultBeastId]));
+      
+      // Create and save the default custom beast configuration
+      const defaultCustomBeast = {
+        name: 'Night Wolf',
+        head: {
+          id: 'nightwolf-head',
+          name: 'Night Wolf Head',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
+          type: 'head' as const
+        },
+        torso: {
+          id: 'nightwolf-torso',
+          name: 'Night Wolf Torso',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
+          type: 'torso' as const
+        },
+        armLeft: {
+          id: 'nightwolf-arm-l',
+          name: 'Night Wolf Left Arm',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
+          type: 'armLeft' as const
+        },
+        armRight: {
+          id: 'nightwolf-arm-r',
+          name: 'Night Wolf Right Arm',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
+          type: 'armRight' as const
+        },
+        legLeft: {
+          id: 'nightwolf-leg-l',
+          name: 'Night Wolf Left Leg',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
+          type: 'legLeft' as const
+        },
+        legRight: {
+          id: 'nightwolf-leg-r',
+          name: 'Night Wolf Right Leg',
+          source: 'Night Wolf',
+          imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
+          type: 'legRight' as const
         }
-      }
-    });
+      };
+      
+      localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
+    }
     
-    return defaultData;
+    return customBeastData;
+  });
+
+  // Set current beast ID to first available custom beast
+  const [currentBeastId, setCurrentBeastId] = useState<string>(() => {
+    const beastIds = Object.keys(beastData);
+    return beastIds.length > 0 ? beastIds[0] : 'custom_default_nightwolf';
   });
   
-  const [showBeastSelector, setShowBeastSelector] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
@@ -263,12 +278,11 @@ function App() {
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
 
   const handleBeastChange = useCallback((beastId: string) => {
-    const beastConfig = getBeastById(beastId);
-    const hasCustomBeastData = beastData[beastId]; // Check if custom beast data exists
+    // All beasts are now custom beasts
+    const hasCustomBeastData = beastData[beastId];
     
-    if (beastConfig || hasCustomBeastData) {
+    if (hasCustomBeastData) {
       setCurrentBeastId(beastId);
-      setShowBeastSelector(false); // Close selector after selection
     }
   }, [beastData]);
 
@@ -426,76 +440,65 @@ function App() {
     setIsInitialLoad(true); // Reset initial load flag when switching beasts
   }, [currentBeastId, currentBeastData.level]);
 
-  // Function to get species name based on head and torso parts
+  // Function to get species name based on head and torso parts (custom beasts only)
   const getBeastSpecies = useCallback((beastId: string): string => {
-    // For default beasts, return predefined species names
-    switch (beastId) {
-      case 'emi':
-        return 'Black Dog';
-      case 'hobbes':
-        return 'Tiger Dog';
-      case 'nightwolf':
-        return 'Night Wolf';
-      case 'mountaindragon':
-        return 'Mountain Dragon';
-      default:
-        // For custom beasts, extract species from parts
-        if (beastId.startsWith('custom_')) {
-          try {
-            const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-            if (customBeastData) {
-              const customBeast = JSON.parse(customBeastData);
-              
-              // Extract species from head part ID (e.g., "nightwolf-head" -> "wolf")
-              const headParts = customBeast.head?.id?.split('-') || [];
-              let headSpecies = '';
-              if (headParts.length >= 2) {
-                // For nightwolf-head, take "wolf" (second part of "nightwolf")
-                const beastName = headParts[0]; // "nightwolf" or "mountaindragon"
-                if (beastName === 'nightwolf') {
-                  headSpecies = 'wolf';
-                } else if (beastName === 'mountaindragon') {
-                  headSpecies = 'dragon';
-                } else {
-                  // For other formats, try to extract the last meaningful part
-                  headSpecies = beastName.replace(/night|mountain/i, '').toLowerCase() || 'beast';
-                }
-              }
-              
-              // Extract species from torso part ID (e.g., "mountaindragon-torso" -> "mountain")
-              const torsoParts = customBeast.torso?.id?.split('-') || [];
-              let torsoSpecies = '';
-              if (torsoParts.length >= 1) {
-                const beastName = torsoParts[0]; // "nightwolf" or "mountaindragon"
-                if (beastName === 'nightwolf') {
-                  torsoSpecies = 'night';
-                } else if (beastName === 'mountaindragon') {
-                  torsoSpecies = 'mountain';
-                } else {
-                  // For other formats, try to extract the first meaningful part
-                  const match = beastName.match(/^(night|mountain|desert|forest|ice|fire)/i);
-                  torsoSpecies = match ? match[1].toLowerCase() : beastName;
-                }
-              }
-              
-              if (headSpecies && torsoSpecies) {
-                // Capitalize first letter of each word
-                const capitalizedTorso = torsoSpecies.charAt(0).toUpperCase() + torsoSpecies.slice(1);
-                const capitalizedHead = headSpecies.charAt(0).toUpperCase() + headSpecies.slice(1);
-                return `${capitalizedTorso} ${capitalizedHead}`;
-              }
+    // All beasts are now custom beasts
+    if (beastId.startsWith('custom_')) {
+      try {
+        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+        if (customBeastData) {
+          const customBeast = JSON.parse(customBeastData);
+          
+          // Extract species from head part ID (e.g., "nightwolf-head" -> "wolf")
+          const headParts = customBeast.head?.id?.split('-') || [];
+          let headSpecies = '';
+          if (headParts.length >= 2) {
+            // For nightwolf-head, take "wolf" (second part of "nightwolf")
+            const beastName = headParts[0]; // "nightwolf" or "mountaindragon"
+            if (beastName === 'nightwolf') {
+              headSpecies = 'wolf';
+            } else if (beastName === 'mountaindragon') {
+              headSpecies = 'dragon';
+            } else {
+              // For other formats, try to extract the last meaningful part
+              headSpecies = beastName.replace(/night|mountain/i, '').toLowerCase() || 'beast';
             }
-          } catch (error) {
-            console.warn(`Failed to determine species for custom beast ${beastId}:`, error);
+          }
+          
+          // Extract species from torso part ID (e.g., "mountaindragon-torso" -> "mountain")
+          const torsoParts = customBeast.torso?.id?.split('-') || [];
+          let torsoSpecies = '';
+          if (torsoParts.length >= 1) {
+            const beastName = torsoParts[0]; // "nightwolf" or "mountaindragon"
+            if (beastName === 'nightwolf') {
+              torsoSpecies = 'night';
+            } else if (beastName === 'mountaindragon') {
+              torsoSpecies = 'mountain';
+            } else {
+              // For other formats, try to extract the first meaningful part
+              const match = beastName.match(/^(night|mountain|desert|forest|ice|fire)/i);
+              torsoSpecies = match ? match[1].toLowerCase() : beastName;
+            }
+          }
+          
+          if (headSpecies && torsoSpecies) {
+            // Capitalize first letter of each word
+            const capitalizedTorso = torsoSpecies.charAt(0).toUpperCase() + torsoSpecies.slice(1);
+            const capitalizedHead = headSpecies.charAt(0).toUpperCase() + headSpecies.slice(1);
+            return `${capitalizedTorso} ${capitalizedHead}`;
           }
         }
-        return 'Unknown Species';
+      } catch (error) {
+        console.warn(`Failed to determine species for custom beast ${beastId}:`, error);
+      }
     }
+    return 'Unknown Species';
   }, []);
 
   // Menu handlers
   const handleSelectBeast = useCallback(() => {
-    setShowBeastSelector(true);
+    // Beast selection is now handled by the sidebar - could open Mausoleum instead
+    setShowMausoleum(true);
   }, []);
 
   const handleOptions = useCallback(() => {
@@ -635,6 +638,18 @@ function App() {
 
   const handleSendToFarm = useCallback(() => {
     const beastName = currentBeastData?.name || 'Beast';
+    
+    // Check if this is the last beast - prevent deletion if so
+    const remainingBeasts = Object.keys(beastData).filter(id => id !== currentBeastId);
+    if (remainingBeasts.length === 0) {
+      setToast({
+        message: 'Cannot send the last beast to the farm! You must have at least one beast.',
+        show: true,
+        type: 'info'
+      });
+      return;
+    }
+    
     const confirmed = window.confirm(
       `Are you sure you want to send ${beastName} to the farm? This will permanently delete this beast and cannot be undone.`
     );
@@ -657,8 +672,11 @@ function App() {
       localStorage.removeItem(`customBeast_${currentBeastId}`);
     }
 
-    // Switch to a default beast (Emi) 
-    setCurrentBeastId('emi');
+    // Switch to the first remaining beast
+    const firstRemainingBeast = Object.keys(beastData).find(id => id !== currentBeastId);
+    if (firstRemainingBeast) {
+      setCurrentBeastId(firstRemainingBeast);
+    }
     
     // Trigger sidebar refresh to update the beast list
     setSidebarRefreshTrigger(prev => prev + 1);
@@ -669,7 +687,7 @@ function App() {
       show: true,
       type: 'info'
     });
-  }, [currentBeastId, currentBeastData, setBeastData, setSidebarRefreshTrigger, setToast]);
+  }, [currentBeastId, currentBeastData, beastData, setBeastData, setSidebarRefreshTrigger, setToast]);
 
   const handlePlay = useCallback(() => {
     play();
@@ -730,31 +748,15 @@ function App() {
 
   return (
     <div className="App">
-      {/* Don't render if beast data isn't loaded yet */}
-      {!currentBeastData ? (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh', 
-          color: 'white', 
-          fontSize: '18px' 
-        }}>
-          Loading beast data...
-        </div>
-      ) : (
-        <>
-          <Menu 
-            onSelectBeast={handleSelectBeast}
-            onOptions={handleOptions}
-            onSave={handleSave}
-            onInventory={handleInventory}
-            onBattleArena={handleBattleArena}
-            onDebug={handleDebug}
-            inBattleArena={inBattleArena}
-          />
-
-      
+      <Menu 
+        onSelectBeast={handleSelectBeast}
+        onOptions={handleOptions}
+        onSave={handleSave}
+        onInventory={handleInventory}
+        onBattleArena={handleBattleArena}
+        onDebug={handleDebug}
+        inBattleArena={inBattleArena}
+      />
 
       {/* Beast name and info in upper left */}
       <div className="beast-header">
@@ -793,16 +795,6 @@ function App() {
         }}
         refreshTrigger={sidebarRefreshTrigger}
       />
-      
-      {showBeastSelector && (
-        <BeastSelector 
-          currentBeastId={currentBeastId}
-          onBeastChange={handleBeastChange}
-          onClose={() => setShowBeastSelector(false)}
-          isModal={true}
-          beastData={beastData}
-        />
-      )}
       
       {showInventory && (
         <Inventory 
@@ -883,8 +875,6 @@ function App() {
         <div className="level-up-effect">
           🎉 LEVEL UP! 🎉
         </div>
-      )}
-        </>
       )}
     </div>
   );
