@@ -857,6 +857,12 @@ function App() {
             beastPosition={position}
             beastId={currentBeastId}
             hunger={stats.hunger}
+            combatStats={{
+              attack: currentBeastData?.attack || 0,
+              defense: currentBeastData?.defense || 0,
+              speed: currentBeastData?.speed || 0,
+              magic: currentBeastData?.magic || 0
+            }}
             poos={poos}
             onFeedFromBowl={handleFeed}
             onRestFromBed={startRest}
