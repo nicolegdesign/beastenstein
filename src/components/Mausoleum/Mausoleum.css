@@ -31,6 +31,7 @@
   padding: 30px;
   max-width: 90vw;
   max-height: 90vh;
+  width: 70%;
   overflow-y: auto;
   border: 3px solid #8b5cf6;
   box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
@@ -235,6 +236,8 @@
 }
 
 .part-option {
+  max-width: 150px;
+  max-height: 150px;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid transparent;
   border-radius: 10px;
@@ -242,16 +245,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
-}
-
-.part-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .part-option.selected {
   border-color: #10b981;
-  background: rgba(16, 185, 129, 0.2);
 }
 
 .part-image {
@@ -273,10 +274,34 @@
   font-weight: 500;
 }
 
-.part-source {
+.part-rarity {
   font-size: 0.7rem;
-  color: #9ca3af;
-  font-style: italic;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.part-rarity.rarity-common {
+  background-color: #6b7280;
+}
+
+.part-rarity.rarity-uncommon {
+  background-color: #10b981;
+}
+
+.part-rarity.rarity-rare {
+  background-color: #3b82f6;
+}
+
+.part-rarity.rarity-epic {
+  background-color: #8b5cf6;
+}
+
+.part-rarity.rarity-legendary {
+  background-color: #f59e0b;
 }
 
 /* Beast Creation */
@@ -369,6 +394,12 @@
   display: inline-block;
 }
 
+.part-description {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
 /* Rarity color schemes */
 .rarity-common {
   color: #9ca3af;
@@ -438,29 +469,17 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
   padding: 8px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
   z-index: 10;
 }
 
 .preview-soul-image {
-  width: 32px;
-  height: 32px;
+  max-width: 90px;
+  max-height: 90px;
   object-fit: contain;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3));
-}
-
-.preview-soul-name {
-  font-size: 0.7rem;
-  font-weight: bold;
-  text-align: center;
-  text-transform: uppercase;
 }
 
 .preview-soul-essence .rarity-legendary .preview-soul-image {

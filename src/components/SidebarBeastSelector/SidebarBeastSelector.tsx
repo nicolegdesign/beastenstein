@@ -4,6 +4,9 @@ import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
 import './SidebarBeastSelector.css';
 
+// Maximum number of beasts allowed
+const MAX_BEASTS = 8;
+
 interface CustomBeast {
   id: string;
   name: string;
@@ -183,7 +186,12 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
   }, [refreshTrigger, sortBeastsByOrder]); // Refresh when refreshTrigger changes
   return (
     <div className="sidebar-beast-selector">
-      <h4 className="sidebar-title">Your Beasts</h4>
+      <h4 className="sidebar-title">
+        Your Beasts 
+        <span className="beast-count">
+          {beastData ? Object.keys(beastData).length : 0}/{MAX_BEASTS}
+        </span>
+      </h4>
       <div className="sidebar-beast-list">
         {/* Static BEASTS */}
         {BEASTS.map((beast: BeastConfig) => {
@@ -243,19 +251,19 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
         {/* Create New Beast Button */}
         {(() => {
           const totalBeasts = beastData ? Object.keys(beastData).length : 0;
-          const isAtLimit = totalBeasts >= 8;
+          const isAtLimit = totalBeasts >= MAX_BEASTS;
           
           return (
             <button
               className={`sidebar-create-beast-button ${isAtLimit ? 'disabled' : ''}`}
               onClick={() => !isAtLimit && onCreateBeast?.()}
-              title={isAtLimit ? "Maximum of 8 beasts reached" : "Create New Beast"}
+              title={isAtLimit ? `Maximum of ${MAX_BEASTS} beasts reached` : "Create New Beast"}
               disabled={isAtLimit}
             >
               <div className="plus-icon">+</div>
               <div className="sidebar-beast-info">
                 <span className="sidebar-beast-name">
-                  {isAtLimit ? `Max (${totalBeasts}/8)` : 'Create Beast'}
+                  {isAtLimit ? `Max (${totalBeasts}/${MAX_BEASTS})` : 'Create Beast'}
                 </span>
               </div>
             </button>

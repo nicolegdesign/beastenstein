@@ -280,3 +280,15 @@
     font-size: 0.55em;
   }
 }
+
+.beast-count {
+  color: #4CAF50;
+  font-size: 0.85em;
+  font-weight: 700;
+  margin-left: 8px;
+  background: rgba(76, 175, 80, 0.2);
+  padding: 2px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}

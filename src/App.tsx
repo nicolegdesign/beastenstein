@@ -24,9 +24,9 @@ import './App.css';
 interface BeastPart {
   id: string;
   name: string;
-  source: string;
   imagePath: string;
   type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 }
 
 interface SoulEssence {

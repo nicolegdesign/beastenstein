@@ -5,18 +5,18 @@ import './Mausoleum.css';
 interface BeastPart {
   id: string;
   name: string;
-  source: string; // Which beast it comes from
   imagePath: string;
   type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 }
 
 interface BeastPartSet {
   id: string;
   name: string;
-  source: string;
   leftImagePath: string;
   rightImagePath: string;
   type: 'armSet' | 'legSet';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 }
 
 interface SoulEssence {
@@ -49,87 +49,87 @@ const AVAILABLE_PARTS: BeastPart[] = [
   {
     id: 'nightwolf-head',
     name: 'Night Wolf Head',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
-    type: 'head'
+    type: 'head',
+    rarity: 'common'
   },
   {
     id: 'nightwolf-torso',
     name: 'Night Wolf Torso',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
-    type: 'torso'
+    type: 'torso',
+    rarity: 'common'
   },
   {
     id: 'nightwolf-arm-l',
     name: 'Night Wolf Left Arm',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-    type: 'armLeft'
+    type: 'armLeft',
+    rarity: 'common'
   },
   {
     id: 'nightwolf-arm-r',
     name: 'Night Wolf Right Arm',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-    type: 'armRight'
+    type: 'armRight',
+    rarity: 'common'
   },
   {
     id: 'nightwolf-leg-l',
     name: 'Night Wolf Left Leg',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-    type: 'legLeft'
+    type: 'legLeft',
+    rarity: 'common'
   },
   {
     id: 'nightwolf-leg-r',
     name: 'Night Wolf Right Leg',
-    source: 'Night Wolf',
     imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-    type: 'legRight'
+    type: 'legRight',
+    rarity: 'common'
   },
   // Mountain Dragon parts
   {
     id: 'mountaindragon-head',
     name: 'Mountain Dragon Head',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
-    type: 'head'
+    type: 'head',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-torso',
     name: 'Mountain Dragon Torso',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg',
-    type: 'torso'
+    type: 'torso',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-arm-l',
     name: 'Mountain Dragon Left Arm',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
-    type: 'armLeft'
+    type: 'armLeft',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-arm-r',
     name: 'Mountain Dragon Right Arm',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
-    type: 'armRight'
+    type: 'armRight',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-leg-l',
     name: 'Mountain Dragon Left Leg',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
-    type: 'legLeft'
+    type: 'legLeft',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-leg-r',
     name: 'Mountain Dragon Right Leg',
-    source: 'Mountain Dragon',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
-    type: 'legRight'
+    type: 'legRight',
+    rarity: 'common'
   },
 ];
 
@@ -138,18 +138,18 @@ const AVAILABLE_ARM_SETS: BeastPartSet[] = [
   {
     id: 'nightwolf-arms',
     name: 'Night Wolf Arms',
-    source: 'Night Wolf',
     leftImagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
     rightImagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-    type: 'armSet'
+    type: 'armSet',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-arms',
     name: 'Mountain Dragon Arms',
-    source: 'Mountain Dragon',
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
-    type: 'armSet'
+    type: 'armSet',
+    rarity: 'common'
   },
 ];
 
@@ -157,18 +157,18 @@ const AVAILABLE_LEG_SETS: BeastPartSet[] = [
   {
     id: 'nightwolf-legs',
     name: 'Night Wolf Legs',
-    source: 'Night Wolf',
     leftImagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
     rightImagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-    type: 'legSet'
+    type: 'legSet',
+    rarity: 'common'
   },
   {
     id: 'mountaindragon-legs',
     name: 'Mountain Dragon Legs',
-    source: 'Mountain Dragon',
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
-    type: 'legSet'
+    type: 'legSet',
+    rarity: 'common'
   },
 ];
 
@@ -248,16 +248,16 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
       const leftArm: BeastPart = {
         id: `${partSet.id}-left`,
         name: `${partSet.name} Left`,
-        source: partSet.source,
         imagePath: partSet.leftImagePath,
-        type: 'armLeft'
+        type: 'armLeft',
+        rarity: partSet.rarity
       };
       const rightArm: BeastPart = {
         id: `${partSet.id}-right`,
         name: `${partSet.name} Right`,
-        source: partSet.source,
         imagePath: partSet.rightImagePath,
-        type: 'armRight'
+        type: 'armRight',
+        rarity: partSet.rarity
       };
       
       setSelectedParts(prev => ({
@@ -270,16 +270,16 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
       const leftLeg: BeastPart = {
         id: `${partSet.id}-left`,
         name: `${partSet.name} Left`,
-        source: partSet.source,
         imagePath: partSet.leftImagePath,
-        type: 'legLeft'
+        type: 'legLeft',
+        rarity: partSet.rarity
       };
       const rightLeg: BeastPart = {
         id: `${partSet.id}-right`,
         name: `${partSet.name} Right`,
-        source: partSet.source,
         imagePath: partSet.rightImagePath,
-        type: 'legRight'
+        type: 'legRight',
+        rarity: partSet.rarity
       };
       
       setSelectedParts(prev => ({
@@ -390,9 +390,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
             {selectedParts.soulEssence && (
               <div className="preview-soul-essence">
                 <img src={selectedParts.soulEssence.imagePath} alt={selectedParts.soulEssence.name} className="preview-soul-image" />
-                <span className={`preview-soul-name rarity-${selectedParts.soulEssence.rarity}`}>
-                  {selectedParts.soulEssence.name}
-                </span>
+                
               </div>
             )}
           </div>
@@ -424,13 +422,13 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                 getPartsOfType(activePartType).map(part => (
                   <div
                     key={part.id}
-                    className={`part-option ${selectedParts[activePartType]?.id === part.id ? 'selected' : ''}`}
+                    className={`part-option ${selectedParts[activePartType]?.id === part.id ? 'selected' : ''} rarity-${part.rarity}`}
                     onClick={() => selectPart(part)}
                   >
                     <img src={part.imagePath} alt={part.name} className="part-image" />
                     <div className="part-info">
                       <span className="part-name">{part.name}</span>
-                      <span className="part-source">from {part.source}</span>
+                      <span className={`part-rarity rarity-${part.rarity}`}>{part.rarity}</span>
                     </div>
                   </div>
                 ))
@@ -441,7 +439,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                 getSetsOfType('armSet').map(armSet => (
                   <div
                     key={armSet.id}
-                    className={`part-option ${getSelectedSetId('armSet') === armSet.id ? 'selected' : ''}`}
+                    className={`part-option ${getSelectedSetId('armSet') === armSet.id ? 'selected' : ''} rarity-${armSet.rarity}`}
                     onClick={() => selectPartSet(armSet)}
                   >
                     <div className="set-preview">
@@ -450,7 +448,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                     </div>
                     <div className="part-info">
                       <span className="part-name">{armSet.name}</span>
-                      <span className="part-source">from {armSet.source}</span>
+                      <span className={`part-rarity rarity-${armSet.rarity}`}>{armSet.rarity}</span>
                     </div>
                   </div>
                 ))
@@ -461,7 +459,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                 getSetsOfType('legSet').map(legSet => (
                   <div
                     key={legSet.id}
-                    className={`part-option ${getSelectedSetId('legSet') === legSet.id ? 'selected' : ''}`}
+                    className={`part-option ${getSelectedSetId('legSet') === legSet.id ? 'selected' : ''} rarity-${legSet.rarity}`}
                     onClick={() => selectPartSet(legSet)}
                   >
                     <div className="set-preview">
@@ -470,7 +468,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                     </div>
                     <div className="part-info">
                       <span className="part-name">{legSet.name}</span>
-                      <span className="part-source">from {legSet.source}</span>
+                      <span className={`part-rarity rarity-${legSet.rarity}`}>{legSet.rarity}</span>
                     </div>
                   </div>
                 ))
@@ -487,7 +485,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                     <img src={soulEssence.imagePath} alt={soulEssence.name} className="part-image soul-image" />
                     <div className="part-info">
                       <span className="part-name">{soulEssence.name}</span>
-                      <span className="part-source">{soulEssence.description}</span>
+                      <span className="part-description">{soulEssence.description}</span>
                       <span className={`soul-rarity rarity-${soulEssence.rarity}`}>{soulEssence.rarity}</span>
                     </div>
                   </div>
