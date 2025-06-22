@@ -14,41 +14,40 @@ interface AnimatedNightWolfProps {
 // 3. The component will automatically use the new piece for that mood
 const NIGHT_WOLF_PIECES = {
   head: {
-    // normal: '/images/beasts/night-wolf/night-wolf-head.svg',
-    normal: '/images/beasts/mountain-dragon/mountain-dragon-head.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-head-happy.svg',
-    sad: '/images/beasts/night-wolf/night-wolf-head.svg', // Can add sad variant later
-    rest: '/images/beasts/night-wolf/night-wolf-head.svg', // Can add rest variant later
+    normal: './images/beasts/night-wolf/night-wolf-head.svg',
+    happy: './images/beasts/night-wolf/night-wolf-head-happy.svg',
+    sad: './images/beasts/night-wolf/night-wolf-head.svg', // Can add sad variant later
+    rest: './images/beasts/night-wolf/night-wolf-head.svg', // Can add rest variant later
   },
   torso: {
-    normal: '/images/beasts/night-wolf/night-wolf-torso.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-torso.svg', // Can add variants later
-    sad: '/images/beasts/night-wolf/night-wolf-torso.svg',
-    rest: '/images/beasts/night-wolf/night-wolf-torso.svg',
+    normal: './images/beasts/night-wolf/night-wolf-torso.svg',
+    happy: './images/beasts/night-wolf/night-wolf-torso.svg', // Can add variants later
+    sad: './images/beasts/night-wolf/night-wolf-torso.svg',
+    rest: './images/beasts/night-wolf/night-wolf-torso.svg',
   },
   armLeft: {
-    normal: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
-    sad: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
-    rest: '/images/beasts/night-wolf/night-wolf-arm-l.svg',
+    normal: './images/beasts/night-wolf/night-wolf-arm-l.svg',
+    happy: './images/beasts/night-wolf/night-wolf-arm-l.svg',
+    sad: './images/beasts/night-wolf/night-wolf-arm-l.svg',
+    rest: './images/beasts/night-wolf/night-wolf-arm-l.svg',
   },
   armRight: {
-    normal: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
-    sad: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
-    rest: '/images/beasts/night-wolf/night-wolf-arm-r.svg',
+    normal: './images/beasts/night-wolf/night-wolf-arm-r.svg',
+    happy: './images/beasts/night-wolf/night-wolf-arm-r.svg',
+    sad: './images/beasts/night-wolf/night-wolf-arm-r.svg',
+    rest: './images/beasts/night-wolf/night-wolf-arm-r.svg',
   },
   legLeft: {
-    normal: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
-    sad: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
-    rest: '/images/beasts/night-wolf/night-wolf-leg-l.svg',
+    normal: './images/beasts/night-wolf/night-wolf-leg-l.svg',
+    happy: './images/beasts/night-wolf/night-wolf-leg-l.svg',
+    sad: './images/beasts/night-wolf/night-wolf-leg-l.svg',
+    rest: './images/beasts/night-wolf/night-wolf-leg-l.svg',
   },
   legRight: {
-    normal: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
-    happy: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
-    sad: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
-    rest: '/images/beasts/night-wolf/night-wolf-leg-r.svg',
+    normal: './images/beasts/night-wolf/night-wolf-leg-r.svg',
+    happy: './images/beasts/night-wolf/night-wolf-leg-r.svg',
+    sad: './images/beasts/night-wolf/night-wolf-leg-r.svg',
+    rest: './images/beasts/night-wolf/night-wolf-leg-r.svg',
   },
 };
 
