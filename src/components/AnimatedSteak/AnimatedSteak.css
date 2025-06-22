@@ -1,0 +1,44 @@
+.animated-steak {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  pointer-events: none;
+  animation: steak-toss 1s ease-out forwards;
+}
+
+.steak-image {
+  width: 100px;
+  height: 100px;
+  display: block;
+  animation: steak-spin 1s ease-out forwards;
+}
+
+@keyframes steak-toss {
+  0% {
+    transform: translateX(-50%) translateY(-50vh) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    transform: translateX(-50%) translateY(-100px) scale(1.2);
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-50%) translateY(50px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(100px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes steak-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(720deg);
+  }
+}

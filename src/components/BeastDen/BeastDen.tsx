@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { Beast } from '../Beast/Beast';
 import { Poo } from '../Poo/Poo';
+import { AnimatedSteak } from '../AnimatedSteak/AnimatedSteak';
 import type { BeastMood } from '../../types/game';
 import './BeastDen.css';
 
@@ -21,6 +22,8 @@ interface BeastDenProps {
   onFeedFromBowl: () => void;
   onRestFromBed: () => void;
   onCleanupPoo: (pooId: string) => void;
+  showSteakAnimation?: boolean;
+  onSteakAnimationComplete?: () => void;
   children?: React.ReactNode;
 }
 
@@ -42,6 +45,8 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   onFeedFromBowl,
   onRestFromBed,
   onCleanupPoo,
+  showSteakAnimation = false,
+  onSteakAnimationComplete = () => {},
   children
 }, ref) => {
   const getBowlImage = () => {
@@ -57,6 +62,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
       }}
     >
       <Beast 
+        key={beastId}
         mood={beastMood}
         isResting={isResting}
         position={beastPosition}
@@ -81,6 +87,12 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
           onCleanup={onCleanupPoo}
         />
       ))}
+
+      {/* Animated steak */}
+      <AnimatedSteak 
+        isVisible={showSteakAnimation}
+        onAnimationComplete={onSteakAnimationComplete}
+      />
       
       {children}
     </div>

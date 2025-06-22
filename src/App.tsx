@@ -157,6 +157,7 @@ function App() {
   const [inBattleArena, setInBattleArena] = useState(false);
   const [showMausoleum, setShowMausoleum] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+  const [showSteakAnimation, setShowSteakAnimation] = useState(false);
   
   // Initialize game options from localStorage or defaults
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
@@ -694,6 +695,15 @@ function App() {
     createTennisBall();
   }, [play, createTennisBall]);
 
+  const handleFeed = useCallback(() => {
+    feed();
+    setShowSteakAnimation(true);
+  }, [feed]);
+
+  const handleSteakAnimationComplete = useCallback(() => {
+    setShowSteakAnimation(false);
+  }, []);
+
   const handleResetAllBeasts = useCallback(() => {
     // Show confirmation dialog
     const confirmed = window.confirm(
@@ -848,13 +858,15 @@ function App() {
             beastId={currentBeastId}
             hunger={stats.hunger}
             poos={poos}
-            onFeedFromBowl={feed}
+            onFeedFromBowl={handleFeed}
             onRestFromBed={startRest}
             onCleanupPoo={handlePooCleanup}
+            showSteakAnimation={showSteakAnimation}
+            onSteakAnimationComplete={handleSteakAnimationComplete}
           />
 
           <ActionButtons
-            onFeed={feed}
+            onFeed={handleFeed}
             onPlay={handlePlay}
             onRest={startRest}
             onTravel={handleTravel}
