@@ -29,6 +29,7 @@ interface SoulEssence {
 
 interface CustomBeast {
   name: string;
+  gender: 'male' | 'female';
   head: BeastPart;
   torso: BeastPart;
   armLeft: BeastPart;
@@ -310,8 +311,12 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
 
   const handleCreate = () => {
     if (isComplete()) {
+      // Randomly assign gender (50/50 chance for male/female)
+      const gender = Math.random() < 0.5 ? 'male' : 'female';
+      
       onCreateBeast({
         name: beastName,
+        gender: gender,
         head: selectedParts.head!,
         torso: selectedParts.torso!,
         armLeft: selectedParts.armLeft!,

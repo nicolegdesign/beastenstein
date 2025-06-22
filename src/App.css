@@ -108,6 +108,12 @@ body {
   font-feature-settings: "kern" 1;
 }
 
+.species-text .gender-symbol {
+  margin-left: 8px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
 /* Level up celebration effect */
 .level-up-effect {
   position: fixed;

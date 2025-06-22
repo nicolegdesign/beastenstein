@@ -39,6 +39,7 @@ interface SoulEssence {
 
 interface CustomBeastData {
   name: string;
+  gender: 'male' | 'female';
   head: BeastPart;
   torso: BeastPart;
   armLeft: BeastPart;
@@ -104,47 +105,48 @@ function App() {
       // Create and save the default custom beast configuration
       const defaultCustomBeast = {
         name: 'Night Wolf',
+        gender: 'male' as const,
         head: {
           id: 'nightwolf-head',
           name: 'Night Wolf Head',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
-          type: 'head' as const
+          type: 'head' as const,
+          rarity: 'common' as const
         },
         torso: {
           id: 'nightwolf-torso',
           name: 'Night Wolf Torso',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
-          type: 'torso' as const
+          type: 'torso' as const,
+          rarity: 'common' as const
         },
         armLeft: {
           id: 'nightwolf-arm-l',
           name: 'Night Wolf Left Arm',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-          type: 'armLeft' as const
+          type: 'armLeft' as const,
+          rarity: 'common' as const
         },
         armRight: {
           id: 'nightwolf-arm-r',
           name: 'Night Wolf Right Arm',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-          type: 'armRight' as const
+          type: 'armRight' as const,
+          rarity: 'common' as const
         },
         legLeft: {
           id: 'nightwolf-leg-l',
           name: 'Night Wolf Left Leg',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-          type: 'legLeft' as const
+          type: 'legLeft' as const,
+          rarity: 'common' as const
         },
         legRight: {
           id: 'nightwolf-leg-r',
           name: 'Night Wolf Right Leg',
-          source: 'Night Wolf',
           imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-          type: 'legRight' as const
+          type: 'legRight' as const,
+          rarity: 'common' as const
         },
         soulEssence: {
           id: 'dim-soul',
@@ -253,6 +255,37 @@ function App() {
     loadCustomBeastData();
   }, []); // Run only once on component mount
   
+  // Migration function to add gender to existing custom beasts
+  useEffect(() => {
+    const migrateExistingBeasts = () => {
+      // Get all custom beast keys from localStorage
+      const keys = Object.keys(localStorage).filter(key => key.startsWith('customBeast_'));
+      
+      for (const key of keys) {
+        try {
+          const customBeastData = localStorage.getItem(key);
+          if (customBeastData) {
+            const customBeast = JSON.parse(customBeastData);
+            
+            // If the beast doesn't have a gender, assign one based on name
+            if (!customBeast.gender) {
+              // Default Night Wolf is male, others are random
+              customBeast.gender = customBeast.name === 'Night Wolf' ? 'male' : 
+                                   (Math.random() < 0.5 ? 'male' : 'female');
+              
+              // Save the updated beast data
+              localStorage.setItem(key, JSON.stringify(customBeast));
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to migrate beast ${key}:`, error);
+        }
+      }
+    };
+
+    migrateExistingBeasts();
+  }, []); // Run only once on component mount
+
   const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
     message: '', 
     show: false, 
@@ -510,6 +543,26 @@ function App() {
       }
     }
     return 'Unknown Species';
+  }, []);
+
+  // Function to get gender symbol for a custom beast
+  const getBeastGender = useCallback((beastId: string): { symbol: string; gender: string } => {
+    if (beastId.startsWith('custom_')) {
+      try {
+        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+        if (customBeastData) {
+          const customBeast = JSON.parse(customBeastData);
+          const gender = customBeast.gender;
+          return {
+            symbol: gender === 'male' ? '♂' : '♀',
+            gender: gender
+          };
+        }
+      } catch (error) {
+        console.warn(`Failed to get gender for custom beast ${beastId}:`, error);
+      }
+    }
+    return { symbol: '', gender: '' };
   }, []);
 
   // Menu handlers
@@ -795,7 +848,17 @@ function App() {
         
         <div className="beast-info-plate">
           <div className="info-text">
-            <span className="species-text">{getBeastSpecies(currentBeastId)}</span>
+            <span className="species-text">
+              {getBeastSpecies(currentBeastId)}
+              {(() => {
+                const genderInfo = getBeastGender(currentBeastId);
+                return genderInfo.symbol ? (
+                  <span className={`gender-symbol ${genderInfo.gender}`}>
+                    {genderInfo.symbol}
+                  </span>
+                ) : null;
+              })()}
+            </span>
             <span>LEVEL {stats.level}</span>
             <span>AGE {stats.age}</span>
             <span>EXP {getExperience()}/{stats.level * 100}</span>

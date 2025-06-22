@@ -10,47 +10,48 @@ const MAX_BEASTS = 8;
 interface CustomBeast {
   id: string;
   name: string;
+  gender: 'male' | 'female';
   head: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'head';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
   torso: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'torso';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
   armLeft: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'armLeft';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
   armRight: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'armRight';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
   legLeft: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'legLeft';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
   legRight: {
     id: string;
     name: string;
-    source: string;
     imagePath: string;
     type: 'legRight';
+    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   };
 }
 
