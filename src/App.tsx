@@ -286,6 +286,18 @@ function App() {
   }, [currentBeastId]);
 
   const handleCreateCustomBeast = useCallback((customBeast: CustomBeastData) => {
+    // Check if we've reached the maximum beast limit (8 total)
+    const totalBeasts = Object.keys(beastData).length;
+    
+    if (totalBeasts >= 8) {
+      setToast({
+        message: 'Maximum of 8 beasts allowed! Send a beast to the farm to make room.',
+        show: true,
+        type: 'info'
+      });
+      return;
+    }
+    
     // Create a new custom beast ID
     const customBeastId = `custom_${Date.now()}`;
     const now = Date.now();
@@ -330,7 +342,7 @@ function App() {
       show: true,
       type: 'success'
     });
-  }, []);
+  }, [beastData]);
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
@@ -413,6 +425,73 @@ function App() {
     setPreviousLevel(currentBeastData.level);
     setIsInitialLoad(true); // Reset initial load flag when switching beasts
   }, [currentBeastId, currentBeastData.level]);
+
+  // Function to get species name based on head and torso parts
+  const getBeastSpecies = useCallback((beastId: string): string => {
+    // For default beasts, return predefined species names
+    switch (beastId) {
+      case 'emi':
+        return 'Black Dog';
+      case 'hobbes':
+        return 'Tiger Dog';
+      case 'nightwolf':
+        return 'Night Wolf';
+      case 'mountaindragon':
+        return 'Mountain Dragon';
+      default:
+        // For custom beasts, extract species from parts
+        if (beastId.startsWith('custom_')) {
+          try {
+            const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+            if (customBeastData) {
+              const customBeast = JSON.parse(customBeastData);
+              
+              // Extract species from head part ID (e.g., "nightwolf-head" -> "wolf")
+              const headParts = customBeast.head?.id?.split('-') || [];
+              let headSpecies = '';
+              if (headParts.length >= 2) {
+                // For nightwolf-head, take "wolf" (second part of "nightwolf")
+                const beastName = headParts[0]; // "nightwolf" or "mountaindragon"
+                if (beastName === 'nightwolf') {
+                  headSpecies = 'wolf';
+                } else if (beastName === 'mountaindragon') {
+                  headSpecies = 'dragon';
+                } else {
+                  // For other formats, try to extract the last meaningful part
+                  headSpecies = beastName.replace(/night|mountain/i, '').toLowerCase() || 'beast';
+                }
+              }
+              
+              // Extract species from torso part ID (e.g., "mountaindragon-torso" -> "mountain")
+              const torsoParts = customBeast.torso?.id?.split('-') || [];
+              let torsoSpecies = '';
+              if (torsoParts.length >= 1) {
+                const beastName = torsoParts[0]; // "nightwolf" or "mountaindragon"
+                if (beastName === 'nightwolf') {
+                  torsoSpecies = 'night';
+                } else if (beastName === 'mountaindragon') {
+                  torsoSpecies = 'mountain';
+                } else {
+                  // For other formats, try to extract the first meaningful part
+                  const match = beastName.match(/^(night|mountain|desert|forest|ice|fire)/i);
+                  torsoSpecies = match ? match[1].toLowerCase() : beastName;
+                }
+              }
+              
+              if (headSpecies && torsoSpecies) {
+                // Capitalize first letter of each word
+                const capitalizedTorso = torsoSpecies.charAt(0).toUpperCase() + torsoSpecies.slice(1);
+                const capitalizedHead = headSpecies.charAt(0).toUpperCase() + headSpecies.slice(1);
+                return `${capitalizedTorso} ${capitalizedHead}`;
+              }
+            }
+          } catch (error) {
+            console.warn(`Failed to determine species for custom beast ${beastId}:`, error);
+          }
+        }
+        return 'Unknown Species';
+    }
+  }, []);
 
   // Menu handlers
   const handleSelectBeast = useCallback(() => {
@@ -688,6 +767,7 @@ function App() {
         
         <div className="beast-info-plate">
           <div className="info-text">
+            <span className="species-text">{getBeastSpecies(currentBeastId)}</span>
             <span>LEVEL {stats.level}</span>
             <span>AGE {stats.age}</span>
             <span>EXP {getExperience()}/{stats.level * 100}</span>

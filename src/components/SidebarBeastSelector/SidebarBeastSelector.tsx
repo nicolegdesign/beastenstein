@@ -7,10 +7,48 @@ import './SidebarBeastSelector.css';
 interface CustomBeast {
   id: string;
   name: string;
-  bodyPart: string;
-  headPart: string;
-  tailPart: string;
-  wingPart: string;
+  head: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'head';
+  };
+  torso: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'torso';
+  };
+  armLeft: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'armLeft';
+  };
+  armRight: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'armRight';
+  };
+  legLeft: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'legLeft';
+  };
+  legRight: {
+    id: string;
+    name: string;
+    source: string;
+    imagePath: string;
+    type: 'legRight';
+  };
 }
 
 interface SidebarBeastSelectorProps {
@@ -99,32 +137,39 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
               onClick={() => onBeastChange(customBeast.id)}
               title={`Switch to ${displayName}`}
             >
-              {/* Use a simple preview for custom beasts - we could enhance this later */}
-              <div className="custom-beast-preview">
-                <span className="custom-beast-icon">🧬</span>
-              </div>
+              {/* Use the head image for custom beasts */}
+              <img src={customBeast.head?.imagePath || './images/pet-normal.png'} alt={displayName} />
               <div className="sidebar-beast-info">
                 <span className="sidebar-beast-name">{displayName}</span>
                 {data && (
                   <div className="sidebar-beast-level">Lv.{data.level}</div>
                 )}
-                <div className="custom-beast-indicator">Custom</div>
               </div>
             </button>
           );
         })}
         
         {/* Create New Beast Button */}
-        <button
-          className="sidebar-create-beast-button"
-          onClick={() => onCreateBeast?.()}
-          title="Create New Beast"
-        >
-          <div className="plus-icon">+</div>
-          <div className="sidebar-beast-info">
-            <span className="sidebar-beast-name">Create Beast</span>
-          </div>
-        </button>
+        {(() => {
+          const totalBeasts = beastData ? Object.keys(beastData).length : 0;
+          const isAtLimit = totalBeasts >= 8;
+          
+          return (
+            <button
+              className={`sidebar-create-beast-button ${isAtLimit ? 'disabled' : ''}`}
+              onClick={() => !isAtLimit && onCreateBeast?.()}
+              title={isAtLimit ? "Maximum of 8 beasts reached" : "Create New Beast"}
+              disabled={isAtLimit}
+            >
+              <div className="plus-icon">+</div>
+              <div className="sidebar-beast-info">
+                <span className="sidebar-beast-name">
+                  {isAtLimit ? `Max (${totalBeasts}/8)` : 'Create Beast'}
+                </span>
+              </div>
+            </button>
+          );
+        })()}
       </div>
     </div>
   );
