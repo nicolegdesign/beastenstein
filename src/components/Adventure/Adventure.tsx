@@ -46,12 +46,14 @@ interface AdventureProps {
   currentBeastId: string;
   playerStats: BeastCombatStats & { health: number };
   onClose: () => void;
+  onUpdateExperience: (beastId: string, newExperience: number) => boolean;
 }
 
-export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose }) => {
-  const { inventory, setInventory } = useInventoryContext();
+export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience }) => {
+  const { setInventory } = useInventoryContext();
   const [gameState, setGameState] = useState<'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('setup');
   const [playerHealth, setPlayerHealth] = useState(playerStats.health);
+  const [opponentLevel] = useState(1); // Start with level 1 opponents
   const [opponentHealth, setOpponentHealth] = useState(30); // Level 1 opponent
   const [currentTurn, setCurrentTurn] = useState<'player' | 'opponent'>('player');
   const [opponent, setOpponent] = useState<CustomBeast | null>(null);
@@ -63,6 +65,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   });
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [droppedLoot, setDroppedLoot] = useState<DroppedLoot | null>(null);
+  const [experienceGained, setExperienceGained] = useState<number>(0);
 
   // Generate random opponent
   useEffect(() => {
@@ -202,6 +205,54 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     return selectedLoot;
   };
 
+  // Calculate experience gained based on opponent level
+  const calculateExperienceGain = (defeatedLevel: number): number => {
+    return defeatedLevel * 50; // 10 XP per opponent level
+  };
+
+  // Add experience to the player's beast
+  const gainExperience = (expGained: number) => {
+    console.log('gainExperience called with:', expGained, 'for beast:', currentBeastId);
+    try {
+      // Get current experience from single source of truth
+      const currentExp = getCurrentExperience();
+      const newExp = currentExp + expGained;
+      
+      // Use the prop function to update experience globally
+      const success = onUpdateExperience(currentBeastId, newExp);
+      
+      if (success) {
+        console.log('Updated experience - Current exp:', currentExp, 'New exp:', newExp);
+        setExperienceGained(expGained);
+        setBattleLog(prev => [...prev, `Your beast gained ${expGained} experience!`]);
+        console.log('Experience updated successfully, UI state set to:', expGained);
+      } else {
+        console.error('Failed to update experience via prop function');
+      }
+    } catch (error) {
+      console.error('Failed to update beast experience:', error);
+    }
+  };
+
+  // Get current experience from main beastData storage
+  const getCurrentExperience = (): number => {
+    try {
+      const beastDataKey = `beastData`;
+      const mainBeastData = localStorage.getItem(beastDataKey);
+      
+      if (mainBeastData) {
+        const allBeastData = JSON.parse(mainBeastData);
+        if (allBeastData[currentBeastId]) {
+          return allBeastData[currentBeastId].experience || 0;
+        }
+      }
+      return 0;
+    } catch (error) {
+      console.error('Failed to get current experience:', error);
+      return 0;
+    }
+  };
+
   const playerAttack = () => {
     if (currentTurn !== 'player' || gameState !== 'battle') return;
 
@@ -239,6 +290,11 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         }));
       }
       
+      // Calculate and gain experience
+      const expGained = calculateExperienceGain(opponentLevel);
+      console.log('Victory! Calculating experience:', expGained, 'for opponent level:', opponentLevel);
+      gainExperience(expGained);
+
       return;
     }
 
@@ -342,7 +398,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             {/* Opponent Beast */}
             <div className="beast-container opponent-beast">
               <div className="beast-info">
-                <h3>{opponent?.name || 'Wild Beast'} (Lvl 1)</h3>
+                <h3>{opponent?.name || 'Wild Beast'} (Lvl {opponentLevel})</h3>
                 <div className="health-bar">
                   <div 
                     className="health-fill opponent-health" 
@@ -409,6 +465,16 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           >
             {gameState === 'victory' ? '🎉 Victory!' : '💀 Defeat!'}
           </motion.div>
+          {gameState === 'victory' && experienceGained > 0 && (
+            <motion.div 
+              className="experience-gained"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              +{experienceGained} XP Gained!
+            </motion.div>
+          )}
           {gameState === 'victory' ? (
             <motion.button
               className="result-btn"

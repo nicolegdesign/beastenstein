@@ -79,23 +79,44 @@ function App() {
   const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
     const customBeastData: Record<string, IndividualBeastData> = {};
     
-    // Load all custom beast data from localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('beastData_custom_')) {
-        try {
-          const beastId = key.replace('beastData_', '');
-          const savedData = localStorage.getItem(key);
-          if (savedData) {
-            const parsed = JSON.parse(savedData);
+    // First try to load from consolidated beastData
+    const consolidatedData = localStorage.getItem('beastData');
+    if (consolidatedData) {
+      try {
+        const allBeastData = JSON.parse(consolidatedData);
+        // Filter for custom beasts only
+        Object.keys(allBeastData).forEach(beastId => {
+          if (beastId.startsWith('custom_')) {
+            const beastData = allBeastData[beastId];
             // Migrate old data without createdAt timestamp
-            if (!parsed.createdAt) {
-              parsed.createdAt = Date.now();
+            if (!beastData.createdAt) {
+              beastData.createdAt = Date.now();
             }
-            customBeastData[beastId] = parsed;
+            customBeastData[beastId] = beastData;
           }
-        } catch (error) {
-          console.warn(`Failed to load beast data for ${key}:`, error);
+        });
+      } catch (error) {
+        console.warn('Failed to load consolidated beast data:', error);
+      }
+    } else {
+      // Fallback: Load all custom beast data from individual localStorage keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('beastData_custom_')) {
+          try {
+            const beastId = key.replace('beastData_', '');
+            const savedData = localStorage.getItem(key);
+            if (savedData) {
+              const parsed = JSON.parse(savedData);
+              // Migrate old data without createdAt timestamp
+              if (!parsed.createdAt) {
+                parsed.createdAt = Date.now();
+              }
+              customBeastData[beastId] = parsed;
+            }
+          } catch (error) {
+            console.warn(`Failed to load beast data for ${key}:`, error);
+          }
         }
       }
     }
@@ -123,8 +144,18 @@ function App() {
         maxLevel: 5  // Dim soul max level
       };
       
-      // Save the default beast data
-      localStorage.setItem(`beastData_${defaultBeastId}`, JSON.stringify(customBeastData[defaultBeastId]));
+      // Save the default beast data using consolidated approach
+      try {
+        const beastDataKey = 'beastData';
+        const existingData = localStorage.getItem(beastDataKey);
+        const allBeastData = existingData ? JSON.parse(existingData) : {};
+        allBeastData[defaultBeastId] = customBeastData[defaultBeastId];
+        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
+      } catch (error) {
+        console.error('Failed to save default beast data:', error);
+        // Fallback to old method
+        localStorage.setItem(`beastData_${defaultBeastId}`, JSON.stringify(customBeastData[defaultBeastId]));
+      }
       
       // Create and save the default custom beast configuration
       const defaultCustomBeast = {
@@ -361,6 +392,32 @@ function App() {
           console.warn(`Failed to migrate beast data ${key}:`, error);
         }
       }
+      
+      // Consolidate all individual beastData_${id} keys into a single beastData object
+      const consolidatedBeastData: Record<string, IndividualBeastData> = {};
+      for (const key of beastDataKeys) {
+        try {
+          const beastDataString = localStorage.getItem(key);
+          if (beastDataString) {
+            const beastData = JSON.parse(beastDataString);
+            const beastId = key.replace('beastData_', '');
+            consolidatedBeastData[beastId] = beastData;
+          }
+        } catch (error) {
+          console.warn(`Failed to consolidate beast data ${key}:`, error);
+        }
+      }
+      
+      // Store the consolidated data and remove individual keys
+      if (Object.keys(consolidatedBeastData).length > 0) {
+        localStorage.setItem('beastData', JSON.stringify(consolidatedBeastData));
+        console.log('Consolidated beast data:', consolidatedBeastData);
+        
+        // Remove individual keys after successful consolidation
+        for (const key of beastDataKeys) {
+          localStorage.removeItem(key);
+        }
+      }
     };
 
     migrateExistingBeasts();
@@ -388,6 +445,7 @@ function App() {
     fillHunger,
     getBeastMood,
     getExperience,
+    setExternalExperience,
     resetToBaseStats
   } = useBeastStats({
     hunger: currentBeastData?.hunger || 50,
@@ -506,8 +564,60 @@ function App() {
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
-    localStorage.setItem(`beastData_${beastId}`, JSON.stringify(data));
+    // Update the consolidated beastData object
+    try {
+      const beastDataKey = 'beastData';
+      const existingData = localStorage.getItem(beastDataKey);
+      const allBeastData = existingData ? JSON.parse(existingData) : {};
+      
+      allBeastData[beastId] = data;
+      localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
+      
+      console.log(`Saved beast data for ${beastId}:`, data);
+    } catch (error) {
+      console.error('Failed to save beast data:', error);
+      // Fallback to old method if consolidation fails
+      localStorage.setItem(`beastData_${beastId}`, JSON.stringify(data));
+    }
   }, []);
+
+  // Function to update experience globally (both localStorage and hook state)
+  const updateBeastExperience = useCallback((beastId: string, newExperience: number): boolean => {
+    try {
+      // Update consolidated localStorage
+      const beastDataKey = 'beastData';
+      const existingData = localStorage.getItem(beastDataKey);
+      const allBeastData = existingData ? JSON.parse(existingData) : {};
+      
+      if (allBeastData[beastId]) {
+        allBeastData[beastId].experience = newExperience;
+        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
+        
+        // Update the local state
+        setBeastData(prev => ({
+          ...prev,
+          [beastId]: {
+            ...prev[beastId],
+            experience: newExperience
+          }
+        }));
+        
+        // If this is the current beast, update the hook's state too
+        if (beastId === currentBeastId) {
+          setExternalExperience(newExperience);
+        }
+        
+        console.log(`Updated experience for beast ${beastId} to ${newExperience}`);
+        return true;
+      } else {
+        console.error(`Beast ${beastId} not found in beastData`);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to update beast experience:', error);
+      return false;
+    }
+  }, [currentBeastId, setExternalExperience]);
 
   // Update beast data when stats change (with debouncing to prevent flashing)
   useEffect(() => {
@@ -872,7 +982,19 @@ function App() {
     });
 
     // Remove from localStorage
-    localStorage.removeItem(`beastData_${currentBeastId}`);
+    try {
+      const beastDataKey = 'beastData';
+      const existingData = localStorage.getItem(beastDataKey);
+      if (existingData) {
+        const allBeastData = JSON.parse(existingData);
+        delete allBeastData[currentBeastId];
+        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
+      }
+    } catch (error) {
+      console.error('Failed to remove beast from consolidated data:', error);
+      // Fallback to old method
+      localStorage.removeItem(`beastData_${currentBeastId}`);
+    }
     localStorage.removeItem(`beastName_${currentBeastId}`);
     
     // If it's a custom beast, also remove the custom beast config
@@ -943,8 +1065,18 @@ function App() {
           createdAt: now
         };
         
-        // Save to localStorage
-        localStorage.setItem(`beastData_${beastId}`, JSON.stringify(resetData[beastId]));
+        // Save to localStorage using consolidated approach
+        try {
+          const beastDataKey = 'beastData';
+          const existingData = localStorage.getItem(beastDataKey);
+          const allBeastData = existingData ? JSON.parse(existingData) : {};
+          allBeastData[beastId] = resetData[beastId];
+          localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
+        } catch (error) {
+          console.error('Failed to save reset data:', error);
+          // Fallback to old method
+          localStorage.setItem(`beastData_${beastId}`, JSON.stringify(resetData[beastId]));
+        }
       });
       
       return resetData;
@@ -1086,6 +1218,7 @@ function App() {
             health: currentBeastData.health
           }}
           onClose={() => setInAdventure(false)}
+          onUpdateExperience={updateBeastExperience}
         />
       ) : (
         <>

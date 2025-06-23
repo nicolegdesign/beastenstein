@@ -261,6 +261,18 @@
   transform: translateY(-2px);
 }
 
+.experience-gained {
+  font-family: 'Pirata One', cursive;
+  font-size: 1.8rem;
+  color: #10b981;
+  margin-bottom: 30px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  background: rgba(16, 185, 129, 0.2);
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 2px solid #10b981;
+}
+
 .battle-log {
   position: absolute;
   bottom: 0px;
@@ -284,6 +296,8 @@
 .log-content {
   max-height: 150px;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
 }
 
 .log-entry {

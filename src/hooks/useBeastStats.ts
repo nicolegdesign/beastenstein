@@ -252,6 +252,10 @@ export const useBeastStats = (
 
   const getExperience = useCallback(() => experience, [experience]);
 
+  const setExternalExperience = useCallback((newExperience: number) => {
+    setExperience(newExperience);
+  }, []);
+
   const getExpToNextLevel = useCallback(() => {
     return stats.level * 100 - experience;
   }, [stats.level, experience]);
@@ -282,6 +286,7 @@ export const useBeastStats = (
     fillEnergy,
     getBeastMood,
     getExperience,
+    setExternalExperience,
     getExpToNextLevel,
     resetToBaseStats
   };
