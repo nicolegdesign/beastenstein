@@ -8,9 +8,10 @@ interface DebugProps {
   onClose: () => void;
   isModal?: boolean;
   onResetAllBeasts?: () => void;
+  onTestLevelUp?: () => void;
 }
 
-export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false, onResetAllBeasts }) => {
+export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false, onResetAllBeasts, onTestLevelUp }) => {
   const handleToggle = (key: keyof GameOptions) => {
     const newOptions = {
       ...options,
@@ -79,6 +80,24 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
         </div>
       </div>
       
+      <div className="debug-section">
+        <h3>🧪 Test Functions</h3>
+        <div className="debug-options">
+          <div className="debug-reset-section">
+            <p className="debug-description">
+              Test level-up functionality by adding experience to reach next level
+            </p>
+            <button 
+              onClick={onTestLevelUp} 
+              className="debug-reset-btn"
+              disabled={!onTestLevelUp}
+            >
+              ⬆️ Test Level Up
+            </button>
+          </div>
+        </div>
+      </div>
+
       {isModal && (
         <div className="debug-actions">
           <button onClick={onClose} className="debug-close-btn">
