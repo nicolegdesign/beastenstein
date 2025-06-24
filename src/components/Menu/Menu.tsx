@@ -6,14 +6,12 @@ interface MenuProps {
   onOptions: () => void;
   onSave: () => void;
   onInventory: () => void;
-  onBattleArena: () => void;
   onAdventure: () => void;
   onDebug: () => void;
-  inBattleArena: boolean;
   inAdventure: boolean;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, onInventory, onBattleArena, onAdventure, onDebug, inBattleArena, inAdventure }) => {
+export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, onInventory, onAdventure, onDebug, inAdventure }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -50,12 +48,6 @@ export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, on
             onClick={() => handleMenuItemClick(onInventory)}
           >
             🎒 Inventory
-          </button>
-          <button 
-            className="menu-item"
-            onClick={() => handleMenuItemClick(onBattleArena)}
-          >
-            {inBattleArena ? '🏠 Leave Arena' : '⚔️ Battle Arena'}
           </button>
           <button 
             className="menu-item"

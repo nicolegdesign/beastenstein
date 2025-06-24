@@ -9,7 +9,6 @@ import { Menu } from './components/Menu/Menu';
 import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
-import { BattleArena } from './components/BattleArena/BattleArena';
 import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
 import { InventoryProvider } from './contexts/InventoryContext';
@@ -229,7 +228,6 @@ function App() {
   const [showInventory, setShowInventory] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
-  const [inBattleArena, setInBattleArena] = useState(false);
   const [inAdventure, setInAdventure] = useState(false);
   const [showMausoleum, setShowMausoleum] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
@@ -840,10 +838,6 @@ function App() {
     setShowInventory(true);
   }, []);
 
-  const handleBattleArena = useCallback(() => {
-    setInBattleArena(prev => !prev);
-  }, []);
-
   const handleAdventure = useCallback(() => {
     setInAdventure(prev => !prev);
   }, []);
@@ -1175,10 +1169,8 @@ function App() {
         onOptions={handleOptions}
         onSave={handleSave}
         onInventory={handleInventory}
-        onBattleArena={handleBattleArena}
         onAdventure={handleAdventure}
         onDebug={handleDebug}
-        inBattleArena={inBattleArena}
         inAdventure={inAdventure}
       />
 
@@ -1273,13 +1265,7 @@ function App() {
         />
       )}
       
-      {inBattleArena ? (
-        <BattleArena
-          beastId={currentBeastId}
-          beastMood={getBeastMood()}
-          showBeastBorder={gameOptions.showBeastBorder}
-        />
-      ) : inAdventure ? (
+      {inAdventure ? (
         <Adventure
           currentBeastId={currentBeastId}
           playerStats={{

@@ -25,25 +25,6 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
       <h2>🐛 Debug Options</h2>
       
       <div className="debug-section">
-        <h3>Visual Debug</h3>
-        <div className="debug-options">
-          <label className="debug-option">
-            <input
-              type="checkbox"
-              checked={options.showBeastBorder}
-              onChange={() => handleToggle('showBeastBorder')}
-            />
-            <span className="debug-option-text">
-              Show Beast Border (Battle Arena)
-            </span>
-            <span className="debug-description">
-              Shows a red border around the beast in Battle Arena for debugging positioning
-            </span>
-          </label>
-        </div>
-      </div>
-      
-      <div className="debug-section">
         <h3>Movement Debug</h3>
         <div className="debug-options">
           <label className="debug-option">
