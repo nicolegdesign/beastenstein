@@ -18,6 +18,7 @@ import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { DEFAULT_ITEMS } from './types/inventory';
 import { DEFAULT_OPTIONS } from './types/options';
+import type { BeastCombatStats } from './types/game';
 import { getRandomPersonality, getDefaultPersonality } from './data/personalities';
 import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
@@ -1095,6 +1096,77 @@ function App() {
     setShowDebug(false);
   }, [resetToBaseStats, setToast, setShowDebug]);
 
+  // Calculate enhanced combat stats including stat bonuses from beast parts
+  const getEnhancedCombatStats = (beastId: string): BeastCombatStats => {
+    const baseStats = {
+      attack: currentBeastData?.attack || 0,
+      defense: currentBeastData?.defense || 0,
+      speed: currentBeastData?.speed || 0,
+      magic: currentBeastData?.magic || 0
+    };
+
+    try {
+      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+      if (customBeastData) {
+        const customBeast = JSON.parse(customBeastData);
+        
+        // Calculate stat bonuses from all parts
+        let attackBonus = 0;
+        let defenseBonus = 0;
+        let speedBonus = 0;
+        let magicBonus = 0;
+
+        // Add bonuses from each part
+        [customBeast.head, customBeast.torso, customBeast.armLeft, customBeast.armRight, customBeast.legLeft, customBeast.legRight].forEach(part => {
+          if (part?.statBonus) {
+            attackBonus += part.statBonus.attack || 0;
+            defenseBonus += part.statBonus.defense || 0;
+            speedBonus += part.statBonus.speed || 0;
+            magicBonus += part.statBonus.magic || 0;
+          }
+        });
+
+        return {
+          attack: baseStats.attack + attackBonus,
+          defense: baseStats.defense + defenseBonus,
+          speed: baseStats.speed + speedBonus,
+          magic: baseStats.magic + magicBonus
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load custom beast data for enhanced stats:', error);
+    }
+
+    return baseStats;
+  };
+
+  // Calculate enhanced health including health bonuses from beast parts
+  const getEnhancedHealth = (beastId: string): number => {
+    const baseHealth = currentBeastData?.health || 100;
+
+    try {
+      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
+      if (customBeastData) {
+        const customBeast = JSON.parse(customBeastData);
+        
+        let healthBonus = 0;
+
+        // Add health bonuses from all parts
+        [customBeast.head, customBeast.torso, customBeast.armLeft, customBeast.armRight, customBeast.legLeft, customBeast.legRight].forEach(part => {
+          if (part?.statBonus) {
+            healthBonus += part.statBonus.health || 0;
+          }
+        });
+
+        return baseHealth + healthBonus;
+      }
+    } catch (error) {
+      console.error('Failed to load custom beast data for enhanced health:', error);
+    }
+
+    return baseHealth;
+  };
+
   return (
     <InventoryProvider>
       <div className="App">
@@ -1211,11 +1283,8 @@ function App() {
         <Adventure
           currentBeastId={currentBeastId}
           playerStats={{
-            attack: currentBeastData.attack,
-            defense: currentBeastData.defense,
-            speed: currentBeastData.speed,
-            magic: currentBeastData.magic,
-            health: currentBeastData.health
+            ...getEnhancedCombatStats(currentBeastId),
+            health: getEnhancedHealth(currentBeastId)
           }}
           onClose={() => setInAdventure(false)}
           onUpdateExperience={updateBeastExperience}
@@ -1230,12 +1299,8 @@ function App() {
             beastPosition={position}
             beastId={currentBeastId}
             hunger={stats.hunger}
-            combatStats={{
-              attack: currentBeastData?.attack || 0,
-              defense: currentBeastData?.defense || 0,
-              speed: currentBeastData?.speed || 0,
-              magic: currentBeastData?.magic || 0
-            }}
+            combatStats={getEnhancedCombatStats(currentBeastId)}
+            enhancedHealth={getEnhancedHealth(currentBeastId)}
             poos={poos}
             onFeedFromBowl={handleFeed}
             onRestFromBed={startRest}

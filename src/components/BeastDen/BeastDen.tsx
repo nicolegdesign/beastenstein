@@ -19,6 +19,7 @@ interface BeastDenProps {
   beastId: string;
   hunger: number;
   combatStats: BeastCombatStats;
+  enhancedHealth: number;
   poos: PooItem[];
   onFeedFromBowl: () => void;
   onRestFromBed: () => void;
@@ -43,6 +44,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   beastId,
   hunger,
   combatStats,
+  enhancedHealth,
   poos,
   onFeedFromBowl,
   onRestFromBed,
@@ -74,7 +76,8 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
       {/* Combat Stats Table */}
       <div className="combat-stats-container">
         <div className="combat-stats-table">
-          <h4 className="stats-title">Combat Stats</h4>
+          <h4 className="stats-title">Combat Stats ✨</h4>
+          <div className="stats-subtitle">Enhanced with Part Bonuses</div>
           <div className="stats-grid">
             <div className="stat-item">
               <span className="stat-icon">⚔️</span>
@@ -95,6 +98,11 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
               <span className="stat-icon">🔮</span>
               <span className="stat-label">Magic</span>
               <span className="stat-value">{combatStats.magic}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon">❤️</span>
+              <span className="stat-label">Health</span>
+              <span className="stat-value">{enhancedHealth}</span>
             </div>
           </div>
         </div>
