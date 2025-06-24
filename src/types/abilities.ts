@@ -1,0 +1,48 @@
+export interface Ability {
+  id: string;
+  name: string;
+  description: string;
+  type: 'attack' | 'defense' | 'heal' | 'buff' | 'debuff';
+  damage?: number;
+  healing?: number;
+  effects?: {
+    statModifier?: {
+      attack?: number;
+      defense?: number;
+      speed?: number;
+      magic?: number;
+    };
+    duration?: number; // turns
+  };
+  cooldown: number; // turns
+  manaCost?: number;
+}
+
+export interface StatBonus {
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  magic?: number;
+  health?: number;
+}
+
+export interface EnhancedBeastPart {
+  id: string;
+  name: string;
+  imagePath: string;
+  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  statBonus: StatBonus;
+  ability?: Ability;
+}
+
+export interface EnhancedBeastPartSet {
+  id: string;
+  name: string;
+  leftImagePath: string;
+  rightImagePath: string;
+  type: 'armSet' | 'legSet';
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  statBonus: StatBonus;
+  ability?: Ability;
+}

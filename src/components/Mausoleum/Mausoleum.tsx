@@ -3,24 +3,9 @@ import { motion } from 'framer-motion';
 import { getRandomPersonality } from '../../data/personalities';
 import type { Personality } from '../../data/personalities';
 import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
+import type { EnhancedBeastPart, EnhancedBeastPartSet, StatBonus, Ability } from '../../types/abilities';
+import { ABILITIES } from '../../data/abilities';
 import './Mausoleum.css';
-
-interface BeastPart {
-  id: string;
-  name: string;
-  imagePath: string;
-  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-}
-
-interface BeastPartSet {
-  id: string;
-  name: string;
-  leftImagePath: string;
-  rightImagePath: string;
-  type: 'armSet' | 'legSet';
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-}
 
 interface SoulEssence {
   id: string;
@@ -34,13 +19,16 @@ interface CustomBeast {
   name: string;
   gender: 'male' | 'female';
   personality: Personality;
-  head: BeastPart;
-  torso: BeastPart;
-  armLeft: BeastPart;
-  armRight: BeastPart;
-  legLeft: BeastPart;
-  legRight: BeastPart;
+  head: EnhancedBeastPart;
+  torso: EnhancedBeastPart;
+  armLeft: EnhancedBeastPart;
+  armRight: EnhancedBeastPart;
+  legLeft: EnhancedBeastPart;
+  legRight: EnhancedBeastPart;
   soulEssence: SoulEssence;
+  // Calculated stats and abilities
+  totalStatBonus: StatBonus;
+  availableAbilities: Ability[];
 }
 
 interface MausoleumProps {
@@ -49,21 +37,25 @@ interface MausoleumProps {
 }
 
 // Available beast parts from existing beasts (head and torso only)
-const AVAILABLE_PARTS: BeastPart[] = [
+const AVAILABLE_PARTS: EnhancedBeastPart[] = [
   // Night Wolf parts
   {
     id: 'nightwolf-head',
     name: 'Night Wolf Head',
     imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
     type: 'head',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { magic: 2 },
+    ability: ABILITIES.howl
   },
   {
     id: 'nightwolf-torso',
     name: 'Night Wolf Torso',
     imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
     type: 'torso',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { defense: 3, health: 10 }
+    // No ability for torsos
   },
   // Mountain Dragon parts
   {
@@ -71,26 +63,32 @@ const AVAILABLE_PARTS: BeastPart[] = [
     name: 'Mountain Dragon Head',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
     type: 'head',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { magic: 3, attack: 1 },
+    ability: ABILITIES.dragonBreath
   },
   {
     id: 'mountaindragon-torso',
     name: 'Mountain Dragon Torso',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg',
     type: 'torso',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { defense: 4, health: 15 }
+    // No ability for torsos
   },
 ];
 
 // Available arm and leg sets
-const AVAILABLE_ARM_SETS: BeastPartSet[] = [
+const AVAILABLE_ARM_SETS: EnhancedBeastPartSet[] = [
   {
     id: 'nightwolf-arms',
     name: 'Night Wolf Arms',
     leftImagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
     rightImagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
     type: 'armSet',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { attack: 2, speed: 1 },
+    ability: ABILITIES.slash
   },
   {
     id: 'mountaindragon-arms',
@@ -98,18 +96,22 @@ const AVAILABLE_ARM_SETS: BeastPartSet[] = [
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
     type: 'armSet',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { attack: 3, magic: 1 },
+    ability: ABILITIES.dragonClaw
   },
 ];
 
-const AVAILABLE_LEG_SETS: BeastPartSet[] = [
+const AVAILABLE_LEG_SETS: EnhancedBeastPartSet[] = [
   {
     id: 'nightwolf-legs',
     name: 'Night Wolf Legs',
     leftImagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
     rightImagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
     type: 'legSet',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { speed: 3, defense: 1 },
+    ability: ABILITIES.charge
   },
   {
     id: 'mountaindragon-legs',
@@ -117,7 +119,9 @@ const AVAILABLE_LEG_SETS: BeastPartSet[] = [
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
     type: 'legSet',
-    rarity: 'common'
+    rarity: 'common',
+    statBonus: { speed: 2, attack: 2 },
+    ability: ABILITIES.dragonLeap
   },
 ];
 
@@ -163,6 +167,44 @@ const AVAILABLE_SOUL_ESSENCES: SoulEssence[] = [
 export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) => {
   const { getPartQuantity, getSetQuantity, getSoulEssenceQuantity, canCreateBeast, consumePartsForBeast } = useBeastPartInventory();
   
+  // Calculate total stat bonuses and available abilities
+  const calculateBeastStats = (): { totalStatBonus: StatBonus; availableAbilities: Ability[] } => {
+    const totalStatBonus: StatBonus = {
+      attack: 0,
+      defense: 0,
+      speed: 0,
+      magic: 0,
+      health: 0
+    };
+    const availableAbilities: Ability[] = [];
+
+    // Add bonuses from each part
+    const parts = [
+      selectedParts.head,
+      selectedParts.torso,
+      selectedParts.armLeft,
+      selectedParts.armRight,
+      selectedParts.legLeft,
+      selectedParts.legRight
+    ];
+
+    parts.forEach(part => {
+      if (part) {
+        Object.keys(part.statBonus).forEach(stat => {
+          const statKey = stat as keyof StatBonus;
+          totalStatBonus[statKey] = (totalStatBonus[statKey] || 0) + (part.statBonus[statKey] || 0);
+        });
+
+        // Add ability if it exists and isn't already added
+        if (part.ability && !availableAbilities.some(a => a.id === part.ability!.id)) {
+          availableAbilities.push(part.ability);
+        }
+      }
+    });
+
+    return { totalStatBonus, availableAbilities };
+  };
+
   const [beastName, setBeastName] = useState('');
   const [selectedParts, setSelectedParts] = useState<Partial<CustomBeast>>({
     name: '',
@@ -176,39 +218,43 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
   });
   const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'soulEssence'>('head');
 
-  const getPartsOfType = (type: BeastPart['type']) => {
+  const getPartsOfType = (type: EnhancedBeastPart['type']) => {
     return AVAILABLE_PARTS.filter(part => part.type === type);
   };
 
-  const getSetsOfType = (type: BeastPartSet['type']) => {
+  const getSetsOfType = (type: EnhancedBeastPartSet['type']) => {
     if (type === 'armSet') return AVAILABLE_ARM_SETS;
     if (type === 'legSet') return AVAILABLE_LEG_SETS;
     return [];
   };
 
-  const selectPart = (part: BeastPart) => {
+  const selectPart = (part: EnhancedBeastPart) => {
     setSelectedParts(prev => ({
       ...prev,
       [part.type]: part
     }));
   };
 
-  const selectPartSet = (partSet: BeastPartSet) => {
+  const selectPartSet = (partSet: EnhancedBeastPartSet) => {
     if (partSet.type === 'armSet') {
-      // Create arm parts from the set
-      const leftArm: BeastPart = {
+      // Create enhanced arm parts from the set
+      const leftArm: EnhancedBeastPart = {
         id: `${partSet.id}-left`,
         name: `${partSet.name} Left`,
         imagePath: partSet.leftImagePath,
         type: 'armLeft',
-        rarity: partSet.rarity
+        rarity: partSet.rarity,
+        statBonus: partSet.statBonus,
+        ability: partSet.ability
       };
-      const rightArm: BeastPart = {
+      const rightArm: EnhancedBeastPart = {
         id: `${partSet.id}-right`,
         name: `${partSet.name} Right`,
         imagePath: partSet.rightImagePath,
         type: 'armRight',
-        rarity: partSet.rarity
+        rarity: partSet.rarity,
+        statBonus: partSet.statBonus,
+        ability: partSet.ability
       };
       
       setSelectedParts(prev => ({
@@ -217,20 +263,24 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         armRight: rightArm
       }));
     } else if (partSet.type === 'legSet') {
-      // Create leg parts from the set
-      const leftLeg: BeastPart = {
+      // Create enhanced leg parts from the set
+      const leftLeg: EnhancedBeastPart = {
         id: `${partSet.id}-left`,
         name: `${partSet.name} Left`,
         imagePath: partSet.leftImagePath,
         type: 'legLeft',
-        rarity: partSet.rarity
+        rarity: partSet.rarity,
+        statBonus: partSet.statBonus,
+        ability: partSet.ability
       };
-      const rightLeg: BeastPart = {
+      const rightLeg: EnhancedBeastPart = {
         id: `${partSet.id}-right`,
         name: `${partSet.name} Right`,
         imagePath: partSet.rightImagePath,
         type: 'legRight',
-        rarity: partSet.rarity
+        rarity: partSet.rarity,
+        statBonus: partSet.statBonus,
+        ability: partSet.ability
       };
       
       setSelectedParts(prev => ({
@@ -294,6 +344,9 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         return;
       }
 
+      // Calculate total stats and abilities
+      const { totalStatBonus, availableAbilities } = calculateBeastStats();
+
       // Randomly assign gender (50/50 chance for male/female)
       const gender = Math.random() < 0.5 ? 'male' : 'female';
       // Randomly assign personality
@@ -310,6 +363,8 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         legLeft: selectedParts.legLeft!,
         legRight: selectedParts.legRight!,
         soulEssence: selectedParts.soulEssence!,
+        totalStatBonus,
+        availableAbilities
       });
       console.log("Consumed?", consumed);
     }
@@ -386,6 +441,46 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
               </div>
             )}
           </div>
+
+          {/* Stat Bonuses and Abilities Display */}
+          {(() => {
+            const { totalStatBonus, availableAbilities } = calculateBeastStats();
+            return (
+              <>
+                {/* Stat Bonuses Display */}
+                {Object.keys(totalStatBonus).some(key => totalStatBonus[key as keyof StatBonus]! > 0) && (
+                  <div className="stat-bonuses">
+                    <h4>Stat Bonuses</h4>
+                    <div className="bonus-list">
+                      {totalStatBonus.attack! > 0 && <span className="stat-bonus attack">⚔️ +{totalStatBonus.attack} Attack</span>}
+                      {totalStatBonus.defense! > 0 && <span className="stat-bonus defense">🛡️ +{totalStatBonus.defense} Defense</span>}
+                      {totalStatBonus.speed! > 0 && <span className="stat-bonus speed">⚡ +{totalStatBonus.speed} Speed</span>}
+                      {totalStatBonus.magic! > 0 && <span className="stat-bonus magic">🔮 +{totalStatBonus.magic} Magic</span>}
+                      {totalStatBonus.health! > 0 && <span className="stat-bonus health">❤️ +{totalStatBonus.health} Health</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Available Abilities Display */}
+                {availableAbilities.length > 0 && (
+                  <div className="available-abilities">
+                    <h4>Battle Abilities</h4>
+                    <div className="ability-list">
+                      {availableAbilities.map(ability => (
+                        <div key={ability.id} className={`ability-preview ${ability.type}`}>
+                          <span className="ability-name">{ability.name}</span>
+                          <span className="ability-description">{ability.description}</span>
+                          {ability.damage && <span className="ability-damage">💥 {ability.damage} damage</span>}
+                          {ability.healing && <span className="ability-healing">💚 {ability.healing} healing</span>}
+                          <span className="ability-cooldown">🕐 {ability.cooldown} turn cooldown</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
           </div>
 
           {/* Part Selection */}
@@ -424,6 +519,25 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                       <div className="part-info">
                         <span className="part-name">{part.name}</span>
                         <span className={`part-rarity rarity-${part.rarity}`}>{part.rarity}</span>
+                        
+                        {/* Stat bonuses */}
+                        <div className="part-stats">
+                          {Object.entries(part.statBonus).map(([stat, value]) => 
+                            value && value > 0 && (
+                              <span key={stat} className={`stat-bonus ${stat}`}>
+                                +{value} {stat}
+                              </span>
+                            )
+                          )}
+                        </div>
+                        
+                        {/* Ability */}
+                        {part.ability && (
+                          <div className="part-ability">
+                            <span className="ability-name">⚡ {part.ability.name}</span>
+                          </div>
+                        )}
+                        
                         <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{quantity}</span>
                       </div>
                     </div>
@@ -450,6 +564,25 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                       <div className="part-info">
                         <span className="part-name">{armSet.name}</span>
                         <span className={`part-rarity rarity-${armSet.rarity}`}>{armSet.rarity}</span>
+                        
+                        {/* Stat bonuses */}
+                        <div className="part-stats">
+                          {Object.entries(armSet.statBonus).map(([stat, value]) => 
+                            value && value > 0 && (
+                              <span key={stat} className={`stat-bonus ${stat}`}>
+                                +{value} {stat}
+                              </span>
+                            )
+                          )}
+                        </div>
+                        
+                        {/* Ability */}
+                        {armSet.ability && (
+                          <div className="part-ability">
+                            <span className="ability-name">⚡ {armSet.ability.name}</span>
+                          </div>
+                        )}
+                        
                         <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{setQuantity}</span>
                       </div>
                     </div>
@@ -476,6 +609,25 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                       <div className="part-info">
                         <span className="part-name">{legSet.name}</span>
                         <span className={`part-rarity rarity-${legSet.rarity}`}>{legSet.rarity}</span>
+                        
+                        {/* Stat bonuses */}
+                        <div className="part-stats">
+                          {Object.entries(legSet.statBonus).map(([stat, value]) => 
+                            value && value > 0 && (
+                              <span key={stat} className={`stat-bonus ${stat}`}>
+                                +{value} {stat}
+                              </span>
+                            )
+                          )}
+                        </div>
+                        
+                        {/* Ability */}
+                        {legSet.ability && (
+                          <div className="part-ability">
+                            <span className="ability-name">⚡ {legSet.ability.name}</span>
+                          </div>
+                        )}
+                        
                         <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{setQuantity}</span>
                       </div>
                     </div>

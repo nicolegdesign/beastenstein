@@ -524,6 +524,134 @@
   }
 }
 
+/* Stat bonuses and abilities styling */
+.stat-bonuses {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.stat-bonuses h4 {
+  margin: 0 0 8px 0;
+  color: #ffd700;
+  font-size: 14px;
+}
+
+.bonus-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.stat-bonus {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.stat-bonus.attack { background: #ff6b6b; color: white; }
+.stat-bonus.defense { background: #4ecdc4; color: white; }
+.stat-bonus.speed { background: #ffe66d; color: #333; }
+.stat-bonus.magic { background: #a8e6cf; color: #333; }
+.stat-bonus.health { background: #ff8b94; color: white; }
+
+.available-abilities {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.available-abilities h4 {
+  margin: 0 0 8px 0;
+  color: #ffd700;
+  font-size: 14px;
+}
+
+.ability-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ability-preview {
+  padding: 8px;
+  border-radius: 6px;
+  border-left: 3px solid;
+}
+
+.ability-preview.attack { 
+  background: rgba(255, 107, 107, 0.2); 
+  border-left-color: #ff6b6b; 
+}
+
+.ability-preview.defense { 
+  background: rgba(78, 205, 196, 0.2); 
+  border-left-color: #4ecdc4; 
+}
+
+.ability-preview.heal { 
+  background: rgba(168, 230, 207, 0.2); 
+  border-left-color: #a8e6cf; 
+}
+
+.ability-preview.buff { 
+  background: rgba(255, 230, 109, 0.2); 
+  border-left-color: #ffe66d; 
+}
+
+.ability-preview.debuff { 
+  background: rgba(255, 139, 148, 0.2); 
+  border-left-color: #ff8b94; 
+}
+
+.ability-name {
+  display: block;
+  font-weight: bold;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.ability-description {
+  display: block;
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.ability-damage,
+.ability-healing,
+.ability-cooldown {
+  display: inline-block;
+  font-size: 10px;
+  margin-right: 8px;
+  opacity: 0.8;
+}
+
+.part-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 5px 0;
+}
+
+.part-stats .stat-bonus {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.part-ability {
+  margin: 5px 0;
+}
+
+.part-ability .ability-name {
+  font-size: 11px;
+  color: #ffd700;
+  font-weight: bold;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .mausoleum-creator {
