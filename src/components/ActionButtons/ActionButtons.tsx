@@ -6,7 +6,7 @@ interface ActionButtonsProps {
   onPlay: () => void;
   onRest: () => void;
   onTravel: () => void;
-  onSendToFarm: () => void;
+  onReleaseToWild: () => void;
   isResting: boolean;
 }
 
@@ -15,7 +15,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onPlay, 
   onRest, 
   onTravel,
-  onSendToFarm,
+  onReleaseToWild,
   isResting 
 }) => {
   return (
@@ -37,9 +37,9 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           <span className="icon">✈️</span>
           <span className="text">TRAVEL</span>
         </button>
-        <button onClick={onSendToFarm} disabled={isResting} className="send-to-farm-button">
-          <span className="icon">🚜</span>
-          <span className="text">SEND TO FARM</span>
+        <button onClick={onReleaseToWild} disabled={isResting} className="release-to-wild-button">
+          <span className="icon">🌿</span>
+          <span className="text">RELEASE TO WILD</span>
         </button>
       </div>
     </div>

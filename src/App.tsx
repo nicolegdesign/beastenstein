@@ -493,7 +493,7 @@ function App() {
     
     if (totalBeasts >= 8) {
       setToast({
-        message: 'Maximum of 8 beasts allowed! Send a beast to the farm to make room.',
+        message: 'Maximum of 8 beasts allowed! Release a beast to the wild to make room.',
         show: true,
         type: 'info'
       });
@@ -945,14 +945,14 @@ function App() {
     }, 2500);
   }, [isResting]);
 
-  const handleSendToFarm = useCallback(() => {
+  const handleReleaseToWild = useCallback(() => {
     const beastName = currentBeastData?.name || 'Beast';
     
     // Check if this is the last beast - prevent deletion if so
     const remainingBeasts = Object.keys(beastData).filter(id => id !== currentBeastId);
     if (remainingBeasts.length === 0) {
       setToast({
-        message: 'Cannot send the last beast to the farm! You must have at least one beast.',
+        message: 'Cannot release the last beast to the wild! You must have at least one beast.',
         show: true,
         type: 'info'
       });
@@ -960,7 +960,7 @@ function App() {
     }
     
     const confirmed = window.confirm(
-      `Are you sure you want to send ${beastName} to the farm? This will permanently delete this beast and cannot be undone.`
+      `Are you sure you want to release ${beastName} to the wild? This will permanently delete this beast and cannot be undone.`
     );
     
     if (!confirmed) return;
@@ -1004,7 +1004,7 @@ function App() {
     
     // Show confirmation message
     setToast({
-      message: `${beastName} has been sent to the farm 🚜`,
+      message: `${beastName} has been released to the wild 🌿`,
       show: true,
       type: 'info'
     });
@@ -1310,7 +1310,7 @@ function App() {
             onPlay={handlePlay}
             onRest={handleRest}
             onTravel={handleTravel}
-            onSendToFarm={handleSendToFarm}
+            onReleaseToWild={handleReleaseToWild}
             isResting={isResting}
           />
         </>
