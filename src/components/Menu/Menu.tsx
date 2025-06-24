@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import './Menu.css';
 
 interface MenuProps {
-  onSelectBeast: () => void;
   onOptions: () => void;
   onSave: () => void;
   onInventory: () => void;
@@ -11,7 +10,7 @@ interface MenuProps {
   inAdventure: boolean;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, onInventory, onAdventure, onDebug, inAdventure }) => {
+export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onAdventure, onDebug, inAdventure }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -39,9 +38,9 @@ export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, on
         <div className="menu-dropdown">
           <button 
             className="menu-item"
-            onClick={() => handleMenuItemClick(onSelectBeast)}
+            onClick={() => handleMenuItemClick(onAdventure)}
           >
-            🐾 Select Your Beast
+            {inAdventure ? '🏠 Leave Adventure' : '🗺️ Adventure'}
           </button>
           <button 
             className="menu-item"
@@ -49,12 +48,7 @@ export const Menu: React.FC<MenuProps> = ({ onSelectBeast, onOptions, onSave, on
           >
             🎒 Inventory
           </button>
-          <button 
-            className="menu-item"
-            onClick={() => handleMenuItemClick(onAdventure)}
-          >
-            {inAdventure ? '🏠 Leave Adventure' : '🗺️ Adventure'}
-          </button>
+         
           <button 
             className="menu-item" 
             onClick={() => handleMenuItemClick(onOptions)}

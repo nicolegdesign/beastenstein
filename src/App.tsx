@@ -810,11 +810,6 @@ function App() {
   }, []);
 
   // Menu handlers
-  const handleSelectBeast = useCallback(() => {
-    // Beast selection is now handled by the sidebar - could open Mausoleum instead
-    setShowMausoleum(true);
-  }, []);
-
   const handleOptions = useCallback(() => {
     setShowOptions(true);
   }, []);
@@ -1180,7 +1175,6 @@ function App() {
     <InventoryProvider>
       <div className="App">
       <Menu 
-        onSelectBeast={handleSelectBeast}
         onOptions={handleOptions}
         onSave={handleSave}
         onInventory={handleInventory}
