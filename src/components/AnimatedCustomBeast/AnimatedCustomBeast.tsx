@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import './AnimatedCustomBeast.css';
 
 interface AnimatedCustomBeastProps {
-  mood?: 'normal' | 'happy' | 'sad' | 'rest';
+  mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
   size?: number;
   customBeast: {
     name: string;
@@ -30,21 +30,54 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         return 0.5; // Slower, more subdued
       case 'rest':
         return 0.3; // Very gentle breathing-like motion
+      case 'laying':
+        return 0.2; // Minimal movement while laying down
       default:
         return 1; // Normal idle
     }
   };
 
+  // Get rotation and positioning for laying down
+  const getLayingProps = () => {
+    if (mood === 'laying') {
+      return {
+        rotate: 90, // Rotate the entire beast to lay on its side
+        x: 50, // Adjust position to center when rotated
+        y: 50,
+        transition: {
+          duration: 1.5,
+          ease: "easeInOut" as const
+        }
+      };
+    }
+    return {
+      rotate: 0,
+      x: 0,
+      y: 0,
+      transition: {
+        duration: 1.5,
+        ease: "easeInOut" as const
+      }
+    };
+  };
+
   const scale = getAnimationScale();
+  const layingProps = getLayingProps();
 
   return (
-    <div 
+    <motion.div 
       className="animated-custom-beast"
       style={{ 
         width: size, 
         height: size * 1.2, // Maintain aspect ratio
         position: 'relative'
       }}
+      animate={{
+        rotate: layingProps.rotate,
+        x: layingProps.x,
+        y: layingProps.y
+      }}
+      transition={layingProps.transition}
     >
       <div className="custom-beast-container">
         
@@ -191,6 +224,34 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         />
 
       </div>
-    </div>
+      
+      {/* Sleep animation - show Z's when laying down */}
+      {mood === 'laying' && (
+        <motion.div
+          className="sleep-animation"
+          style={{
+            position: 'absolute',
+            top: '10%',
+            right: '15%',
+            fontSize: '24px',
+            color: '#87CEEB',
+            fontWeight: 'bold',
+            zIndex: 10
+          }}
+          animate={{
+            y: [-5, -15, -5],
+            opacity: [0.3, 1, 0.3],
+            scale: [0.8, 1.2, 0.8]
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          Z z z
+        </motion.div>
+      )}
+    </motion.div>
   );
 };

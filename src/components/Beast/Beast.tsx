@@ -1,34 +1,29 @@
 import React from 'react';
 import type { BeastMood } from '../../types/game';
-import { getBeastById } from '../../types/beasts';
-import { AnimatedNightWolf } from '../AnimatedNightWolf/AnimatedNightWolf';
-import { AnimatedMountainDragon } from '../AnimatedMountainDragon/AnimatedMountainDragon';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import './Beast.css';
 
 interface BeastProps {
   mood: BeastMood;
   isResting: boolean;
+  isLayingDown?: boolean;
   position: { x: number; y: number };
   beastId: string;
   disablePositioning?: boolean;
 }
 
-export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId, disablePositioning = false }) => {
-  const beastConfig = getBeastById(beastId);
-  
+export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = false, position, beastId, disablePositioning = false }) => {
   const getBeastImage = (): string => {
-    if (!beastConfig) return './images/pet-normal.png'; // fallback
-    
-    if (isResting) return beastConfig.images.rest;
+    // Fallback static image (not used for custom beasts but kept for compatibility)
+    if (isResting) return './images/pet-rest.png';
     
     switch (mood) {
       case 'happy':
-        return beastConfig.images.happy;
+        return './images/pet-happy.png';
       case 'sad':
-        return beastConfig.images.sad;
+        return './images/pet-sad.png';
       default:
-        return beastConfig.images.normal;
+        return './images/pet-normal.png';
     }
   };
 
@@ -46,35 +41,20 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
   };
 
   const renderBeastContent = () => {
-    // Use animated SVG for Night Wolf
-    if (beastId === 'nightwolf') {
-      const animatedMood = isResting ? 'rest' : mood;
-      return (
-        <AnimatedNightWolf 
-          mood={animatedMood} 
-          size={500} // Adjust size as needed
-        />
-      );
-    }
-    
-    // Use animated SVG for Mountain Dragon
-    if (beastId === 'mountaindragon') {
-      const animatedMood = isResting ? 'rest' : mood;
-      return (
-        <AnimatedMountainDragon 
-          mood={animatedMood} 
-          size={500} // Adjust size as needed
-        />
-      );
-    }
-    
-    // Use animated SVG for custom beasts
+    // All beasts are now custom beasts
     if (beastId.startsWith('custom_')) {
       const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
       if (customBeastData) {
         try {
           const customBeast = JSON.parse(customBeastData);
-          const animatedMood = isResting ? 'rest' : mood;
+          let animatedMood: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
+          if (isLayingDown) {
+            animatedMood = 'laying';
+          } else if (isResting) {
+            animatedMood = 'rest';
+          } else {
+            animatedMood = mood;
+          }
           return (
             <AnimatedCustomBeast 
               mood={animatedMood} 
@@ -88,7 +68,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, position, beastId
       }
     }
     
-    // Use static image for other beasts
+    // Fallback to static image for any edge cases
     return <img src={getBeastImage()} alt="Your Beast" />;
   };
 

@@ -19,6 +19,31 @@
   pointer-events: none;
 }
 
+/* Laying down animation enhancements */
+.animated-custom-beast.laying-down {
+  transform-origin: center center;
+}
+
+.custom-beast-container.laying-down {
+  transition: all 1.5s ease-in-out;
+}
+
+/* Subtle shadow effect when laying down */
+.animated-custom-beast.laying-down::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  filter: blur(8px);
+  opacity: 0.6;
+  z-index: -1;
+}
+
 /* Layer ordering - back to front */
 .custom-beast-leg-left {
   z-index: 1;

@@ -232,6 +232,7 @@ function App() {
   const [showMausoleum, setShowMausoleum] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
   const [showSteakAnimation, setShowSteakAnimation] = useState(false);
+  const [isLayingDown, setIsLayingDown] = useState(false);
   
   // Initialize game options from localStorage or defaults
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
@@ -1028,6 +1029,20 @@ function App() {
     setShowSteakAnimation(false);
   }, []);
 
+  const handleRest = useCallback(() => {
+    // Trigger laying down animation first
+    setIsLayingDown(true);
+    
+    // After the laying animation completes, start the actual rest
+    setTimeout(() => {
+      startRest();
+      // Keep laying animation for a bit longer to show the beast is resting
+      setTimeout(() => {
+        setIsLayingDown(false);
+      }, 2000); // Beast stays laying for 2 seconds
+    }, 1500); // Wait for laying animation to complete (1.5 seconds)
+  }, [startRest]);
+
   const handleResetAllBeasts = useCallback(() => {
     // Show confirmation dialog
     const confirmed = window.confirm(
@@ -1282,6 +1297,7 @@ function App() {
             backgroundIndex={currentBackgroundIndex}
             beastMood={getBeastMood()}
             isResting={isResting}
+            isLayingDown={isLayingDown}
             beastPosition={position}
             beastId={currentBeastId}
             hunger={stats.hunger}
@@ -1289,7 +1305,7 @@ function App() {
             enhancedHealth={getEnhancedHealth(currentBeastId)}
             poos={poos}
             onFeedFromBowl={handleFeed}
-            onRestFromBed={startRest}
+            onRestFromBed={handleRest}
             onCleanupPoo={handlePooCleanup}
             showSteakAnimation={showSteakAnimation}
             onSteakAnimationComplete={handleSteakAnimationComplete}
@@ -1298,7 +1314,7 @@ function App() {
           <ActionButtons
             onFeed={handleFeed}
             onPlay={handlePlay}
-            onRest={startRest}
+            onRest={handleRest}
             onTravel={handleTravel}
             onSendToFarm={handleSendToFarm}
             isResting={isResting}

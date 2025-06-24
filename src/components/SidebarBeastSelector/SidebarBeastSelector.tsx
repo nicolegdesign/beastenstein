@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BEASTS } from '../../types/beasts';
-import type { BeastConfig } from '../../types/beasts';
 import type { IndividualBeastData } from '../../types/game';
 import type { Personality } from '../../data/personalities';
 import './SidebarBeastSelector.css';
@@ -196,29 +194,6 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
         </span>
       </h4>
       <div className="sidebar-beast-list">
-        {/* Static BEASTS */}
-        {BEASTS.map((beast: BeastConfig) => {
-          const data = beastData?.[beast.id];
-          const displayName = data?.name || beast.name;
-          
-          return (
-            <button
-              key={beast.id}
-              className={`sidebar-beast-button ${currentBeastId === beast.id ? 'active' : ''}`}
-              onClick={() => onBeastChange(beast.id)}
-              title={`Switch to ${displayName}`}
-            >
-              <img src={beast.images.normal} alt={displayName} />
-              <div className="sidebar-beast-info">
-                <span className="sidebar-beast-name">{displayName}</span>
-                {data && (
-                  <div className="sidebar-beast-level">Lv.{data.level}</div>
-                )}
-              </div>
-            </button>
-          );
-        })}
-
         {/* Custom Beasts */}
         {customBeasts.map((customBeast, index) => {
           const data = beastData?.[customBeast.id];

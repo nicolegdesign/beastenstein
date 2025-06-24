@@ -15,6 +15,7 @@ interface BeastDenProps {
   backgroundIndex: number;
   beastMood: BeastMood;
   isResting: boolean;
+  isLayingDown?: boolean;
   beastPosition: { x: number; y: number };
   beastId: string;
   hunger: number;
@@ -40,6 +41,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   backgroundIndex,
   beastMood,
   isResting,
+  isLayingDown = false,
   beastPosition,
   beastId,
   hunger,
@@ -69,6 +71,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
         key={beastId}
         mood={beastMood}
         isResting={isResting}
+        isLayingDown={isLayingDown}
         position={beastPosition}
         beastId={beastId}
       />
