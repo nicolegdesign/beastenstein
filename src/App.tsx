@@ -11,6 +11,8 @@ import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
 import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
+import { IntroStory } from './components/IntroStory/IntroStory';
+import { BeastSelection } from './components/BeastSelection/BeastSelection';
 import { InventoryProvider } from './contexts/InventoryContext';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
@@ -73,6 +75,13 @@ const getMaxLevelFromSoul = (soulId: string): number => {
 };
 
 function App() {
+  // Game flow state
+  const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
+    // Check if this is a first-time user
+    const hasPlayed = localStorage.getItem('hasPlayedBefore');
+    return hasPlayed ? 'game' : 'intro';
+  });
+
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   
   // Initialize individual beast data from localStorage (custom beasts only)
@@ -464,6 +473,47 @@ function App() {
   const { position } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
+
+  // Intro flow handlers
+  const handleIntroComplete = useCallback(() => {
+    setGameState('beastSelection');
+  }, []);
+
+  const handleBeastSelected = useCallback((name: string) => {
+    // Create the first Night Wolf beast with the chosen name
+    const now = Date.now();
+    const customBeastId = `custom_${now}`;
+    
+    const newBeastData: IndividualBeastData = {
+      name: name,
+      hunger: 90,
+      happiness: 90,
+      energy: 90,
+      health: 100,
+      level: 1,
+      age: 0,
+      attack: 6,
+      defense: 6,
+      speed: 6,
+      magic: 6,
+      isResting: false,
+      createdAt: now,
+      experience: 0,
+      maxLevel: 50
+    };
+    
+    // Save to state and localStorage
+    setBeastData({ [customBeastId]: newBeastData });
+    setCurrentBeastId(customBeastId);
+    
+    // Save to localStorage with consolidated format
+    const allBeastData = { [customBeastId]: newBeastData };
+    localStorage.setItem('beastData', JSON.stringify(allBeastData));
+    localStorage.setItem('hasPlayedBefore', 'true');
+    
+    // Transition to game
+    setGameState('game');
+  }, []);
 
   const handleBeastChange = useCallback((beastId: string) => {
     // All beasts are now custom beasts
@@ -1174,20 +1224,33 @@ function App() {
   return (
     <InventoryProvider>
       <div className="App">
-      <Menu 
-        onOptions={handleOptions}
-        onSave={handleSave}
-        onInventory={handleInventory}
-        onAdventure={handleAdventure}
-        onDebug={handleDebug}
-        inAdventure={inAdventure}
-      />
+        {/* Intro Story Screen */}
+        {gameState === 'intro' && (
+          <IntroStory onComplete={handleIntroComplete} />
+        )}
 
-      {/* Beast name and info in upper left */}
-      <div className="beast-header">
-        <h1><EditableName 
-          key={currentBeastId}
-          initialName={currentBeastData.name} 
+        {/* Beast Selection Screen */}
+        {gameState === 'beastSelection' && (
+          <BeastSelection onBeastSelected={handleBeastSelected} />
+        )}
+
+        {/* Main Game Screen */}
+        {gameState === 'game' && (
+          <>
+            <Menu 
+              onOptions={handleOptions}
+              onSave={handleSave}
+              onInventory={handleInventory}
+              onAdventure={handleAdventure}
+              onDebug={handleDebug}
+              inAdventure={inAdventure}
+            />
+
+            {/* Beast name and info in upper left */}
+            <div className="beast-header">
+              <h1><EditableName 
+                key={currentBeastId}
+                initialName={currentBeastData.name} 
           onNameChange={handleNameChange} 
           beastId={currentBeastId} 
         /></h1>
@@ -1328,6 +1391,8 @@ function App() {
           🎉 LEVEL UP! 🎉
         </div>
       )}
+          </>
+        )}
       </div>
     </InventoryProvider>
   );
