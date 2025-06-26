@@ -61,7 +61,7 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
             The seams look a bit loose,  but they should hold... Choose your beast's name and begin your journey.
           </p>
           
-          <div className="beast-preview">
+          <div className="beast-selection-preview">
             <div className="beast-silhouette">
               <AnimatedCustomBeast
                 customBeast={nightWolfConfig}

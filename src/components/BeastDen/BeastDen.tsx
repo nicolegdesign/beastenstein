@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { Beast } from '../Beast/Beast';
 import { Poo } from '../Poo/Poo';
 import { AnimatedSteak } from '../AnimatedSteak/AnimatedSteak';
-import type { BeastMood, BeastCombatStats } from '../../types/game';
+import type { BeastMood } from '../../types/game';
 import './BeastDen.css';
 
 interface PooItem {
@@ -19,8 +19,6 @@ interface BeastDenProps {
   beastPosition: { x: number; y: number };
   beastId: string;
   hunger: number;
-  combatStats: BeastCombatStats;
-  enhancedHealth: number;
   poos: PooItem[];
   onFeedFromBowl: () => void;
   onRestFromBed: () => void;
@@ -45,8 +43,6 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   beastPosition,
   beastId,
   hunger,
-  combatStats,
-  enhancedHealth,
   poos,
   onFeedFromBowl,
   onRestFromBed,
@@ -75,41 +71,6 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
         position={beastPosition}
         beastId={beastId}
       />
-      
-      {/* Combat Stats Table */}
-      <div className="combat-stats-container">
-        <div className="combat-stats-table">
-          <h4 className="stats-title">Combat Stats ✨</h4>
-          <div className="stats-subtitle">Enhanced with Part Bonuses</div>
-          <div className="stats-grid">
-            <div className="stat-item">
-              <span className="stat-icon">⚔️</span>
-              <span className="stat-label">Attack</span>
-              <span className="stat-value">{combatStats.attack}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">🛡️</span>
-              <span className="stat-label">Defense</span>
-              <span className="stat-value">{combatStats.defense}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">⚡</span>
-              <span className="stat-label">Speed</span>
-              <span className="stat-value">{combatStats.speed}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">🔮</span>
-              <span className="stat-label">Magic</span>
-              <span className="stat-value">{combatStats.magic}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">❤️</span>
-              <span className="stat-label">Health</span>
-              <span className="stat-value">{enhancedHealth}</span>
-            </div>
-          </div>
-        </div>
-      </div>
       
       <div id="food-bowl" onClick={onFeedFromBowl}>
         <img src={getBowlImage()} alt="Food Bowl" />

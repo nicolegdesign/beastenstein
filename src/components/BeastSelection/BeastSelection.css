@@ -89,7 +89,7 @@
   font-style: italic;
 }
 
-.beast-preview {
+.beast-selection-preview {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;

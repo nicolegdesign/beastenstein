@@ -1373,8 +1373,6 @@ function App() {
             beastPosition={position}
             beastId={currentBeastId}
             hunger={stats.hunger}
-            combatStats={getEnhancedCombatStats(currentBeastId)}
-            enhancedHealth={getEnhancedHealth(currentBeastId)}
             poos={poos}
             onFeedFromBowl={handleFeed}
             onRestFromBed={handleRest}
@@ -1382,6 +1380,41 @@ function App() {
             showSteakAnimation={showSteakAnimation}
             onSteakAnimationComplete={handleSteakAnimationComplete}
           />
+
+          {/* Combat Stats Container - positioned on the right side */}
+          <div className="combat-stats-container">
+            <div className="combat-stats-table">
+              <h4 className="stats-title">Combat Stats ✨</h4>
+              <div className="stats-subtitle">Enhanced with Part Bonuses</div>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-icon">⚔️</span>
+                  <span className="stat-label">Attack</span>
+                  <span className="stat-value">{getEnhancedCombatStats(currentBeastId).attack}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">🛡️</span>
+                  <span className="stat-label">Defense</span>
+                  <span className="stat-value">{getEnhancedCombatStats(currentBeastId).defense}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">⚡</span>
+                  <span className="stat-label">Speed</span>
+                  <span className="stat-value">{getEnhancedCombatStats(currentBeastId).speed}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">🔮</span>
+                  <span className="stat-label">Magic</span>
+                  <span className="stat-value">{getEnhancedCombatStats(currentBeastId).magic}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-icon">❤️</span>
+                  <span className="stat-label">Health</span>
+                  <span className="stat-value">{getEnhancedHealth(currentBeastId)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <ActionButtons
             onFeed={handleFeed}

@@ -7,15 +7,15 @@ interface IntroStoryProps {
 
 const storySegments = [
   {
-    text: "You were born in the Forbidden Lands—a vast, shadow-soaked region stitched together by fog, bone, and forgotten rituals. For generations, the Stitchers have ruled here, shaping beasts from scraps of flesh, fur, and soul to fight, conquer, and dominate.",
+    text: "You were born in the Forbidden Lands. A vast, shadow-soaked region stitched together by fog, bone, and dark rituals. For generations, the Stitchers have ruled here, shaping beasts from scraps of flesh, fur, and soul to fight, conquer, and dominate.",
     image: "./images/forrest-clearing.jpg"
   },
   {
-    text: "You were raised among them… but you've never truly belonged.\n\nWhere others saw beasts as tools or trophies, you saw companions. While they stitched for power, you stitched for love. Your beasts are your friends—woven not from cold ambition, but from care and connection.",
+    text: "You were raised among them… but you've never truly belonged.\n\nWhere others saw beasts as tools or trophies, you saw companions. While they stitched for power, you stitched for love. Your beasts are your friends—woven not from cold ambition, but from care and connection.\n\n Some call you soft. Others call you foolish.",
     image: "./images/forrest-clearing.jpg"
   },
   {
-    text: "Some call you soft. Others call you foolish.\n\nArmed with a soulneedle, a half-scorched bestiary, and a knack for creative anatomy, you leave the comfort of the Bonehome orphanage to chase a whisper: the ruins of Castle Beastenstein are stirring.",
+    text: "Armed with the magic soulneedle, a half-scorched bestiary, and a knack for creative anatomy, you leave the comfort of the Kinderstich orphanage to chase a whisper: the ruins of Castle Beastenstein are stirring.",
     image: "./images/forrest-clearing.jpg"
   },
   {
