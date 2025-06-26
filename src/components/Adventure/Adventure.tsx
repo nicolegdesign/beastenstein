@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
+import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { useInventoryContext } from '../../contexts/InventoryContext';
 import type { BeastCombatStats } from '../../types/game';
 import type { EnhancedBeastPart, Ability, StatBonus } from '../../types/abilities';
@@ -63,16 +64,18 @@ interface AdventureProps {
 
 export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience }) => {
   const { setInventory } = useInventoryContext();
-  const [gameState, setGameState] = useState<'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('setup');
-  const [opponentLevel] = useState(1); // Start with level 1 opponents
+  const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
+  const [selectedLevel, setSelectedLevel] = useState<number>(1);
+  const [opponentLevel, setOpponentLevel] = useState<number>(1);
   const [currentTurn, setCurrentTurn] = useState<'player' | 'opponent'>('player');
   const [opponent, setOpponent] = useState<CustomBeast | null>(null);
-  const [opponentStats] = useState<BeastCombatStats>({
+  const [opponentStats, setOpponentStats] = useState<BeastCombatStats>({
     attack: 5,
     defense: 4,
     speed: 3,
     magic: 2
   });
+  const [opponentMaxHealth, setOpponentMaxHealth] = useState<number>(100);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [droppedLoot, setDroppedLoot] = useState<DroppedLoot | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
@@ -90,139 +93,191 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     turn: 'player'
   });
 
-  // Generate random opponent
-  useEffect(() => {
-    const generateOpponent = (): CustomBeast => {
-      const availableParts = {
-        heads: [
-          { id: 'nightwolf-head', name: 'Night Wolf Head', imagePath: './images/beasts/night-wolf/night-wolf-head.svg', type: 'head' as const, rarity: 'common' as const },
-          { id: 'mountaindragon-head', name: 'Mountain Dragon Head', imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg', type: 'head' as const, rarity: 'common' as const }
-        ],
-        torsos: [
-          { id: 'nightwolf-torso', name: 'Night Wolf Torso', imagePath: './images/beasts/night-wolf/night-wolf-torso.svg', type: 'torso' as const, rarity: 'common' as const },
-          { id: 'mountaindragon-torso', name: 'Mountain Dragon Torso', imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg', type: 'torso' as const, rarity: 'common' as const }
-        ],
-        arms: [
-          { left: './images/beasts/night-wolf/night-wolf-arm-l.svg', right: './images/beasts/night-wolf/night-wolf-arm-r.svg', name: 'Night Wolf Arms' },
-          { left: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg', name: 'Mountain Dragon Arms' }
-        ],
-        legs: [
-          { left: './images/beasts/night-wolf/night-wolf-leg-l.svg', right: './images/beasts/night-wolf/night-wolf-leg-r.svg', name: 'Night Wolf Legs' },
-          { left: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg', name: 'Mountain Dragon Legs' }
-        ]
-      };
-
-      const randomHead = availableParts.heads[Math.floor(Math.random() * availableParts.heads.length)];
-      const randomTorso = availableParts.torsos[Math.floor(Math.random() * availableParts.torsos.length)];
-      const randomArms = availableParts.arms[Math.floor(Math.random() * availableParts.arms.length)];
-      const randomLegs = availableParts.legs[Math.floor(Math.random() * availableParts.legs.length)];
-
-      return {
-        name: 'Wild Beast',
-        gender: Math.random() < 0.5 ? 'male' : 'female',
-        head: {
-          ...randomHead,
-          statBonus: { magic: 1 },
-          ability: {
-            id: 'bite',
-            name: 'Bite',
-            description: 'A savage bite attack',
-            type: 'attack' as const,
-            damage: 12,
-            cooldown: 2,
-            manaCost: 5
-          }
-        },
-        torso: {
-          ...randomTorso,
-          statBonus: { defense: 2, health: 5 }
-        },
-        armLeft: {
-          id: 'opponent-arm-left',
-          name: `${randomArms.name} Left`,
-          imagePath: randomArms.left,
-          type: 'armLeft',
-          rarity: 'common',
-          statBonus: { attack: 1 }
-        },
-        armRight: {
-          id: 'opponent-arm-right',
-          name: `${randomArms.name} Right`,
-          imagePath: randomArms.right,
-          type: 'armRight',
-          rarity: 'common',
-          statBonus: { attack: 1 },
-          ability: {
-            id: 'claw',
-            name: 'Claw',
-            description: 'Sharp claw attack',
-            type: 'attack' as const,
-            damage: 10,
-            cooldown: 1,
-            manaCost: 3
-          }
-        },
-        legLeft: {
-          id: 'opponent-leg-left',
-          name: `${randomLegs.name} Left`,
-          imagePath: randomLegs.left,
-          type: 'legLeft',
-          rarity: 'common',
-          statBonus: { speed: 1 }
-        },
-        legRight: {
-          id: 'opponent-leg-right',
-          name: `${randomLegs.name} Right`,
-          imagePath: randomLegs.right,
-          type: 'legRight',
-          rarity: 'common',
-          statBonus: { speed: 1 }
-        },
-        soulEssence: {
-          id: 'dim-soul',
-          name: 'Dim Soul',
-          description: 'A faint glimmer of spiritual energy',
-          imagePath: './images/items/dim-soul.png',
-          rarity: 'common'
-        },
-        totalStatBonus: { attack: 2, defense: 2, speed: 2, magic: 1, health: 5 },
-        availableAbilities: [
-          {
-            id: 'bite',
-            name: 'Bite',
-            description: 'A savage bite attack',
-            type: 'attack' as const,
-            damage: 12,
-            cooldown: 2,
-            manaCost: 5
-          },
-          {
-            id: 'claw',
-            name: 'Claw',
-            description: 'Sharp claw attack',
-            type: 'attack' as const,
-            damage: 10,
-            cooldown: 1,
-            manaCost: 3
-          }
-        ]
-      };
+  // Handle level selection from map
+  const handleLevelSelect = (level: number) => {
+    setSelectedLevel(level);
+    setOpponentLevel(level);
+    setGameState('setup');
+    
+    // Scale opponent stats based on level
+    const baseStats = { attack: 5, defense: 4, speed: 3, magic: 2 };
+    const scaledStats = {
+      attack: baseStats.attack + (level - 1) * 2,
+      defense: baseStats.defense + (level - 1) * 2,
+      speed: baseStats.speed + (level - 1) * 1,
+      magic: baseStats.magic + (level - 1) * 1
     };
+    setOpponentStats(scaledStats);
+    
+    // Calculate opponent health based on level and their parts
+    // Base health of 100, +20 per level, +health bonuses from parts
+    const baseHealth = 100;
+    const levelHealthBonus = (level - 1) * 20;
+    // Will be updated when opponent is generated with their part bonuses
+    
+    setCombatState(prev => ({
+      ...prev,
+      playerHealth: playerStats.health,
+      opponentHealth: baseHealth + levelHealthBonus // Will be updated with part bonuses
+    }));
+  };
 
-    const newOpponent = generateOpponent();
-    setOpponent(newOpponent);
-    
-    // Determine who goes first based on speed
-    if (playerStats.speed >= opponentStats.speed) {
-      setCurrentTurn('player');
-      setBattleLog(['Battle begins! You move first!']);
-    } else {
-      setCurrentTurn('opponent');
-      setBattleLog(['Battle begins! The opponent moves first!']);
+  const handleMapClose = () => {
+    onClose();
+  };
+
+  // Generate random opponent when entering setup
+  useEffect(() => {
+    if (gameState === 'setup') {
+      const generateOpponent = (): CustomBeast => {
+        const availableParts = {
+          heads: [
+            { id: 'nightwolf-head', name: 'Night Wolf Head', imagePath: './images/beasts/night-wolf/night-wolf-head.svg', type: 'head' as const, rarity: 'common' as const },
+            { id: 'mountaindragon-head', name: 'Mountain Dragon Head', imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg', type: 'head' as const, rarity: 'common' as const }
+          ],
+          torsos: [
+            { id: 'nightwolf-torso', name: 'Night Wolf Torso', imagePath: './images/beasts/night-wolf/night-wolf-torso.svg', type: 'torso' as const, rarity: 'common' as const },
+            { id: 'mountaindragon-torso', name: 'Mountain Dragon Torso', imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg', type: 'torso' as const, rarity: 'common' as const }
+          ],
+          arms: [
+            { left: './images/beasts/night-wolf/night-wolf-arm-l.svg', right: './images/beasts/night-wolf/night-wolf-arm-r.svg', name: 'Night Wolf Arms' },
+            { left: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg', name: 'Mountain Dragon Arms' }
+          ],
+          legs: [
+            { left: './images/beasts/night-wolf/night-wolf-leg-l.svg', right: './images/beasts/night-wolf/night-wolf-leg-r.svg', name: 'Night Wolf Legs' },
+            { left: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg', name: 'Mountain Dragon Legs' }
+          ]
+        };
+
+        const randomHead = availableParts.heads[Math.floor(Math.random() * availableParts.heads.length)];
+        const randomTorso = availableParts.torsos[Math.floor(Math.random() * availableParts.torsos.length)];
+        const randomArms = availableParts.arms[Math.floor(Math.random() * availableParts.arms.length)];
+        const randomLegs = availableParts.legs[Math.floor(Math.random() * availableParts.legs.length)];
+
+        // Scale part bonuses based on level
+        const levelMultiplier = 1 + (opponentLevel - 1) * 0.2; // 20% increase per level
+        
+        const opponent: CustomBeast = {
+          name: 'Wild Beast',
+          gender: Math.random() < 0.5 ? 'male' : 'female',
+          head: {
+            ...randomHead,
+            statBonus: { magic: Math.floor(2 * levelMultiplier) },
+            ability: {
+              id: 'bite',
+              name: 'Bite',
+              description: 'A savage bite attack',
+              type: 'attack' as const,
+              damage: Math.floor(12 * levelMultiplier),
+              cooldown: 2,
+              manaCost: 5
+            }
+          },
+          torso: {
+            ...randomTorso,
+            statBonus: { 
+              defense: Math.floor(3 * levelMultiplier), 
+              health: Math.floor(20 * levelMultiplier) // More health from torso
+            }
+          },
+          armLeft: {
+            id: 'opponent-arm-left',
+            name: `${randomArms.name} Left`,
+            imagePath: randomArms.left,
+            type: 'armLeft',
+            rarity: 'common',
+            statBonus: { attack: Math.floor(2 * levelMultiplier) }
+          },
+          armRight: {
+            id: 'opponent-arm-right',
+            name: `${randomArms.name} Right`,
+            imagePath: randomArms.right,
+            type: 'armRight',
+            rarity: 'common',
+            statBonus: { attack: Math.floor(2 * levelMultiplier) },
+            ability: {
+              id: 'claw',
+              name: 'Claw',
+              description: 'Sharp claw attack',
+              type: 'attack' as const,
+              damage: Math.floor(10 * levelMultiplier),
+              cooldown: 1,
+              manaCost: 3
+            }
+          },
+          legLeft: {
+            id: 'opponent-leg-left',
+            name: `${randomLegs.name} Left`,
+            imagePath: randomLegs.left,
+            type: 'legLeft',
+            rarity: 'common',
+            statBonus: { speed: Math.floor(1 * levelMultiplier) }
+          },
+          legRight: {
+            id: 'opponent-leg-right',
+            name: `${randomLegs.name} Right`,
+            imagePath: randomLegs.right,
+            type: 'legRight',
+            rarity: 'common',
+            statBonus: { speed: Math.floor(1 * levelMultiplier) }
+          },
+          soulEssence: {
+            id: 'dim-soul',
+            name: 'Dim Soul',
+            description: 'A faint glimmer of spiritual energy',
+            imagePath: './images/items/dim-soul.png',
+            rarity: 'common'
+          },
+          totalStatBonus: { 
+            attack: Math.floor(4 * levelMultiplier), 
+            defense: Math.floor(3 * levelMultiplier), 
+            speed: Math.floor(2 * levelMultiplier), 
+            magic: Math.floor(2 * levelMultiplier), 
+            health: Math.floor(20 * levelMultiplier) 
+          },
+          availableAbilities: [
+            {
+              id: 'bite',
+              name: 'Bite',
+              description: 'A savage bite attack',
+              type: 'attack' as const,
+              damage: Math.floor(12 * levelMultiplier),
+              cooldown: 2,
+              manaCost: 5
+            },
+            {
+              id: 'claw',
+              name: 'Claw',
+              description: 'Sharp claw attack',
+              type: 'attack' as const,
+              damage: Math.floor(10 * levelMultiplier),
+              cooldown: 1,
+              manaCost: 3
+            }
+          ]
+        };
+
+        return opponent;
+      };
+
+      const newOpponent = generateOpponent();
+      setOpponent(newOpponent);
+      
+      // Update combat state with proper opponent health including part bonuses
+      const baseHealth = 100;
+      const levelHealthBonus = (selectedLevel - 1) * 20;
+      const partHealthBonus = newOpponent.totalStatBonus.health || 0;
+      const totalOpponentHealth = baseHealth + levelHealthBonus + partHealthBonus;
+      
+      setOpponentMaxHealth(totalOpponentHealth);
+      setCombatState(prev => ({
+        ...prev,
+        opponentHealth: totalOpponentHealth
+      }));
+      
+      console.log(`Generated Level ${opponentLevel} opponent with ${totalOpponentHealth} health (base: ${baseHealth}, level bonus: ${levelHealthBonus}, part bonus: ${partHealthBonus})`);
     }
-    
-    setGameState('battle');
-  }, [playerStats.speed, opponentStats.speed]);
+  }, [gameState, selectedLevel, opponentLevel]);
 
   // Generate loot drop based on rarity weights
   const generateLoot = (): DroppedLoot => {
@@ -418,6 +473,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     setGameState('victory');
     setBattleLog(prev => [...prev, 'Victory! You defeated the wild beast!']);
     
+    // Update adventure progress
+    updateAdventureProgress(selectedLevel);
+    
     // Generate loot drop
     const loot = generateLoot();
     setDroppedLoot(loot);
@@ -446,6 +504,40 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     const expGained = calculateExperienceGain(opponentLevel);
     console.log('Victory! Calculating experience:', expGained, 'for opponent level:', opponentLevel);
     gainExperience(expGained);
+  };
+
+  // Update adventure progress when a level is completed
+  const updateAdventureProgress = (completedLevel: number) => {
+    try {
+      const savedProgress = localStorage.getItem('adventureProgress');
+      let progress: { maxUnlockedLevel: number; completedLevels: number[] } = { 
+        maxUnlockedLevel: 1, 
+        completedLevels: [] 
+      };
+      
+      if (savedProgress) {
+        progress = JSON.parse(savedProgress);
+        // Ensure arrays are properly initialized
+        if (!progress.completedLevels) {
+          progress.completedLevels = [];
+        }
+      }
+      
+      // Mark level as completed
+      if (!progress.completedLevels.includes(completedLevel)) {
+        progress.completedLevels.push(completedLevel);
+      }
+      
+      // Unlock next level
+      if (completedLevel >= progress.maxUnlockedLevel && completedLevel < 10) {
+        progress.maxUnlockedLevel = completedLevel + 1;
+      }
+      
+      localStorage.setItem('adventureProgress', JSON.stringify(progress));
+      console.log('Adventure progress updated:', progress);
+    } catch (error) {
+      console.error('Failed to update adventure progress:', error);
+    }
   };
 
   const basicAttack = () => {
@@ -578,6 +670,39 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     setGameState('loot');
   };
 
+  const returnToMap = () => {
+    setGameState('map');
+  };
+
+  const startBattle = () => {
+    // Calculate opponent's total health
+    const baseHealth = 100;
+    const levelHealthBonus = (selectedLevel - 1) * 20;
+    const partHealthBonus = opponent?.totalStatBonus?.health || 0;
+    const totalOpponentHealth = baseHealth + levelHealthBonus + partHealthBonus;
+    
+    setOpponentMaxHealth(totalOpponentHealth);
+    
+    // Reset battle state
+    setCombatState({
+      playerHealth: playerStats.health,
+      playerMana: 50,
+      opponentHealth: totalOpponentHealth,
+      playerAbilityCooldowns: [],
+      statusEffects: {
+        player: {},
+        opponent: {}
+      },
+      turn: 'player'
+    });
+    
+    // Reset battle log
+    setBattleLog(['Battle begins! You move first!']);
+    
+    // Start the battle
+    setGameState('battle');
+  };
+
   const getPlayerBeast = (): CustomBeast | null => {
     try {
       const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
@@ -634,6 +759,99 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
 
   return (
     <div className="adventure">
+      {/* Adventure Map */}
+      {gameState === 'map' && (
+        <AdventureMap 
+          onLevelSelect={handleLevelSelect}
+          onClose={handleMapClose}
+        />
+      )}
+
+      {/* Setup Screen */}
+      {gameState === 'setup' && (
+        <div className="setup-screen">
+          <div className="setup-background">
+            <div className="setup-overlay" />
+          </div>
+          
+          <div className="setup-content">
+            <motion.h2 
+              className="setup-title"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              Level {selectedLevel} Challenge
+            </motion.h2>
+            
+            <div className="opponent-preview">
+              <motion.div 
+                className="opponent-info"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <h3>Wild Beast (Level {opponentLevel})</h3>
+                <div className="opponent-stats-preview">
+                  <div className="stat-preview">
+                    <span className="stat-icon">⚔️</span>
+                    <span>ATK: {opponentStats.attack + (opponent?.totalStatBonus?.attack || 0)}</span>
+                  </div>
+                  <div className="stat-preview">
+                    <span className="stat-icon">🛡️</span>
+                    <span>DEF: {opponentStats.defense + (opponent?.totalStatBonus?.defense || 0)}</span>
+                  </div>
+                  <div className="stat-preview">
+                    <span className="stat-icon">⚡</span>
+                    <span>SPD: {opponentStats.speed + (opponent?.totalStatBonus?.speed || 0)}</span>
+                  </div>
+                  <div className="stat-preview">
+                    <span className="stat-icon">✨</span>
+                    <span>MAG: {opponentStats.magic + (opponent?.totalStatBonus?.magic || 0)}</span>
+                  </div>
+                </div>
+                
+                {opponent && (
+                  <div className="opponent-visual-preview">
+                    <AnimatedCustomBeast 
+                      mood="normal" 
+                      size={150}
+                      customBeast={opponent}
+                    />
+                  </div>
+                )}
+              </motion.div>
+            </div>
+            
+            <div className="setup-actions">
+              <motion.button
+                className="setup-btn back-to-map"
+                onClick={returnToMap}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                ← Back to Map
+              </motion.button>
+              
+              <motion.button
+                className="setup-btn start-battle"
+                onClick={startBattle}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                Begin Battle! ⚔️
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {gameState === 'battle' && (
         <div className="battle-arena">
           {/* Background */}
@@ -705,9 +923,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                 <div className="health-bar">
                   <div 
                     className="health-fill opponent-health" 
-                    style={{ width: `${(combatState.opponentHealth / 30) * 100}%` }}
+                    style={{ width: `${(combatState.opponentHealth / opponentMaxHealth) * 100}%` }}
                   />
-                  <span className="health-text">{combatState.opponentHealth}/30</span>
+                  <span className="health-text">{combatState.opponentHealth}/{opponentMaxHealth}</span>
                 </div>
                 <div className="stats-mini">
                   <span>ATK: {opponentStats.attack + (opponent?.totalStatBonus?.attack || 0)}</span>
@@ -885,11 +1103,11 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             </div>
             <motion.button
               className="loot-continue-btn"
-              onClick={onClose}
+              onClick={returnToMap}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Return to Beast Den
+              Return to Map
             </motion.button>
           </motion.div>
         </div>
