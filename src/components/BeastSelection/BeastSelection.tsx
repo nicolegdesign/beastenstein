@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import './BeastSelection.css';
 
 interface BeastSelectionProps {
@@ -8,6 +9,29 @@ interface BeastSelectionProps {
 export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected }) => {
   const [beastName, setBeastName] = useState('Night Wolf');
   const [isNaming, setIsNaming] = useState(false);
+
+  // Night Wolf configuration for preview
+  const nightWolfConfig = {
+    name: 'Night Wolf',
+    head: {
+      imagePath: './images/beasts/night-wolf/night-wolf-head.svg'
+    },
+    torso: {
+      imagePath: './images/beasts/night-wolf/night-wolf-torso.svg'
+    },
+    armLeft: {
+      imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg'
+    },
+    armRight: {
+      imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg'
+    },
+    legLeft: {
+      imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg'
+    },
+    legRight: {
+      imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg'
+    }
+  };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBeastName(e.target.value);
@@ -32,47 +56,42 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
       
       <div className="selection-content">
         <div className="forest-clearing">
-          <h1 className="selection-title">The Forest Clearing</h1>
+          <h1 className="selection-title">You've Stiched your first Beast!</h1>
           <p className="selection-subtitle">
-            A mystical presence stirs in the shadows...
+            The seams look a bit loose,  but they should hold... Choose your beast's name and begin your journey.
           </p>
           
           <div className="beast-preview">
             <div className="beast-silhouette">
-              <img 
-                src="/images/pet-normal.png" 
-                alt="Night Wolf" 
-                className="beast-image"
+              <AnimatedCustomBeast
+                customBeast={nightWolfConfig}
+                mood="normal"
+                size={200}
               />
-              <div className="beast-aura" />
             </div>
             
-            <div className="beast-info">
+            <div className="beast-selection-info">
               <h2 className="beast-type">Night Wolf</h2>
               <p className="beast-description">
-                A loyal and mysterious companion with piercing eyes that reflect ancient wisdom. 
-                Night Wolves are known for their intelligence, fierce loyalty, and natural hunting instincts.
+                This Night Wolf was stitched with care and compassion, 
+                embodying the bond between beast and keeper.
               </p>
               
               <div className="beast-stats">
-                <div className="stat">
-                  <span className="stat-label">Nature:</span>
-                  <span className="stat-value">Loyal & Mysterious</span>
+                <div className="stat-selection">
+                  <span className="stat-selection-label">Nature:</span>
+                  <span className="stat-selection-value">Loyal</span>
                 </div>
-                <div className="stat">
-                  <span className="stat-label">Element:</span>
-                  <span className="stat-value">Shadow & Moon</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">Abilities:</span>
-                  <span className="stat-value">Night Vision, Pack Bond</span>
+                <div className="stat-selection">
+                  <span className="stat-selection-label">Bond:</span>
+                  <span className="stat-selection-value">Stitched with Love</span>
                 </div>
               </div>
             </div>
           </div>
           
           <div className="naming-section">
-            <h3 className="naming-title">Choose Your Companion's Name</h3>
+            <h3 className="naming-title">Name Your Companion</h3>
             <div className="name-input-container">
               <input
                 type="text"
@@ -85,7 +104,6 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
                 placeholder="Enter a name..."
                 maxLength={20}
               />
-              <div className="input-glow" />
             </div>
             
             <button 
@@ -93,7 +111,7 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
               onClick={handleStartJourney}
               disabled={!beastName.trim()}
             >
-              Begin Your Bond
+              Weave Your Bond
             </button>
           </div>
         </div>

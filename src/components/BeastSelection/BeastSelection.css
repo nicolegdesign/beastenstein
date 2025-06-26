@@ -1,16 +1,16 @@
-/* Beast Selection Styles */
 .beast-selection {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #0a1a0a;
+  background: #000;
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  font-family: 'Courier New', monospace;
 }
 
 .forest-background {
@@ -21,10 +21,10 @@
   height: 100%;
   background: linear-gradient(
     135deg,
-    #1a3a1a 0%,
-    #0f2a0f 25%,
-    #1a4a1a 50%,
-    #0a1a0a 75%,
+    #2a1a2a 0%,
+    #1a0f1a 25%,
+    #3a1a3a 50%,
+    #1a0a1a 75%,
     #000 100%
   );
   background-size: 400% 400%;
@@ -59,21 +59,21 @@
 }
 
 .forest-clearing {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(106, 151, 97, 0.3);
+  background: rgba(30, 10, 30, 0.8);
+  border: 1px solid rgba(102, 51, 153, 0.4);
   border-radius: 20px;
   padding: 40px;
   backdrop-filter: blur(10px);
   box-shadow: 
     0 10px 30px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(102, 51, 153, 0.1);
 }
 
 .selection-title {
   font-family: 'Nunito', serif;
   font-size: 3rem;
   font-weight: 300;
-  color: #e8f5e8;
+  color: #e6ccff;
   text-align: center;
   margin-bottom: 10px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -83,7 +83,7 @@
 .selection-subtitle {
   font-family: 'Nunito', sans-serif;
   font-size: 1.2rem;
-  color: rgba(232, 245, 232, 0.8);
+  color: rgba(230, 204, 255, 0.8);
   text-align: center;
   margin-bottom: 40px;
   font-style: italic;
@@ -102,52 +102,32 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 240px; /* Accommodate the animated beast height */
 }
 
-.beast-image {
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  border-radius: 50%;
-  border: 3px solid rgba(106, 151, 97, 0.5);
-  background: radial-gradient(circle, rgba(106, 151, 97, 0.1), transparent);
-  box-shadow: 
-    0 0 30px rgba(106, 151, 97, 0.3),
-    inset 0 0 20px rgba(0, 0, 0, 0.3);
+/* Remove the old beast-image styles since we're using AnimatedCustomBeast now */
+.beast-silhouette .animated-custom-beast {
+  filter: drop-shadow(0 0 20px rgba(102, 51, 153, 0.4));
   animation: beastGlow 3s ease-in-out infinite;
 }
 
 @keyframes beastGlow {
   0%, 100% { 
-    box-shadow: 
-      0 0 30px rgba(106, 151, 97, 0.3),
-      inset 0 0 20px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 20px rgba(186, 183, 105, 0.4));
   }
   50% { 
-    box-shadow: 
-      0 0 50px rgba(106, 151, 97, 0.5),
-      inset 0 0 20px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 35px rgba(186, 183, 105, 0.4));
   }
 }
 
-.beast-aura {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  right: -20px;
-  bottom: -20px;
-  border: 2px solid rgba(106, 151, 97, 0.3);
-  border-radius: 50%;
-  animation: auraRotate 4s linear infinite;
-}
-
-@keyframes auraRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.beast-info {
-  color: #e8f5e8;
+.beast-selection-info {
+    text-align: center;
+    width: 80%;
+    background: rgba(0, 0, 0, 0.8);
+    color: #e6ccff;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid rgba(139, 92, 246, 0.3);
 }
 
 .beast-type {
@@ -155,7 +135,7 @@
   font-size: 2.5rem;
   font-weight: 400;
   margin-bottom: 15px;
-  color: #6a9761;
+  color: #8c66cc;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
@@ -164,7 +144,7 @@
   font-size: 1.1rem;
   line-height: 1.6;
   margin-bottom: 25px;
-  color: rgba(232, 245, 232, 0.9);
+  color: rgba(230, 204, 255, 0.9);
 }
 
 .beast-stats {
@@ -173,22 +153,27 @@
   gap: 12px;
 }
 
-.stat {
+.stat-selection {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   padding: 8px 15px;
-  background: rgba(106, 151, 97, 0.1);
+  background: rgba(102, 51, 153, 0.1);
   border-radius: 8px;
-  border: 1px solid rgba(106, 151, 97, 0.2);
+  border: 1px solid rgba(102, 51, 153, 0.2);
 }
 
-.stat-label {
+.stat-selection-label {
   font-weight: 600;
-  color: #6a9761;
+  color: #8c66cc;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.85em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.stat-value {
-  color: #e8f5e8;
+.stat-selection-value {
+  color: #e6ccff;
 }
 
 .naming-section {
@@ -198,7 +183,7 @@
 .naming-title {
   font-family: 'Nunito', serif;
   font-size: 1.8rem;
-  color: #e8f5e8;
+  color: #e6ccff;
   margin-bottom: 25px;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
@@ -214,10 +199,11 @@
   font-size: 1.5rem;
   font-weight: 500;
   padding: 15px 25px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(106, 151, 97, 0.3);
+  margin-right: 1em;
+  background: rgba(30, 10, 30, 0.8);
+  border: 2px solid rgba(102, 51, 153, 0.3);
   border-radius: 12px;
-  color: #e8f5e8;
+  color: #e6ccff;
   text-align: center;
   min-width: 300px;
   transition: all 0.3s ease;
@@ -226,34 +212,15 @@
 
 .name-input:focus {
   outline: none;
-  border-color: #6a9761;
-  background: rgba(255, 255, 255, 0.1);
+  border-color: #8c66cc;
+  background: rgba(30, 10, 30, 0.9);
   box-shadow: 
-    0 0 20px rgba(106, 151, 97, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 20px rgba(102, 51, 153, 0.3),
+    inset 0 1px 0 rgba(102, 51, 153, 0.1);
 }
 
 .name-input::placeholder {
-  color: rgba(232, 245, 232, 0.5);
-}
-
-.input-glow {
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(45deg, #6a9761, #4a6741, #6a9761);
-  border-radius: 12px;
-  opacity: 0;
-  z-index: -1;
-  transition: opacity 0.3s ease;
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
-}
-
-.name-input.focused + .input-glow {
-  opacity: 0.5;
+  color: rgba(230, 204, 255, 0.5);
 }
 
 @keyframes gradientShift {
@@ -266,8 +233,8 @@
   font-size: 1.3rem;
   font-weight: 600;
   padding: 18px 40px;
-  background: linear-gradient(145deg, #4a6741, #3a5731);
-  border: 2px solid #6a9761;
+  background: linear-gradient(145deg, #663399, #4d2673);
+  border: 2px solid #8c66cc;
   border-radius: 12px;
   color: #ffffff;
   cursor: pointer;
@@ -275,16 +242,16 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   box-shadow: 
-    0 6px 20px rgba(106, 151, 97, 0.3),
+    0 6px 20px rgba(102, 51, 153, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .start-journey-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #5a7751, #4a6741);
-  border-color: #7aa771;
+  background: linear-gradient(145deg, #7a4dcc, #663399);
+  border-color: #b399ff;
   transform: translateY(-3px);
   box-shadow: 
-    0 8px 25px rgba(106, 151, 97, 0.4),
+    0 8px 25px rgba(102, 51, 153, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 

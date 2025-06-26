@@ -74,6 +74,64 @@ const getMaxLevelFromSoul = (soulId: string): number => {
   }
 };
 
+// Factory function to create Night Wolf beast configuration
+const createNightWolfBeast = (name: string): CustomBeastData => {
+  return {
+    name: name,
+    gender: 'male' as const,
+    personality: getDefaultPersonality(),
+    head: {
+      id: 'nightwolf-head',
+      name: 'Night Wolf Head',
+      imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
+      type: 'head' as const,
+      rarity: 'common' as const
+    },
+    torso: {
+      id: 'nightwolf-torso',
+      name: 'Night Wolf Torso',
+      imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
+      type: 'torso' as const,
+      rarity: 'common' as const
+    },
+    armLeft: {
+      id: 'nightwolf-arms-left',
+      name: 'Night Wolf Left Arm',
+      imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
+      type: 'armLeft' as const,
+      rarity: 'common' as const
+    },
+    armRight: {
+      id: 'nightwolf-arms-right',
+      name: 'Night Wolf Right Arm',
+      imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
+      type: 'armRight' as const,
+      rarity: 'common' as const
+    },
+    legLeft: {
+      id: 'nightwolf-legs-left',
+      name: 'Night Wolf Left Leg',
+      imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
+      type: 'legLeft' as const,
+      rarity: 'common' as const
+    },
+    legRight: {
+      id: 'nightwolf-legs-right',
+      name: 'Night Wolf Right Leg',
+      imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
+      type: 'legRight' as const,
+      rarity: 'common' as const
+    },
+    soulEssence: {
+      id: 'dim-soul',
+      name: 'Dim Soul',
+      description: 'A faint glimmer of spiritual energy',
+      imagePath: './images/items/dim-soul.png',
+      rarity: 'common' as const
+    }
+  };
+};
+
 function App() {
   // Game flow state
   const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
@@ -130,8 +188,10 @@ function App() {
       }
     }
     
-    // If no custom beasts exist, create default Night Wolf
-    if (Object.keys(customBeastData).length === 0) {
+    // Only create default Night Wolf if user has played before and has no beasts
+    // (returning users who somehow lost their beasts)
+    const hasPlayed = localStorage.getItem('hasPlayedBefore');
+    if (Object.keys(customBeastData).length === 0 && hasPlayed) {
       const defaultBeastId = 'custom_default_nightwolf';
       const now = Date.now();
       
@@ -167,61 +227,7 @@ function App() {
       }
       
       // Create and save the default custom beast configuration
-      const defaultCustomBeast = {
-        name: 'Night Wolf',
-        gender: 'male' as const,
-        personality: getDefaultPersonality(),
-        head: {
-          id: 'nightwolf-head',
-          name: 'Night Wolf Head',
-          imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
-          type: 'head' as const,
-          rarity: 'common' as const
-        },
-        torso: {
-          id: 'nightwolf-torso',
-          name: 'Night Wolf Torso',
-          imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
-          type: 'torso' as const,
-          rarity: 'common' as const
-        },
-        armLeft: {
-          id: 'nightwolf-arms-left',
-          name: 'Night Wolf Left Arm',
-          imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-          type: 'armLeft' as const,
-          rarity: 'common' as const
-        },
-        armRight: {
-          id: 'nightwolf-arms-right',
-          name: 'Night Wolf Right Arm',
-          imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-          type: 'armRight' as const,
-          rarity: 'common' as const
-        },
-        legLeft: {
-          id: 'nightwolf-legs-left',
-          name: 'Night Wolf Left Leg',
-          imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-          type: 'legLeft' as const,
-          rarity: 'common' as const
-        },
-        legRight: {
-          id: 'nightwolf-legs-right',
-          name: 'Night Wolf Right Leg',
-          imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-          type: 'legRight' as const,
-          rarity: 'common' as const
-        },
-        soulEssence: {
-          id: 'dim-soul',
-          name: 'Dim Soul',
-          description: 'A faint glimmer of spiritual energy',
-          imagePath: './images/items/dim-soul.png',
-          rarity: 'common' as const
-        }
-      };
-      
+      const defaultCustomBeast = createNightWolfBeast('Night Wolf');
       localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
     }
     
@@ -231,7 +237,7 @@ function App() {
   // Set current beast ID to first available custom beast
   const [currentBeastId, setCurrentBeastId] = useState<string>(() => {
     const beastIds = Object.keys(beastData);
-    return beastIds.length > 0 ? beastIds[0] : 'custom_default_nightwolf';
+    return beastIds.length > 0 ? beastIds[0] : ''; // Empty string if no beasts initially
   });
   
   const [showInventory, setShowInventory] = useState(false);
@@ -492,15 +498,18 @@ function App() {
       health: 100,
       level: 1,
       age: 0,
-      attack: 6,
+      attack: 7,  // Base 6 + 1 from Brave personality
       defense: 6,
       speed: 6,
       magic: 6,
       isResting: false,
       createdAt: now,
       experience: 0,
-      maxLevel: 50
+      maxLevel: 5  // Dim soul max level
     };
+    
+    // Create the custom beast configuration using the factory function
+    const customBeast = createNightWolfBeast(name);
     
     // Save to state and localStorage
     setBeastData({ [customBeastId]: newBeastData });
@@ -509,6 +518,7 @@ function App() {
     // Save to localStorage with consolidated format
     const allBeastData = { [customBeastId]: newBeastData };
     localStorage.setItem('beastData', JSON.stringify(allBeastData));
+    localStorage.setItem(`customBeast_${customBeastId}`, JSON.stringify(customBeast));
     localStorage.setItem('hasPlayedBefore', 'true');
     
     // Transition to game
@@ -671,6 +681,9 @@ function App() {
 
   // Update beast data when stats change (with debouncing to prevent flashing)
   useEffect(() => {
+    // Don't update if no current beast data exists (e.g., during initial load)
+    if (!currentBeastData) return;
+    
     const timeoutId = setTimeout(() => {
       setBeastData(prev => {
         const currentStats = prev[currentBeastId];
@@ -715,12 +728,12 @@ function App() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData.name, currentBeastData.attack, currentBeastData.defense, currentBeastData.speed, currentBeastData.magic, currentBeastData.maxLevel, currentBeastData.createdAt, saveBeastData, getExperience]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience]);
 
   // Level up detection and celebration
   useEffect(() => {
-    // Don't trigger level up animation on initial load or if previous level is invalid
-    if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0) {
+    // Don't trigger level up animation on initial load or if previous level is invalid or no beast data
+    if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0 && currentBeastData) {
       setShowLevelUp(true);
       setToast({
         message: `🎉 ${currentBeastData.name} reached Level ${stats.level}!`,
@@ -760,13 +773,15 @@ function App() {
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [stats.level, previousLevel, currentBeastData.name, isInitialLoad, currentBeastId, saveBeastData]);
+  }, [stats.level, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData]);
 
   // Initialize previous level when switching beasts
   useEffect(() => {
-    setPreviousLevel(currentBeastData.level);
-    setIsInitialLoad(true); // Reset initial load flag when switching beasts
-  }, [currentBeastId, currentBeastData.level]);
+    if (currentBeastData) {
+      setPreviousLevel(currentBeastData.level);
+      setIsInitialLoad(true); // Reset initial load flag when switching beasts
+    }
+  }, [currentBeastId, currentBeastData]);
 
   // Function to get species name based on head and torso parts (custom beasts only)
   const getBeastSpecies = useCallback((beastId: string): string => {
@@ -1235,7 +1250,7 @@ function App() {
         )}
 
         {/* Main Game Screen */}
-        {gameState === 'game' && (
+        {gameState === 'game' && currentBeastData && (
           <>
             <Menu 
               onOptions={handleOptions}
