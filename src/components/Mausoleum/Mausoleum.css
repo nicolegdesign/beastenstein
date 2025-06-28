@@ -236,8 +236,8 @@
 }
 
 .part-option {
-  max-width: 150px;
-  max-height: 150px;
+  max-width: 190px;
+  max-height: 190px;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid transparent;
   border-radius: 10px;
@@ -256,8 +256,8 @@
 }
 
 .part-image {
-  width: 60px;
-  height: 60px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
   margin-bottom: 8px;
 }
@@ -265,7 +265,24 @@
 .part-info {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   gap: 2px;
+  position: relative;
+}
+
+.part-info .part-quantity {
+  position: absolute;
+  top: -9em;
+  left: 9em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.2);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-align: center;top: -9em;
+  min-width: 30px;
 }
 
 .part-name {
@@ -277,6 +294,7 @@
 .part-rarity {
   font-size: 0.7rem;
   font-weight: 600;
+  min-width: 80px;
   text-transform: capitalize;
   padding: 2px 6px;
   border-radius: 3px;
@@ -305,18 +323,7 @@
 }
 
 /* Part quantity display */
-.part-quantity {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #10b981;
-  background-color: rgba(16, 185, 129, 0.2);
-  padding: 2px 6px;
-  border-radius: 3px;
-  text-align: center;
-  min-width: 30px;
-}
-
-.part-quantity.out-of-stock {
+.part-info .part-quantity.out-of-stock {
   color: #ef4444;
   background-color: rgba(239, 68, 68, 0.2);
 }
