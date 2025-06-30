@@ -76,6 +76,33 @@ const AVAILABLE_PARTS: EnhancedBeastPart[] = [
     statBonus: { defense: 4, health: 15 }
     // No ability for torsos
   },
+  // Wooden Mannequin parts
+  {
+    id: 'woodenmannequin-head',
+    name: 'Wooden Mannequin Head',
+    imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-head.svg',
+    type: 'head',
+    rarity: 'common',
+    statBonus: { defense: 2, health: 5 },
+    ability: {
+      id: 'splinter',
+      name: 'Splinter',
+      description: 'Wooden fragments pierce the enemy',
+      type: 'attack' as const,
+      damage: 8,
+      cooldown: 1,
+      manaCost: 3
+    }
+  },
+  {
+    id: 'woodenmannequin-torso',
+    name: 'Wooden Mannequin Torso',
+    imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-torso.svg',
+    type: 'torso',
+    rarity: 'common',
+    statBonus: { defense: 5, health: 20 }
+    // No ability for torsos
+  },
 ];
 
 // Available arm and leg sets
@@ -100,6 +127,24 @@ const AVAILABLE_ARM_SETS: EnhancedBeastPartSet[] = [
     statBonus: { attack: 3, magic: 1 },
     ability: ABILITIES.dragonClaw
   },
+  {
+    id: 'woodenmannequin-arms',
+    name: 'Wooden Mannequin Arms',
+    leftImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-arm-l.svg',
+    rightImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-arm-r.svg',
+    type: 'armSet',
+    rarity: 'common',
+    statBonus: { defense: 2, health: 10 },
+    ability: {
+      id: 'woodenStrike',
+      name: 'Wooden Strike',
+      description: 'A sturdy wooden blow',
+      type: 'attack' as const,
+      damage: 6,
+      cooldown: 1,
+      manaCost: 2
+    }
+  },
 ];
 
 const AVAILABLE_LEG_SETS: EnhancedBeastPartSet[] = [
@@ -122,6 +167,27 @@ const AVAILABLE_LEG_SETS: EnhancedBeastPartSet[] = [
     rarity: 'common',
     statBonus: { speed: 2, attack: 2 },
     ability: ABILITIES.dragonLeap
+  },
+  {
+    id: 'woodenmannequin-legs',
+    name: 'Wooden Mannequin Legs',
+    leftImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-leg-l.svg',
+    rightImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-leg-r.svg',
+    type: 'legSet',
+    rarity: 'common',
+    statBonus: { defense: 3, speed: 1 },
+    ability: {
+      id: 'rootedStance',
+      name: 'Rooted Stance',
+      description: 'Plant firmly for increased defense',
+      type: 'buff' as const,
+      cooldown: 3,
+      manaCost: 8,
+      effects: {
+        statModifier: { defense: 3 },
+        duration: 3
+      }
+    }
   },
 ];
 
