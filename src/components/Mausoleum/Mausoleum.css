@@ -354,7 +354,6 @@
 
 /* Beast Creation */
 .beast-creation {
-  grid-column: 1 / -1;
   background: rgba(16, 185, 129, 0.1);
   border: 2px solid #10b981;
   border-radius: 15px;
@@ -362,6 +361,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-direction: column;
   gap: 20px;
 }
 
@@ -369,6 +369,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  justify-content: center;
   flex: 1;
 }
 
@@ -384,7 +385,7 @@
   padding: 10px 15px;
   color: white;
   font-size: 1rem;
-  max-width: 300px;
+  width: 300px;
 }
 
 .beast-name-input input:focus {
@@ -544,11 +545,20 @@
 }
 
 /* Stat bonuses and abilities styling */
-.stat-bonuses {
+.beast-stats-abilities-container {
+  display: flex;
+  flex-direction: column;
   margin-top: 15px;
+}
+
+.stat-bonuses {
+  margin-top: 0; /* Reset since container handles spacing */
   padding: 10px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .stat-bonuses h4 {
@@ -591,8 +601,9 @@
 
 .ability-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+  justify-content: center;
 }
 
 .ability-preview {

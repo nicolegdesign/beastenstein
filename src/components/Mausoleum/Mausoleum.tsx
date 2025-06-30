@@ -511,45 +511,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                 </div>
           </div>
 
-          {/* Stat Bonuses and Abilities Display */}
-          {(() => {
-            const { totalStatBonus, availableAbilities } = calculateBeastStats();
-            return (
-              <>
-                {/* Stat Bonuses Display */}
-                {Object.keys(totalStatBonus).some(key => totalStatBonus[key as keyof StatBonus]! > 0) && (
-                  <div className="stat-bonuses">
-                    <h4>Stat Bonuses</h4>
-                    <div className="bonus-list">
-                      {totalStatBonus.attack! > 0 && <span className="stat-bonus attack">⚔️ +{totalStatBonus.attack} Attack</span>}
-                      {totalStatBonus.defense! > 0 && <span className="stat-bonus defense">🛡️ +{totalStatBonus.defense} Defense</span>}
-                      {totalStatBonus.speed! > 0 && <span className="stat-bonus speed">⚡ +{totalStatBonus.speed} Speed</span>}
-                      {totalStatBonus.magic! > 0 && <span className="stat-bonus magic">🔮 +{totalStatBonus.magic} Magic</span>}
-                      {totalStatBonus.health! > 0 && <span className="stat-bonus health">❤️ +{totalStatBonus.health} Health</span>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Available Abilities Display */}
-                {availableAbilities.length > 0 && (
-                  <div className="available-abilities">
-                    <h4>Battle Abilities</h4>
-                    <div className="ability-list">
-                      {availableAbilities.map(ability => (
-                        <div key={ability.id} className={`ability-preview ${ability.type}`}>
-                          <span className="ability-name">{ability.name}</span>
-                          <span className="ability-description">{ability.description}</span>
-                          {ability.damage && <span className="ability-damage">💥 {ability.damage} damage</span>}
-                          {ability.healing && <span className="ability-healing">💚 {ability.healing} healing</span>}
-                          <span className="ability-cooldown">🕐 {ability.cooldown} turn cooldown</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
+          
           </div>
 
           {/* Part Selection */}
@@ -753,6 +715,49 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
               {isComplete() ? '✨ Create Beast' : 'Select all parts to create'}
             </motion.button>
           </div>
+
+          {/* Stat Bonuses and Abilities Display */}
+          {(() => {
+            const { totalStatBonus, availableAbilities } = calculateBeastStats();
+            return (
+              <>
+                <div className="beast-stats-abilities-container">
+                  {Object.keys(totalStatBonus).some(key => totalStatBonus[key as keyof StatBonus]! > 0) && (
+                    <div className="stat-bonuses">
+                      <h4>Stat Bonuses</h4>
+                      <div className="bonus-list">
+                        {totalStatBonus.attack! > 0 && <span className="stat-bonus attack">⚔️ +{totalStatBonus.attack} Attack</span>}
+                        {totalStatBonus.defense! > 0 && <span className="stat-bonus defense">🛡️ +{totalStatBonus.defense} Defense</span>}
+                        {totalStatBonus.speed! > 0 && <span className="stat-bonus speed">⚡ +{totalStatBonus.speed} Speed</span>}
+                        {totalStatBonus.magic! > 0 && <span className="stat-bonus magic">🔮 +{totalStatBonus.magic} Magic</span>}
+                        {totalStatBonus.health! > 0 && <span className="stat-bonus health">❤️ +{totalStatBonus.health} Health</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Available Abilities Display */}
+                  {availableAbilities.length > 0 && (
+                    <div className="available-abilities">
+                      <h4>Battle Abilities</h4>
+                      <div className="ability-list">
+                        {availableAbilities.map(ability => (
+                          <div key={ability.id} className={`ability-preview ${ability.type}`}>
+                            <span className="ability-name">{ability.name}</span>
+                            <span className="ability-description">{ability.description}</span>
+                            {ability.damage && <span className="ability-damage">💥 {ability.damage} damage</span>}
+                            {ability.healing && <span className="ability-healing">💚 {ability.healing} healing</span>}
+                            <span className="ability-cooldown">🕐 {ability.cooldown} turn cooldown</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+
+
         </div>
       </div>
     </div>
