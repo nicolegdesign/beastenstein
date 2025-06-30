@@ -792,35 +792,31 @@ function App() {
         if (customBeastData) {
           const customBeast = JSON.parse(customBeastData);
           
-          // Extract species from head part ID (e.g., "nightwolf-head" -> "wolf")
-          const headParts = customBeast.head?.id?.split('-') || [];
+          // Extract species from head part image path
+          // Example: "./images/beasts/night-wolf/night-wolf-head.svg" -> "wolf"
           let headSpecies = '';
-          if (headParts.length >= 2) {
-            // For nightwolf-head, take "wolf" (second part of "nightwolf")
-            const beastName = headParts[0]; // "nightwolf" or "mountaindragon"
-            if (beastName === 'nightwolf') {
-              headSpecies = 'wolf';
-            } else if (beastName === 'mountaindragon') {
-              headSpecies = 'dragon';
-            } else {
-              // For other formats, try to extract the last meaningful part
-              headSpecies = beastName.replace(/night|mountain/i, '').toLowerCase() || 'beast';
+          if (customBeast.head?.imagePath) {
+            const headImagePath = customBeast.head.imagePath;
+            // Extract filename from path and remove extension
+            const headFileName = headImagePath.split('/').pop()?.replace(/\.(svg|png|jpg|jpeg)$/i, '') || '';
+            // Split by hyphens and take the second word
+            const headParts = headFileName.split('-');
+            if (headParts.length >= 2) {
+              headSpecies = headParts[1]; // "night-wolf-head" -> "wolf"
             }
           }
           
-          // Extract species from torso part ID (e.g., "mountaindragon-torso" -> "mountain")
-          const torsoParts = customBeast.torso?.id?.split('-') || [];
+          // Extract species from torso part image path  
+          // Example: "./images/beasts/night-wolf/night-wolf-torso.svg" -> "night"
           let torsoSpecies = '';
-          if (torsoParts.length >= 1) {
-            const beastName = torsoParts[0]; // "nightwolf" or "mountaindragon"
-            if (beastName === 'nightwolf') {
-              torsoSpecies = 'night';
-            } else if (beastName === 'mountaindragon') {
-              torsoSpecies = 'mountain';
-            } else {
-              // For other formats, try to extract the first meaningful part
-              const match = beastName.match(/^(night|mountain|desert|forest|ice|fire)/i);
-              torsoSpecies = match ? match[1].toLowerCase() : beastName;
+          if (customBeast.torso?.imagePath) {
+            const torsoImagePath = customBeast.torso.imagePath;
+            // Extract filename from path and remove extension
+            const torsoFileName = torsoImagePath.split('/').pop()?.replace(/\.(svg|png|jpg|jpeg)$/i, '') || '';
+            // Split by hyphens and take the first word
+            const torsoParts = torsoFileName.split('-');
+            if (torsoParts.length >= 1) {
+              torsoSpecies = torsoParts[0]; // "night-wolf-torso" -> "night"
             }
           }
           
