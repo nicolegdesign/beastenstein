@@ -413,33 +413,36 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         <div className="mausoleum-creator">
           {/* Beast Preview */}
           <div className="beast-preview">
-            <h3>Beast Preview</h3>          <div className="preview-container">
-            {selectedParts.head && (
-              <img src={selectedParts.head.imagePath} alt="Head" className="preview-part preview-head" />
-            )}
-            {selectedParts.torso && (
-              <img src={selectedParts.torso.imagePath} alt="Torso" className="preview-part preview-torso" />
-            )}
-            {selectedParts.armLeft && (
-              <img src={selectedParts.armLeft.imagePath} alt="Left Arm" className="preview-part preview-arm-left" />
-            )}
-            {selectedParts.armRight && (
-              <img src={selectedParts.armRight.imagePath} alt="Right Arm" className="preview-part preview-arm-right" />
-            )}
-            {selectedParts.legLeft && (
-              <img src={selectedParts.legLeft.imagePath} alt="Left Leg" className="preview-part preview-leg-left" />
-            )}
-            {selectedParts.legRight && (
-              <img src={selectedParts.legRight.imagePath} alt="Right Leg" className="preview-part preview-leg-right" />
-            )}
-            
-            {/* Soul Essence Display */}
-            {selectedParts.soulEssence && (
-              <div className="preview-soul-essence">
-                <img src={selectedParts.soulEssence.imagePath} alt={selectedParts.soulEssence.name} className="preview-soul-image" />
-                
-              </div>
-            )}
+            <h3>Beast Preview</h3>          
+            <div className="preview-container">
+              <div className="preview-beast">
+                  {selectedParts.head && (
+                    <img src={selectedParts.head.imagePath} alt="Head" className="preview-part preview-head" />
+                  )}
+                  {selectedParts.torso && (
+                    <img src={selectedParts.torso.imagePath} alt="Torso" className="preview-part preview-torso" />
+                  )}
+                  {selectedParts.armLeft && (
+                    <img src={selectedParts.armLeft.imagePath} alt="Left Arm" className="preview-part preview-arm-left" />
+                  )}
+                  {selectedParts.armRight && (
+                    <img src={selectedParts.armRight.imagePath} alt="Right Arm" className="preview-part preview-arm-right" />
+                  )}
+                  {selectedParts.legLeft && (
+                    <img src={selectedParts.legLeft.imagePath} alt="Left Leg" className="preview-part preview-leg-left" />
+                  )}
+                  {selectedParts.legRight && (
+                    <img src={selectedParts.legRight.imagePath} alt="Right Leg" className="preview-part preview-leg-right" />
+                  )}
+                  
+                  {/* Soul Essence Display */}
+                  {selectedParts.soulEssence && (
+                    <div className="preview-soul-essence">
+                      <img src={selectedParts.soulEssence.imagePath} alt={selectedParts.soulEssence.name} className="preview-soul-image" />
+                      
+                    </div>
+                  )}
+                </div>
           </div>
 
           {/* Stat Bonuses and Abilities Display */}

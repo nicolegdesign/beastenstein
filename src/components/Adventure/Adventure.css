@@ -78,7 +78,7 @@
 }
 
 /* Make beasts face each other */
-.player-beast .beast-visual {
+.opponent-beast .beast-visual {
   transform: scaleX(-1);
 }
 

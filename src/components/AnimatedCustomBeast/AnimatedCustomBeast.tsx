@@ -18,7 +18,7 @@ interface AnimatedCustomBeastProps {
 
 export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({ 
   mood = 'normal',
-  size = 100,
+  size = 25,
   customBeast
 }) => {
   // Adjust animation intensity based on mood
@@ -68,8 +68,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
     <motion.div 
       className="animated-custom-beast"
       style={{ 
-        width: size, 
-        height: size * 1.2, // Maintain aspect ratio
+        width: `${size}px`, // Use px units for absolute sizing
+        height: `${size * 1.2}px`, // Maintain aspect ratio with px
         position: 'relative'
       }}
       animate={{
@@ -97,15 +97,15 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           }}
           style={{ 
             transformOrigin: "50% 15%", // Hip connection to torso
-            width: '46%',
-            height: '49%',
-            left: '59%',
-            bottom: '0%',
-            zIndex: 2
+            width: '100%',
+            height: '100%',
+            left: '7%',
+            bottom: '-37%',
+            zIndex: 1
           }}
         />
 
-        {/* Right Leg (back layer) */}
+        {/* Right Leg (front layer) */}
         <motion.img
           src={customBeast.legRight.imagePath}
           alt="Custom Beast Right Leg"
@@ -121,11 +121,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           }}
           style={{ 
             transformOrigin: "50% 15%", // Hip connection to torso
-            width: '42%',
-            height: '45%',
-            right: '34%',
-            bottom: '0%',
-            zIndex: 1
+            width: '100%',
+            height: '100%',
+            right: '25%',
+            bottom: '-37%',
+            zIndex: 6
           }}
         />
 
@@ -144,15 +144,15 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             ease: "easeInOut"
           }}
           style={{
-            width: '55%',
-            height: '65%',
-            left: '22.5%',
-            bottom: '18%',
+            width: '100%',
+            height: '100%',
+            left: '0%',
+            bottom: '0%',
             zIndex: 4
           }}
         />
 
-        {/* Left Arm (front layer) */}
+        {/* Left Arm (back layer) */}
         <motion.img
           src={customBeast.armLeft.imagePath}
           alt="Custom Beast Left Arm"
@@ -168,11 +168,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           }}
           style={{ 
             transformOrigin: "75% 25%", // Shoulder connection
-            width: '45%',
-            height: '39%',
-            left: '9%',
-            top: '24%',
-            zIndex: 3
+            width: '100%',
+            height: '100%',
+            left: '22%',
+            top: '5%',
+            zIndex: 1
           }}
         />
 
@@ -192,11 +192,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           }}
           style={{ 
             transformOrigin: "25% 25%", // Shoulder connection
-            width: '45%',
-            height: '39%',
-            right: '26%',
-            top: '17%',
-            zIndex: 6
+            width: '100%',
+            height: '100%',
+            right: '-7%',
+            top: '5%',
+            zIndex: 7
           }}
         />
 
@@ -215,10 +215,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             ease: "easeInOut"
           }}
           style={{
-            width: '63%',
-            height: '54%',
-            left: '5%',
-            top: '2%',
+            width: '100%',
+            height: '100%',
+            left: '22%',
+            top: '-34%',
             zIndex: 5
           }}
         />

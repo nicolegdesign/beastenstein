@@ -6,8 +6,8 @@
 
 .custom-beast-container {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 70%;
+  height: 70%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,29 +45,29 @@
 }
 
 /* Layer ordering - back to front */
-.custom-beast-leg-left {
-  z-index: 1;
+/* .custom-beast-leg-left {
+  z-index: 7;
 }
 
 .custom-beast-leg-right {
-  z-index: 2;
+  z-index: 7;
 }
 
 .custom-beast-torso {
-  z-index: 3;
-}
-
-.custom-beast-arm-left {
   z-index: 4;
 }
 
+.custom-beast-arm-left {
+  z-index: 3;
+}
+
 .custom-beast-arm-right {
-  z-index: 5;
+  z-index: 6;
 }
 
 .custom-beast-head {
-  z-index: 6;
-}
+  z-index: 5;
+} */
 
 /* Ensure proper layering for realistic depth */
 .custom-beast-leg-left,
