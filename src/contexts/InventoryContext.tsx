@@ -19,7 +19,7 @@ const createDefaultInventory = (): BeastPartInventory => {
   const partIds = [
     'nightwolf-head', 'nightwolf-torso',
     'mountaindragon-head', 'mountaindragon-torso',
-    'woodenmannequin-head', 'woodenmannequin-torso',
+    'woodenpuppet-head', 'woodenpuppet-torso',
     'forestsprite-head', 'forestsprite-torso',
     'shadowbeast-head', 'shadowbeast-torso',
     'thundereagle-head', 'thundereagle-torso',
@@ -32,8 +32,8 @@ const createDefaultInventory = (): BeastPartInventory => {
   
   // Arm and leg sets
   const setIds = [
-    'nightwolf-arms', 'mountaindragon-arms', 'woodenmannequin-arms',
-    'nightwolf-legs', 'mountaindragon-legs', 'woodenmannequin-legs'
+    'nightwolf-arms', 'mountaindragon-arms', 'woodenpuppet-arms',
+    'nightwolf-legs', 'mountaindragon-legs', 'woodenpuppet-legs'
   ];
   
   setIds.forEach(id => {

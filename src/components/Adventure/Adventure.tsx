@@ -134,22 +134,22 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           heads: [
             { id: 'nightwolf-head', name: 'Night Wolf Head', imagePath: './images/beasts/night-wolf/night-wolf-head.svg', type: 'head' as const, rarity: 'common' as const },
             { id: 'mountaindragon-head', name: 'Mountain Dragon Head', imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg', type: 'head' as const, rarity: 'common' as const },
-            { id: 'woodenmannequin-head', name: 'Wooden Mannequin Head', imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-head.svg', type: 'head' as const, rarity: 'common' as const }
+            { id: 'woodenpuppet-head', name: 'Wooden Puppet Head', imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg', type: 'head' as const, rarity: 'common' as const }
           ],
           torsos: [
             { id: 'nightwolf-torso', name: 'Night Wolf Torso', imagePath: './images/beasts/night-wolf/night-wolf-torso.svg', type: 'torso' as const, rarity: 'common' as const },
             { id: 'mountaindragon-torso', name: 'Mountain Dragon Torso', imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg', type: 'torso' as const, rarity: 'common' as const },
-            { id: 'woodenmannequin-torso', name: 'Wooden Mannequin Torso', imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-torso.svg', type: 'torso' as const, rarity: 'common' as const }
+            { id: 'woodenpuppet-torso', name: 'Wooden Puppet Torso', imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg', type: 'torso' as const, rarity: 'common' as const }
           ],
           arms: [
             { left: './images/beasts/night-wolf/night-wolf-arm-l.svg', right: './images/beasts/night-wolf/night-wolf-arm-r.svg', name: 'Night Wolf Arms' },
             { left: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg', name: 'Mountain Dragon Arms' },
-            { left: './images/beasts/wooden-mannequin/wooden-mannequin-arm-l.svg', right: './images/beasts/wooden-mannequin/wooden-mannequin-arm-r.svg', name: 'Wooden Mannequin Arms' }
+            { left: './images/beasts/wooden-puppet/wooden-puppet-arm-l.svg', right: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg', name: 'Wooden Puppet Arms' }
           ],
           legs: [
             { left: './images/beasts/night-wolf/night-wolf-leg-l.svg', right: './images/beasts/night-wolf/night-wolf-leg-r.svg', name: 'Night Wolf Legs' },
             { left: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg', right: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg', name: 'Mountain Dragon Legs' },
-            { left: './images/beasts/wooden-mannequin/wooden-mannequin-leg-l.svg', right: './images/beasts/wooden-mannequin/wooden-mannequin-leg-r.svg', name: 'Wooden Mannequin Legs' }
+            { left: './images/beasts/wooden-puppet/wooden-puppet-leg-l.svg', right: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg', name: 'Wooden Puppet Legs' }
           ]
         };
 
@@ -291,8 +291,8 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       { id: 'nightwolf-torso', name: 'Night Wolf Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-torso.svg' },
       { id: 'mountaindragon-head', name: 'Mountain Dragon Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg' },
       { id: 'mountaindragon-torso', name: 'Mountain Dragon Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg' },
-      { id: 'woodenmannequin-head', name: 'Wooden Mannequin Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-head.svg' },
-      { id: 'woodenmannequin-torso', name: 'Wooden Mannequin Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-torso.svg' },
+      { id: 'woodenpuppet-head', name: 'Wooden Puppet Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg' },
+      { id: 'woodenpuppet-torso', name: 'Wooden Puppet Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg' },
       { id: 'forestsprite-head', name: 'Forest Sprite Head', type: 'part' as const, rarity: 'uncommon' as const, imagePath: './images/beasts/forest-sprite/forest-sprite-head.svg' },
       { id: 'forestsprite-torso', name: 'Forest Sprite Torso', type: 'part' as const, rarity: 'uncommon' as const, imagePath: './images/beasts/forest-sprite/forest-sprite-torso.svg' },
       { id: 'shadowbeast-head', name: 'Shadow Beast Head', type: 'part' as const, rarity: 'rare' as const, imagePath: './images/beasts/shadow-beast/shadow-beast-head.svg' },
@@ -307,8 +307,8 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       { id: 'nightwolf-legs', name: 'Night Wolf Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg' },
       { id: 'mountaindragon-arms', name: 'Mountain Dragon Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg' },
       { id: 'mountaindragon-legs', name: 'Mountain Dragon Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg' },
-      { id: 'woodenmannequin-arms', name: 'Wooden Mannequin Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-arm-r.svg' },
-      { id: 'woodenmannequin-legs', name: 'Wooden Mannequin Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-leg-r.svg' }
+      { id: 'woodenpuppet-arms', name: 'Wooden Puppet Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg' },
+      { id: 'woodenpuppet-legs', name: 'Wooden Puppet Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg' }
     ];
 
     // Rarity weights (higher = more common)
@@ -823,7 +823,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                   <div className="opponent-visual-preview">
                     <AnimatedCustomBeast 
                       mood="normal" 
-                      size={150}
+                      size={250}
                       customBeast={opponent}
                     />
                   </div>
@@ -906,7 +906,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                 <div className="beast-visual">
                   <AnimatedCustomBeast 
                     mood="normal" 
-                    size={200}
+                    size={300}
                     customBeast={playerBeast}
                   />
                 </div>
@@ -956,7 +956,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                 <div className="beast-visual">
                   <AnimatedCustomBeast 
                     mood="normal" 
-                    size={200}
+                    size={300}
                     customBeast={opponent}
                   />
                 </div>

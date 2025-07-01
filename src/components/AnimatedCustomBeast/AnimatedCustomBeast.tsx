@@ -123,7 +123,7 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             transformOrigin: "50% 15%", // Hip connection to torso
             width: '100%',
             height: '100%',
-            right: '25%',
+            right: '28%',
             bottom: '-37%',
             zIndex: 6
           }}
@@ -170,8 +170,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             transformOrigin: "75% 25%", // Shoulder connection
             width: '100%',
             height: '100%',
-            left: '22%',
-            top: '5%',
+            left: '20%',
+            top: '0%',
             zIndex: 1
           }}
         />
@@ -194,8 +194,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             transformOrigin: "25% 25%", // Shoulder connection
             width: '100%',
             height: '100%',
-            right: '-7%',
-            top: '5%',
+            right: '-3%',
+            top: '0%',
             zIndex: 7
           }}
         />
@@ -217,8 +217,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           style={{
             width: '100%',
             height: '100%',
-            left: '22%',
-            top: '-34%',
+            left: '24%',
+            top: '-40%',
             zIndex: 5
           }}
         />

@@ -76,11 +76,11 @@ const AVAILABLE_PARTS: EnhancedBeastPart[] = [
     statBonus: { defense: 4, health: 15 }
     // No ability for torsos
   },
-  // Wooden Mannequin parts
+  // Wooden Puppet parts
   {
-    id: 'woodenmannequin-head',
-    name: 'Wooden Mannequin Head',
-    imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-head.svg',
+    id: 'woodenpuppet-head',
+    name: 'Wooden Puppet Head',
+    imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg',
     type: 'head',
     rarity: 'common',
     statBonus: { defense: 2, health: 5 },
@@ -95,9 +95,9 @@ const AVAILABLE_PARTS: EnhancedBeastPart[] = [
     }
   },
   {
-    id: 'woodenmannequin-torso',
-    name: 'Wooden Mannequin Torso',
-    imagePath: './images/beasts/wooden-mannequin/wooden-mannequin-torso.svg',
+    id: 'woodenpuppet-torso',
+    name: 'Wooden Puppet Torso',
+    imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg',
     type: 'torso',
     rarity: 'common',
     statBonus: { defense: 5, health: 20 }
@@ -128,10 +128,10 @@ const AVAILABLE_ARM_SETS: EnhancedBeastPartSet[] = [
     ability: ABILITIES.dragonClaw
   },
   {
-    id: 'woodenmannequin-arms',
-    name: 'Wooden Mannequin Arms',
-    leftImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-arm-l.svg',
-    rightImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-arm-r.svg',
+    id: 'woodenpuppet-arms',
+    name: 'Wooden Puppet Arms',
+    leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-l.svg',
+    rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg',
     type: 'armSet',
     rarity: 'common',
     statBonus: { defense: 2, health: 10 },
@@ -169,10 +169,10 @@ const AVAILABLE_LEG_SETS: EnhancedBeastPartSet[] = [
     ability: ABILITIES.dragonLeap
   },
   {
-    id: 'woodenmannequin-legs',
-    name: 'Wooden Mannequin Legs',
-    leftImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-leg-l.svg',
-    rightImagePath: './images/beasts/wooden-mannequin/wooden-mannequin-leg-r.svg',
+    id: 'woodenpuppet-legs',
+    name: 'Wooden Puppet Legs',
+    leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-l.svg',
+    rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg',
     type: 'legSet',
     rarity: 'common',
     statBonus: { defense: 3, speed: 1 },
