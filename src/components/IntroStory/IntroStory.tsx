@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './IntroStory.css';
 
 interface IntroStoryProps {
   onComplete: () => void;
+  musicEnabled?: boolean;
 }
 
 const storySegments = [
@@ -24,22 +25,49 @@ const storySegments = [
   }
 ];
 
-export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete }) => {
+export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete, musicEnabled = true }) => {
   const [currentSegment, setCurrentSegment] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [textVisible, setTextVisible] = useState(false);
+  const [musicStarted, setMusicStarted] = useState(false);
+  const introMusicRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
-    // Start the intro after a brief delay
+    // Start the intro after a brief delay - don't try to play music automatically
     const timer = setTimeout(() => {
       setIsVisible(true);
       setTimeout(() => setTextVisible(true), 200);
     }, 500);
     
-    return () => clearTimeout(timer);
+    // Cleanup function to stop music when component unmounts
+    const musicElement = introMusicRef.current;
+    return () => {
+      clearTimeout(timer);
+      if (musicElement) {
+        musicElement.pause();
+        musicElement.currentTime = 0;
+      }
+    };
   }, []);
 
+  // Function to try starting music on user interaction
+  const tryStartMusic = useCallback(() => {
+    const musicElement = introMusicRef.current;
+    if (musicElement && musicEnabled && !musicStarted) {
+      musicElement.volume = 0.3;
+      musicElement.loop = true;
+      musicElement.play().then(() => {
+        setMusicStarted(true);
+      }).catch(error => {
+        console.log('Could not play intro music:', error);
+      });
+    }
+  }, [musicEnabled, musicStarted]);
+
   const handleNext = useCallback(() => {
+    // Try to start music on first user interaction
+    tryStartMusic();
+    
     if (currentSegment < storySegments.length - 1) {
       setTextVisible(false);
       setTimeout(() => {
@@ -47,24 +75,42 @@ export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete }) => {
         setTimeout(() => setTextVisible(true), 200);
       }, 500);
     } else {
+      // Stop intro music when completing
+      if (introMusicRef.current) {
+        introMusicRef.current.pause();
+        introMusicRef.current.currentTime = 0;
+      }
+      
       setTextVisible(false);
       setIsVisible(false);
       setTimeout(() => {
         onComplete();
       }, 800);
     }
-  }, [currentSegment, onComplete]);
+  }, [currentSegment, onComplete, tryStartMusic]);
 
   const handleSkip = useCallback(() => {
+    // Try to start music on first user interaction
+    tryStartMusic();
+    
+    // Stop intro music
+    if (introMusicRef.current) {
+      introMusicRef.current.pause();
+      introMusicRef.current.currentTime = 0;
+    }
+    
     setTextVisible(false);
     setIsVisible(false);
     setTimeout(() => {
       onComplete();
     }, 500);
-  }, [onComplete]);
+  }, [onComplete, tryStartMusic]);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
+      // Try to start music on first keyboard interaction
+      tryStartMusic();
+      
       if (event.key === 'Enter' || event.key === ' ') {
         handleNext();
       } else if (event.key === 'Escape') {
@@ -74,7 +120,7 @@ export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete }) => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSegment, handleNext, handleSkip]);
+  }, [currentSegment, handleNext, handleSkip, tryStartMusic]);
 
   const currentStory = storySegments[currentSegment];
 
@@ -97,10 +143,18 @@ export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete }) => {
         </div>
         
         <div className={`intro-controls ${textVisible ? 'text-visible' : ''}`}>
-          <button className="next-button" onClick={handleNext}>
+          <button 
+            className="next-button" 
+            onClick={handleNext}
+            onMouseDown={tryStartMusic}
+          >
             {currentSegment < storySegments.length - 1 ? 'Continue' : 'Begin Your Journey'}
           </button>
-          <button className="skip-button" onClick={handleSkip}>
+          <button 
+            className="skip-button" 
+            onClick={handleSkip}
+            onMouseDown={tryStartMusic}
+          >
             Skip Intro
           </button>
         </div>
@@ -117,7 +171,21 @@ export const IntroStory: React.FC<IntroStoryProps> = ({ onComplete }) => {
       
       <div className="intro-instructions">
         Press ENTER or SPACE to continue • ESC to skip
+        {musicStarted && musicEnabled && (
+          <div style={{ fontSize: '0.8em', color: '#8b5cf6', marginTop: '4px' }}>
+            🎵 Music playing
+          </div>
+        )}
       </div>
+      
+      {/* Intro background music */}
+      <audio
+        ref={introMusicRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="./sounds/beast-den-music.mp3" type="audio/mpeg" />
+      </audio>
     </div>
   );
 };

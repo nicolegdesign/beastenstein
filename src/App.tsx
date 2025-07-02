@@ -1290,7 +1290,10 @@ function App() {
       <div className="App">
         {/* Intro Story Screen */}
         {gameState === 'intro' && (
-          <IntroStory onComplete={handleIntroComplete} />
+          <IntroStory 
+            onComplete={handleIntroComplete} 
+            musicEnabled={gameOptions.musicEnabled}
+          />
         )}
 
         {/* Beast Selection Screen */}

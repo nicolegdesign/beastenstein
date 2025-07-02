@@ -67,6 +67,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   const { setInventory } = useInventoryContext();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
+  const battleMusicRef = useRef<HTMLAudioElement>(null);
   
   const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
@@ -108,6 +109,32 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         console.log('Could not play loot sound:', error);
       });
     }
+  }, [gameState, soundEffectsEnabled]);
+
+  // Battle music management
+  useEffect(() => {
+    const battleMusicElement = battleMusicRef.current;
+    
+    if (gameState === 'battle' && battleMusicElement && soundEffectsEnabled) {
+      // Play battle music when entering battle
+      battleMusicElement.volume = 0.2;
+      battleMusicElement.loop = true;
+      battleMusicElement.play().catch(error => {
+        console.log('Could not play battle music:', error);
+      });
+    } else if (battleMusicElement) {
+      // Stop battle music when leaving battle state
+      battleMusicElement.pause();
+      battleMusicElement.currentTime = 0;
+    }
+
+    // Cleanup function to stop music when component unmounts or state changes
+    return () => {
+      if (battleMusicElement) {
+        battleMusicElement.pause();
+        battleMusicElement.currentTime = 0;
+      }
+    };
   }, [gameState, soundEffectsEnabled]);
   
   // Enhanced combat state
@@ -1166,6 +1193,15 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         style={{ display: 'none' }}
       >
         <source src="/sounds/item1.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Battle background music */}
+      <audio
+        ref={battleMusicRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="./sounds/forrest-battle.mp3" type="audio/mpeg" />
       </audio>
     </div>
   );

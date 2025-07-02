@@ -97,6 +97,11 @@
   align-items: center;
 }
 
+.beast-selection-preview .custom-beast-container {
+  width: 110%;
+  height: 110%;
+}
+
 .beast-silhouette {
   position: relative;
   display: flex;
