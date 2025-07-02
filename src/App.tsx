@@ -477,7 +477,7 @@ function App() {
     setIsResting(currentBeastData?.isResting || false);
   }, [currentBeastId, currentBeastData?.isResting, setIsResting]);
 
-  const { position } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
+  const { position, facing } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
 
@@ -1377,6 +1377,7 @@ function App() {
             isResting={isResting}
             isLayingDown={isLayingDown}
             beastPosition={position}
+            beastFacing={facing}
             beastId={currentBeastId}
             hunger={stats.hunger}
             poos={poos}

@@ -5,6 +5,7 @@ import './AnimatedCustomBeast.css';
 interface AnimatedCustomBeastProps {
   mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'attack';
   size?: number;
+  facing?: 'left' | 'right';
   customBeast: {
     name: string;
     head: { imagePath: string };
@@ -18,10 +19,21 @@ interface AnimatedCustomBeastProps {
 
 export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({ 
   mood = 'normal',
-  size = 25,
+  size = 300,
+  facing = 'right',
   customBeast
 }) => {
   const attackSoundRef = useRef<HTMLAudioElement>(null);
+
+  // Debug facing direction
+  useEffect(() => {
+    console.log('AnimatedCustomBeast facing:', facing);
+  }, [facing]);
+
+  // Debug styles applied
+  useEffect(() => {
+    console.log('CSS transform being applied:', facing === 'left' ? 'scaleX(-1)' : 'scaleX(1)');
+  }, [facing]);
 
   // Play attack sound when entering attack mode
   useEffect(() => {
@@ -91,10 +103,12 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         x: [0, 180, -20, 90, 0], // Extreme leap forward - halfway across screen
         y: [0, -30, 10, -15, 0], // Higher vertical leap for dramatic effect
         rotate: [0, 5, -2, 3, 0], // More pronounced rotation during leap
+        scaleX: facing === 'left' ? -1 : 1, // Add facing direction to attack animation
       } : {
         rotate: layingProps.rotate,
         x: layingProps.x,
-        y: layingProps.y
+        y: layingProps.y,
+        scaleX: facing === 'left' ? -1 : 1, // Add facing direction to normal animation
       }}
       transition={mood === 'attack' ? {
         duration: 0.9,

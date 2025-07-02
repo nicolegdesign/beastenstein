@@ -17,6 +17,7 @@ interface BeastDenProps {
   isResting: boolean;
   isLayingDown?: boolean;
   beastPosition: { x: number; y: number };
+  beastFacing?: 'left' | 'right';
   beastId: string;
   hunger: number;
   poos: PooItem[];
@@ -41,6 +42,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   isResting,
   isLayingDown = false,
   beastPosition,
+  beastFacing = 'right',
   beastId,
   hunger,
   poos,
@@ -69,6 +71,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
         isResting={isResting}
         isLayingDown={isLayingDown}
         position={beastPosition}
+        facing={beastFacing}
         beastId={beastId}
       />
       
