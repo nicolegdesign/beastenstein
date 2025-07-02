@@ -60,9 +60,10 @@ interface AdventureProps {
   playerStats: BeastCombatStats & { health: number };
   onClose: () => void;
   onUpdateExperience: (beastId: string, newExperience: number) => boolean;
+  soundEffectsEnabled?: boolean;
 }
 
-export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience }) => {
+export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true }) => {
   const { setInventory } = useInventoryContext();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
@@ -89,25 +90,25 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   
   // Play victory sound when entering victory state
   useEffect(() => {
-    if (gameState === 'victory' && victorySoundRef.current) {
+    if (gameState === 'victory' && victorySoundRef.current && soundEffectsEnabled) {
       victorySoundRef.current.currentTime = 0; // Reset to beginning
       victorySoundRef.current.volume = 0.7; // Set volume to 70%
       victorySoundRef.current.play().catch(error => {
         console.log('Could not play victory sound:', error);
       });
     }
-  }, [gameState]);
+  }, [gameState, soundEffectsEnabled]);
 
   // Play loot sound when entering loot state
   useEffect(() => {
-    if (gameState === 'loot' && lootSoundRef.current) {
+    if (gameState === 'loot' && lootSoundRef.current && soundEffectsEnabled) {
       lootSoundRef.current.currentTime = 0; // Reset to beginning
       lootSoundRef.current.volume = 0.6; // Set volume to 60%
       lootSoundRef.current.play().catch(error => {
         console.log('Could not play loot sound:', error);
       });
     }
-  }, [gameState]);
+  }, [gameState, soundEffectsEnabled]);
   
   // Enhanced combat state
   const [combatState, setCombatState] = useState<CombatState>({
@@ -865,6 +866,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                     <AnimatedCustomBeast 
                       mood="normal" 
                       size={250}
+                      soundEffectsEnabled={soundEffectsEnabled}
                       customBeast={opponent}
                     />
                   </div>
@@ -943,6 +945,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                   <AnimatedCustomBeast 
                     mood={playerAttacking ? "attack" : "normal"} 
                     size={300}
+                    soundEffectsEnabled={soundEffectsEnabled}
                     customBeast={playerBeast}
                   />
                 </div>
@@ -982,6 +985,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                   <AnimatedCustomBeast 
                     mood={opponentAttacking ? "attack" : "normal"} 
                     size={300}
+                    soundEffectsEnabled={soundEffectsEnabled}
                     customBeast={opponent}
                   />
                 </div>

@@ -290,6 +290,7 @@ function App() {
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const levelUpSoundRef = useRef<HTMLAudioElement>(null);
+  const beastDenMusicRef = useRef<HTMLAudioElement>(null);
   
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
@@ -743,7 +744,7 @@ function App() {
       });
 
       // Play level up sound
-      if (levelUpSoundRef.current) {
+      if (levelUpSoundRef.current && gameOptions.soundEffectsEnabled) {
         levelUpSoundRef.current.currentTime = 0; // Reset to beginning
         levelUpSoundRef.current.volume = 0.7; // Set volume to 70%
         levelUpSoundRef.current.play().catch(error => {
@@ -783,7 +784,39 @@ function App() {
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [stats.level, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData]);
+  }, [stats.level, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData, gameOptions.soundEffectsEnabled]);
+
+  // Beast den music management
+  useEffect(() => {
+    const musicElement = beastDenMusicRef.current;
+    
+    if (gameState === 'game' && musicElement && gameOptions.musicEnabled) {
+      if (!inAdventure) {
+        // Play beast den music when in the beast den
+        musicElement.volume = 0.2; // Set volume to 30%
+        musicElement.loop = true; // Loop the music
+        musicElement.play().catch(error => {
+          console.log('Could not play beast den music:', error);
+        });
+      } else {
+        // Stop beast den music when in adventure
+        musicElement.pause();
+        musicElement.currentTime = 0; // Reset to beginning
+      }
+    } else if (musicElement) {
+      // Stop music if music is disabled
+      musicElement.pause();
+      musicElement.currentTime = 0;
+    }
+
+    // Cleanup function to stop music when component unmounts or game state changes
+    return () => {
+      if (musicElement) {
+        musicElement.pause();
+        musicElement.currentTime = 0;
+      }
+    };
+  }, [gameState, inAdventure, gameOptions.musicEnabled]);
 
   // Initialize previous level when switching beasts
   useEffect(() => {
@@ -1367,6 +1400,7 @@ function App() {
           }}
           onClose={() => setInAdventure(false)}
           onUpdateExperience={updateBeastExperience}
+          soundEffectsEnabled={gameOptions.soundEffectsEnabled}
         />
       ) : (
         <>
@@ -1386,6 +1420,7 @@ function App() {
             onCleanupPoo={handlePooCleanup}
             showSteakAnimation={showSteakAnimation}
             onSteakAnimationComplete={handleSteakAnimationComplete}
+            soundEffectsEnabled={gameOptions.soundEffectsEnabled}
           />
 
           {/* Combat Stats Container - positioned on the right side */}
@@ -1453,7 +1488,16 @@ function App() {
         preload="auto"
         style={{ display: 'none' }}
       >
-        <source src="/sounds/chime2.mp3" type="audio/mpeg" />
+        <source src="./sounds/chime2.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Beast den background music */}
+      <audio
+        ref={beastDenMusicRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="./sounds/beast-den-music.mp3" type="audio/mpeg" />
       </audio>
           </>
         )}

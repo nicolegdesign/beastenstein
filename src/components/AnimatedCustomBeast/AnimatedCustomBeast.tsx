@@ -6,6 +6,7 @@ interface AnimatedCustomBeastProps {
   mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'attack';
   size?: number;
   facing?: 'left' | 'right';
+  soundEffectsEnabled?: boolean;
   customBeast: {
     name: string;
     head: { imagePath: string };
@@ -21,6 +22,7 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
   mood = 'normal',
   size = 300,
   facing = 'right',
+  soundEffectsEnabled = true,
   customBeast
 }) => {
   const attackSoundRef = useRef<HTMLAudioElement>(null);
@@ -37,14 +39,14 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
 
   // Play attack sound when entering attack mode
   useEffect(() => {
-    if (mood === 'attack' && attackSoundRef.current) {
+    if (mood === 'attack' && attackSoundRef.current && soundEffectsEnabled) {
       attackSoundRef.current.currentTime = 0; // Reset to beginning
       attackSoundRef.current.volume = 0.6; // Set volume to 60%
       attackSoundRef.current.play().catch(error => {
         console.log('Could not play attack sound:', error);
       });
     }
-  }, [mood]);
+  }, [mood, soundEffectsEnabled]);
 
   // Adjust animation intensity based on mood
   const getAnimationScale = (): number => {

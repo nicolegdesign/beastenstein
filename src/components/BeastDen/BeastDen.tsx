@@ -26,6 +26,7 @@ interface BeastDenProps {
   onCleanupPoo: (pooId: string) => void;
   showSteakAnimation?: boolean;
   onSteakAnimationComplete?: () => void;
+  soundEffectsEnabled?: boolean;
   children?: React.ReactNode;
 }
 
@@ -51,6 +52,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
   onCleanupPoo,
   showSteakAnimation = false,
   onSteakAnimationComplete = () => {},
+  soundEffectsEnabled = true,
   children
 }, ref) => {
   const getBowlImage = () => {
@@ -73,6 +75,7 @@ export const BeastDen = forwardRef<HTMLDivElement, BeastDenProps>(({
         position={beastPosition}
         facing={beastFacing}
         beastId={beastId}
+        soundEffectsEnabled={soundEffectsEnabled}
       />
       
       <div id="food-bowl" onClick={onFeedFromBowl}>

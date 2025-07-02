@@ -11,9 +11,10 @@ interface BeastProps {
   facing?: 'left' | 'right';
   beastId: string;
   disablePositioning?: boolean;
+  soundEffectsEnabled?: boolean;
 }
 
-export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = false, position, facing = 'right', beastId, disablePositioning = false }) => {
+export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = false, position, facing = 'right', beastId, disablePositioning = false, soundEffectsEnabled = true }) => {
   const getBeastImage = (): string => {
     // Fallback static image (not used for custom beasts but kept for compatibility)
     if (isResting) return './images/pet-rest.png';
@@ -61,6 +62,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = fa
               mood={animatedMood} 
               size={500}
               facing={facing}
+              soundEffectsEnabled={soundEffectsEnabled}
               customBeast={customBeast}
             />
           );
