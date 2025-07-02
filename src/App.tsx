@@ -289,6 +289,7 @@ function App() {
   });
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
+  const levelUpSoundRef = useRef<HTMLAudioElement>(null);
   
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
@@ -740,6 +741,15 @@ function App() {
         show: true,
         type: 'success'
       });
+
+      // Play level up sound
+      if (levelUpSoundRef.current) {
+        levelUpSoundRef.current.currentTime = 0; // Reset to beginning
+        levelUpSoundRef.current.volume = 0.7; // Set volume to 70%
+        levelUpSoundRef.current.play().catch(error => {
+          console.log('Could not play level up sound:', error);
+        });
+      }
       
       // Increase all combat stats by 1 for each level gained
       const levelsGained = stats.level - previousLevel;
@@ -1435,6 +1445,15 @@ function App() {
           🎉 LEVEL UP! 🎉
         </div>
       )}
+
+      {/* Level up sound effect */}
+      <audio
+        ref={levelUpSoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="/sounds/chime2.mp3" type="audio/mpeg" />
+      </audio>
           </>
         )}
       </div>

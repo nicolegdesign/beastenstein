@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import './AnimatedCustomBeast.css';
 
 interface AnimatedCustomBeastProps {
-  mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
+  mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'attack';
   size?: number;
   customBeast: {
     name: string;
@@ -21,6 +21,19 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
   size = 25,
   customBeast
 }) => {
+  const attackSoundRef = useRef<HTMLAudioElement>(null);
+
+  // Play attack sound when entering attack mode
+  useEffect(() => {
+    if (mood === 'attack' && attackSoundRef.current) {
+      attackSoundRef.current.currentTime = 0; // Reset to beginning
+      attackSoundRef.current.volume = 0.6; // Set volume to 60%
+      attackSoundRef.current.play().catch(error => {
+        console.log('Could not play attack sound:', error);
+      });
+    }
+  }, [mood]);
+
   // Adjust animation intensity based on mood
   const getAnimationScale = (): number => {
     switch (mood) {
@@ -32,6 +45,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         return 0.3; // Very gentle breathing-like motion
       case 'laying':
         return 0.2; // Minimal movement while laying down
+      case 'attack':
+        return 2.5; // Very aggressive and intense
       default:
         return 1; // Normal idle
     }
@@ -72,12 +87,20 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         height: `${size * 1.2}px`, // Maintain aspect ratio with px
         position: 'relative'
       }}
-      animate={{
+      animate={mood === 'attack' ? {
+        x: [0, 180, -20, 90, 0], // Extreme leap forward - halfway across screen
+        y: [0, -30, 10, -15, 0], // Higher vertical leap for dramatic effect
+        rotate: [0, 5, -2, 3, 0], // More pronounced rotation during leap
+      } : {
         rotate: layingProps.rotate,
         x: layingProps.x,
         y: layingProps.y
       }}
-      transition={layingProps.transition}
+      transition={mood === 'attack' ? {
+        duration: 0.9,
+        repeat: 0, // Play once instead of infinitely
+        ease: "easeInOut"
+      } : layingProps.transition}
     >
       <div className="custom-beast-container">
         
@@ -86,10 +109,18 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.legLeft.imagePath}
           alt="Custom Beast Left Leg"
           className="custom-beast-part custom-beast-leg-left"
-          animate={{
+          animate={mood === 'attack' ? {
+            rotate: [0, -15, 8, -10, 0],
+            x: [0, 5, -3, 2, 0],
+          } : {
             rotate: [0, 3 * scale, 0, -2 * scale, 0],
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.8,
+            repeat: 0, // Play once
+            ease: "easeInOut",
+            delay: 0.1
+          } : {
             duration: 2.8,
             repeat: Infinity,
             ease: "easeInOut",
@@ -110,10 +141,18 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.legRight.imagePath}
           alt="Custom Beast Right Leg"
           className="custom-beast-part custom-beast-leg-right"
-          animate={{
+          animate={mood === 'attack' ? {
+            rotate: [0, 10, -8, 12, 0],
+            x: [0, -5, 3, -2, 0],
+          } : {
             rotate: [0, -2 * scale, 0, 3 * scale, 0],
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.8,
+            repeat: 0, // Play once
+            ease: "easeInOut",
+            delay: 0.4
+          } : {
             duration: 2.8,
             repeat: Infinity,
             ease: "easeInOut",
@@ -134,11 +173,20 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.torso.imagePath}
           alt="Custom Beast Torso"
           className="custom-beast-part custom-beast-torso"
-          animate={{
+          animate={mood === 'attack' ? {
+            y: [0, -8, 3, -5, 0],
+            x: [0, 10, -5, 8, 0], // Forward lunging motion
+            scaleY: [1, 1.1, 0.95, 1.05, 1],
+            scaleX: [1, 1.05, 0.98, 1.02, 1],
+          } : {
             y: [0, -1.5 * scale, 0],
             scaleY: [1, 1 + (0.03 * scale), 1], // Breathing effect
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.9,
+            repeat: 0, // Play once
+            ease: "easeInOut"
+          } : {
             duration: 3.2,
             repeat: Infinity,
             ease: "easeInOut"
@@ -157,10 +205,19 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.armLeft.imagePath}
           alt="Custom Beast Left Arm"
           className="custom-beast-part custom-beast-arm-left"
-          animate={{
+          animate={mood === 'attack' ? {
+            rotate: [0, -25, 15, -20, 0], // Aggressive swinging
+            x: [0, 8, -5, 6, 0],
+            y: [0, -3, 2, -2, 0],
+          } : {
             rotate: [0, 5 * scale, 0, -3 * scale, 0],
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.7,
+            repeat: 0, // Play once
+            ease: "easeInOut",
+            delay: 0.05
+          } : {
             duration: 2.4,
             repeat: Infinity,
             ease: "easeInOut",
@@ -181,10 +238,19 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.armRight.imagePath}
           alt="Custom Beast Right Arm"
           className="custom-beast-part custom-beast-arm-right"
-          animate={{
+          animate={mood === 'attack' ? {
+            rotate: [0, 30, -20, 25, 0], // More dramatic swinging on front arm
+            x: [0, -8, 5, -6, 0],
+            y: [0, -5, 3, -4, 0],
+          } : {
             rotate: [0, -3 * scale, 0, 5 * scale, 0],
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.7,
+            repeat: 0, // Play once
+            ease: "easeInOut",
+            delay: 0.35 // Offset from left arm for more dynamic feel
+          } : {
             duration: 2.4,
             repeat: Infinity,
             ease: "easeInOut",
@@ -205,11 +271,21 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           src={customBeast.head.imagePath}
           alt="Custom Beast Head"
           className="custom-beast-part custom-beast-head"
-          animate={{
+          animate={mood === 'attack' ? {
+            y: [0, -3, 1, -2, 0], // Much more subtle vertical movement
+            x: [0, 4, -2, 3, 0], // Reduced forward motion to stay connected
+            rotate: [0, -3, 2, -2, 0], // Gentler head rotation
+            scale: [1, 1.02, 0.99, 1.01, 1], // Very subtle scaling
+          } : {
             y: [0, -2 * scale, 0],
             rotate: [0, 1.5 * scale, 0, -1.5 * scale, 0],
           }}
-          transition={{
+          transition={mood === 'attack' ? {
+            duration: 0.8,
+            repeat: 0, // Play once
+            ease: "easeInOut",
+            delay: 0.2
+          } : {
             duration: 3,
             repeat: Infinity,
             ease: "easeInOut"
@@ -252,6 +328,72 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           Z z z
         </motion.div>
       )}
+
+      {/* Attack animation - show impact effects */}
+      {mood === 'attack' && (
+        <>
+          <motion.div
+            className="attack-effect-1"
+            style={{
+              position: 'absolute',
+              top: '30%',
+              right: '5%',
+              fontSize: '20px',
+              color: '#FF6B6B',
+              fontWeight: 'bold',
+              zIndex: 10
+            }}
+            animate={{
+              x: [0, 15, 0],
+              opacity: [0, 1, 0],
+              scale: [0.5, 1.5, 0.5]
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: 0, // Play once
+              ease: "easeOut",
+              delay: 0.2
+            }}
+          >
+            ⚡
+          </motion.div>
+          <motion.div
+            className="attack-effect-2"
+            style={{
+              position: 'absolute',
+              top: '45%',
+              right: '0%',
+              fontSize: '16px',
+              color: '#FFD93D',
+              fontWeight: 'bold',
+              zIndex: 10
+            }}
+            animate={{
+              x: [0, 20, 0],
+              y: [0, -5, 0],
+              opacity: [0, 1, 0],
+              rotate: [0, 180, 360]
+            }}
+            transition={{
+              duration: 0.8,
+              repeat: 0, // Play once
+              ease: "easeOut",
+              delay: 0.5
+            }}
+          >
+            💥
+          </motion.div>
+        </>
+      )}
+
+      {/* Attack sound effect */}
+      <audio
+        ref={attackSoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="/sounds/attack-swift-punch.mp3" type="audio/mpeg" />
+      </audio>
     </motion.div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
@@ -64,6 +64,9 @@ interface AdventureProps {
 
 export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience }) => {
   const { setInventory } = useInventoryContext();
+  const victorySoundRef = useRef<HTMLAudioElement>(null);
+  const lootSoundRef = useRef<HTMLAudioElement>(null);
+  
   const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [opponentLevel, setOpponentLevel] = useState<number>(1);
@@ -79,6 +82,32 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [droppedLoot, setDroppedLoot] = useState<DroppedLoot | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
+  
+  // Animation states for attack visuals
+  const [playerAttacking, setPlayerAttacking] = useState<boolean>(false);
+  const [opponentAttacking, setOpponentAttacking] = useState<boolean>(false);
+  
+  // Play victory sound when entering victory state
+  useEffect(() => {
+    if (gameState === 'victory' && victorySoundRef.current) {
+      victorySoundRef.current.currentTime = 0; // Reset to beginning
+      victorySoundRef.current.volume = 0.7; // Set volume to 70%
+      victorySoundRef.current.play().catch(error => {
+        console.log('Could not play victory sound:', error);
+      });
+    }
+  }, [gameState]);
+
+  // Play loot sound when entering loot state
+  useEffect(() => {
+    if (gameState === 'loot' && lootSoundRef.current) {
+      lootSoundRef.current.currentTime = 0; // Reset to beginning
+      lootSoundRef.current.volume = 0.6; // Set volume to 60%
+      lootSoundRef.current.play().catch(error => {
+        console.log('Could not play loot sound:', error);
+      });
+    }
+  }, [gameState]);
   
   // Enhanced combat state
   const [combatState, setCombatState] = useState<CombatState>({
@@ -397,6 +426,10 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       return;
     }
 
+    // Trigger player attack animation
+    setPlayerAttacking(true);
+    setTimeout(() => setPlayerAttacking(false), 1200); // Animation duration
+
     // Calculate final stats with bonuses and status effects
     const getEffectiveStats = (baseStats: BeastCombatStats, statBonuses: StatBonus, statusEffects: { [key: string]: { duration: number; value: number } }) => {
       return {
@@ -551,6 +584,10 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   const basicAttack = () => {
     if (currentTurn !== 'player' || gameState !== 'battle') return;
 
+    // Trigger player attack animation
+    setPlayerAttacking(true);
+    setTimeout(() => setPlayerAttacking(false), 1200); // Animation duration
+
     // Calculate damage with stat bonuses
     const playerEffectiveAttack = playerStats.attack + (playerBeast?.totalStatBonus?.attack || 0);
     const opponentEffectiveDefense = opponentStats.defense + (opponent?.totalStatBonus?.defense || 0);
@@ -612,6 +649,10 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
 
   const opponentAttack = () => {
     if (gameState !== 'battle') return;
+
+    // Trigger opponent attack animation
+    setOpponentAttacking(true);
+    setTimeout(() => setOpponentAttacking(false), 1200); // Animation duration
 
     // Opponent might use an ability (simple AI)
     const shouldUseAbility = opponent?.availableAbilities && Math.random() < 0.3; // 30% chance
@@ -905,7 +946,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
               {playerBeast && (
                 <div className="beast-visual">
                   <AnimatedCustomBeast 
-                    mood="normal" 
+                    mood={playerAttacking ? "attack" : "normal"} 
                     size={300}
                     customBeast={playerBeast}
                   />
@@ -955,7 +996,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
               {opponent && (
                 <div className="beast-visual">
                   <AnimatedCustomBeast 
-                    mood="normal" 
+                    mood={opponentAttacking ? "attack" : "normal"} 
                     size={300}
                     customBeast={opponent}
                   />
@@ -1120,6 +1161,24 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           </motion.div>
         </div>
       )}
+
+      {/* Victory sound effect */}
+      <audio
+        ref={victorySoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="/sounds/chime1.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Loot sound effect */}
+      <audio
+        ref={lootSoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="/sounds/item1.mp3" type="audio/mpeg" />
+      </audio>
     </div>
   );
 };
