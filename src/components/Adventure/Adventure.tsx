@@ -1077,6 +1077,19 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                   </motion.button>
                 );
               })}
+
+              {/* Flee Button */}
+              <motion.button
+                className="action-btn flee-btn"
+                onClick={() => {
+                  setGameState('defeat');
+                  setBattleLog(prev => [...prev, 'You fled from battle!']);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                🏃 Flee
+              </motion.button>
             </div>
           </div>
 

@@ -588,6 +588,19 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* Flee Button */
+.flee-btn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #451a03;
+  border: 2px solid #d97706;
+}
+
+.flee-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.4);
+}
+
 /* Status Effects */
 .status-effects {
   margin-top: 8px;
