@@ -369,6 +369,25 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     return defeatedLevel * 50; // 10 XP per opponent level
   };
 
+  // Get current experience from main beastData storage
+  const getCurrentExperience = (): number => {
+    try {
+      const beastDataKey = `beastData`;
+      const mainBeastData = localStorage.getItem(beastDataKey);
+      
+      if (mainBeastData) {
+        const allBeastData = JSON.parse(mainBeastData);
+        if (allBeastData[currentBeastId]) {
+          return allBeastData[currentBeastId].experience || 0;
+        }
+      }
+      return 0;
+    } catch (error) {
+      console.error('Failed to get current experience:', error);
+      return 0;
+    }
+  };
+
   // Add experience to the player's beast
   const gainExperience = (expGained: number) => {
     console.log('gainExperience called with:', expGained, 'for beast:', currentBeastId);
@@ -390,25 +409,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       }
     } catch (error) {
       console.error('Failed to update beast experience:', error);
-    }
-  };
-
-  // Get current experience from main beastData storage
-  const getCurrentExperience = (): number => {
-    try {
-      const beastDataKey = `beastData`;
-      const mainBeastData = localStorage.getItem(beastDataKey);
-      
-      if (mainBeastData) {
-        const allBeastData = JSON.parse(mainBeastData);
-        if (allBeastData[currentBeastId]) {
-          return allBeastData[currentBeastId].experience || 0;
-        }
-      }
-      return 0;
-    } catch (error) {
-      console.error('Failed to get current experience:', error);
-      return 0;
     }
   };
 

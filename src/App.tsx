@@ -291,6 +291,7 @@ function App() {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const levelUpSoundRef = useRef<HTMLAudioElement>(null);
   const beastDenMusicRef = useRef<HTMLAudioElement>(null);
+  const adventureSoundRef = useRef<HTMLAudioElement>(null);
   
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
@@ -939,8 +940,17 @@ function App() {
   }, []);
 
   const handleAdventure = useCallback(() => {
+    // Play adventure sound effect
+    if (adventureSoundRef.current && gameOptions.soundEffectsEnabled) {
+      adventureSoundRef.current.currentTime = 0;
+      adventureSoundRef.current.volume = 0.8;
+      adventureSoundRef.current.play().catch(error => {
+        console.log('Could not play adventure sound:', error);
+      });
+    }
+    
     setInAdventure(prev => !prev);
-  }, []);
+  }, [gameOptions.soundEffectsEnabled]);
 
   const handleDebug = useCallback(() => {
     setShowDebug(true);
@@ -1295,9 +1305,7 @@ function App() {
               onOptions={handleOptions}
               onSave={handleSave}
               onInventory={handleInventory}
-              onAdventure={handleAdventure}
               onDebug={handleDebug}
-              inAdventure={inAdventure}
             />
 
             {/* Beast name and info in upper left */}
@@ -1423,6 +1431,18 @@ function App() {
             soundEffectsEnabled={gameOptions.soundEffectsEnabled}
           />
 
+          {/* Adventure Button - Outside of Beast Den */}
+          <div className="adventure-button-container">
+            <button 
+              className="adventure-button"
+              onClick={handleAdventure}
+              title="Enter the Adventure Mode"
+            >
+              <div className="adventure-button-icon">🗺️</div>
+              <div className="adventure-button-text">VIEW YOUR MAP</div>
+            </button>
+          </div>
+
           {/* Combat Stats Container - positioned on the right side */}
           <div className="combat-stats-container">
             <div className="combat-stats-table">
@@ -1498,6 +1518,15 @@ function App() {
         style={{ display: 'none' }}
       >
         <source src="./sounds/beast-den-music.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Adventure sound effect */}
+      <audio
+        ref={adventureSoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="./sounds/dungeon_door1.mp3" type="audio/mpeg" />
       </audio>
           </>
         )}

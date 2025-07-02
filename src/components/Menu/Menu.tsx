@@ -5,12 +5,10 @@ interface MenuProps {
   onOptions: () => void;
   onSave: () => void;
   onInventory: () => void;
-  onAdventure: () => void;
   onDebug: () => void;
-  inAdventure: boolean;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onAdventure, onDebug, inAdventure }) => {
+export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onDebug }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -36,12 +34,6 @@ export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onAd
       
       {isOpen && (
         <div className="menu-dropdown">
-          <button 
-            className="menu-item"
-            onClick={() => handleMenuItemClick(onAdventure)}
-          >
-            {inAdventure ? '🏠 Leave Adventure' : '🗺️ Adventure'}
-          </button>
           <button 
             className="menu-item"
             onClick={() => handleMenuItemClick(onInventory)}

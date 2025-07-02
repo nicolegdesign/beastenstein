@@ -246,6 +246,75 @@ body {
   text-shadow: 0 0 15px rgba(34, 197, 94, 0.9);
 }
 
+/* Adventure Button Styles - Positioned outside Beast Den */
+.adventure-button-container {
+  position: fixed;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  z-index: 20;
+}
+
+.adventure-button {
+  background: linear-gradient(135deg, #261454 0%, #472077 25%, #874ca3 50%, #603584 75%, #3e1e79 100%);
+  border: 1px solid #fff;
+  border-radius: 20px;
+  padding: 20px 16px;
+  cursor: pointer;
+  color: white;
+  font-family: 'Arial Black', Arial, sans-serif;
+  text-align: center;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 15em;
+}
+
+.adventure-button:hover {
+  transform: scale(1.1) translateY(-5px);
+  background: linear-gradient(135deg, #ff8a50 0%, #ffab60 25%, #ffb74d 50%, #ffc568 75%, #ffab60 100%);
+}
+
+.adventure-button:hover::before {
+  opacity: 1;
+  left: 100%;
+}
+
+.adventure-button:active {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 
+    0 6px 15px rgba(0, 0, 0, 0.3),
+    inset 0 2px 5px rgba(255, 255, 255, 0.2);
+}
+
+.adventure-button-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.adventure-button-subtitle {
+  font-size: 11px;
+  font-weight: normal;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 /* Responsive adjustments for combat stats */
 @media (max-width: 768px) {
   .combat-stats-container {
@@ -268,5 +337,29 @@ body {
   
   .stat-value {
     font-size: 0.8em;
+  }
+}
+
+/* Responsive adjustments for adventure button */
+@media (max-width: 768px) {
+  .adventure-button-container {
+    right: 10px;
+  }
+  
+  .adventure-button {
+    min-width: 120px;
+    padding: 16px 12px;
+  }
+  
+  .adventure-button-icon {
+    font-size: 24px;
+  }
+  
+  .adventure-button-text {
+    font-size: 14px;
+  }
+  
+  .adventure-button-subtitle {
+    font-size: 10px;
   }
 }
