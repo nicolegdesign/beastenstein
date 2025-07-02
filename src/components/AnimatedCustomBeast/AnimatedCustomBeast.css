@@ -2,6 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Add perspective for more natural 3D-like flipping */
+  perspective: 1000px;
+  /* Improve rendering quality during transforms */
+  transform-style: preserve-3d;
+  will-change: transform;
 }
 
 .custom-beast-container {
@@ -11,12 +16,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Smooth out any sub-pixel rendering issues */
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .custom-beast-part {
   position: absolute;
   object-fit: contain;
   pointer-events: none;
+  /* Improve quality during transforms */
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  /* Smooth anti-aliasing for better visual quality */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 /* Laying down animation enhancements */

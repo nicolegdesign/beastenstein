@@ -908,11 +908,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             <img src="./images/arenas/arena2.jpg" alt="Adventure Arena" className="adventure-bg-image" />
           </div>
           
-          {/* Header */}
-          <div className="adventure-header">
-            <h1>🗺️ Adventure Mode</h1>
-          </div>
-
           {/* Battle Content */}
           <div className="battle-content">
             {/* Player Beast */}
@@ -952,17 +947,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
                   />
                 </div>
               )}
-            </div>
-
-            {/* VS Indicator */}
-            <div className="vs-indicator">
-              <motion.div
-                className="vs-text"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                VS
-              </motion.div>
             </div>
 
             {/* Opponent Beast */}

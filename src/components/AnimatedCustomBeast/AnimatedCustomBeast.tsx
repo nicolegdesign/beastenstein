@@ -109,12 +109,21 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         x: layingProps.x,
         y: layingProps.y,
         scaleX: facing === 'left' ? -1 : 1, // Add facing direction to normal animation
+        // Add subtle bounce when changing direction
+        scaleY: facing === 'left' ? [1, 0.95, 1] : [1, 0.95, 1],
       }}
       transition={mood === 'attack' ? {
         duration: 0.9,
         repeat: 0, // Play once instead of infinitely
-        ease: "easeInOut"
-      } : layingProps.transition}
+        ease: "easeInOut",
+        // Faster transition for facing changes during attack
+        scaleX: { duration: 0.05, ease: "easeOut" }
+      } : {
+        ...layingProps.transition,
+        // Much faster and smoother transition for facing changes
+        scaleX: { duration: 0.05, ease: "easeOut" },
+        scaleY: { duration: 0.05, ease: "easeOut" }
+      }}
     >
       <div className="custom-beast-container">
         
