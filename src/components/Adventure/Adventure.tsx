@@ -67,6 +67,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   const { setInventory } = useInventoryContext();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
+  const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
   const battleMusicRef = useRef<HTMLAudioElement>(null);
   
   const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
@@ -494,6 +495,28 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           handleVictory();
           return newState;
         }
+      } else if (ability.type === 'magicAttack') {
+        // Magic attacks use Magic stat instead of Attack stat
+        const baseDamage = ability.damage || 0;
+        const magicBonusDamage = Math.floor(playerEffectiveStats.magic / 2);
+        const totalDamage = Math.max(1, baseDamage + magicBonusDamage);
+        
+        // Play magic attack sound
+        if (magicAttackSoundRef.current && soundEffectsEnabled) {
+          magicAttackSoundRef.current.currentTime = 0;
+          magicAttackSoundRef.current.volume = 0.7;
+          magicAttackSoundRef.current.play().catch(error => {
+            console.log('Could not play magic attack sound:', error);
+          });
+        }
+        
+        newState.opponentHealth = Math.max(0, prev.opponentHealth - totalDamage);
+        setBattleLog(prevLog => [...prevLog, `You cast ${ability.name} for ${totalDamage} magic damage!`]);
+        
+        if (newState.opponentHealth <= 0) {
+          handleVictory();
+          return newState;
+        }
       } else if (ability.type === 'heal') {
         const healing = ability.healing || 0;
         newState.playerHealth = Math.min(playerStats.health, prev.playerHealth + healing);
@@ -701,6 +724,23 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           setCombatState(prev => {
             const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
             setBattleLog(prevLog => [...prevLog, `Opponent uses ${randomAbility.name} for ${damage} damage!`]);
+            
+            if (newPlayerHealth <= 0) {
+              setGameState('defeat');
+              setBattleLog(prevLog => [...prevLog, 'Defeat! Your beast has fallen...']);
+              return { ...prev, playerHealth: newPlayerHealth };
+            }
+            
+            return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
+          });
+        } else if (randomAbility.type === 'magicAttack') {
+          const finalMagic = opponentStats.magic + (opponent.totalStatBonus.magic || 0);
+          const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
+          const damage = (randomAbility.damage || 0) + Math.floor(finalMagic / 2) - Math.floor(finalPlayerDefense / 2);
+          
+          setCombatState(prev => {
+            const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
+            setBattleLog(prevLog => [...prevLog, `Opponent casts ${randomAbility.name} for ${damage} magic damage!`]);
             
             if (newPlayerHealth <= 0) {
               setGameState('defeat');
@@ -1206,6 +1246,15 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         style={{ display: 'none' }}
       >
         <source src="/sounds/item1.mp3" type="audio/mpeg" />
+      </audio>
+
+      {/* Magic attack sound effect */}
+      <audio
+        ref={magicAttackSoundRef}
+        preload="auto"
+        style={{ display: 'none' }}
+      >
+        <source src="/sounds/magic-attack1.mp3" type="audio/mpeg" />
       </audio>
 
       {/* Battle background music */}

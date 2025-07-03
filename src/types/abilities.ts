@@ -2,7 +2,7 @@ export interface Ability {
   id: string;
   name: string;
   description: string;
-  type: 'attack' | 'defense' | 'heal' | 'buff' | 'debuff';
+  type: 'attack' | 'magicAttack' | 'defense' | 'heal' | 'buff' | 'debuff';
   damage?: number;
   healing?: number;
   effects?: {

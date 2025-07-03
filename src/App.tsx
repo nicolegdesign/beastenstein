@@ -41,7 +41,7 @@ interface BeastPart {
     id: string;
     name: string;
     description: string;
-    type: 'attack' | 'defense' | 'heal' | 'buff' | 'debuff';
+    type: 'attack' | 'defense' | 'magicAttack' | 'heal' | 'buff' | 'debuff';
     damage?: number;
     healing?: number;
     effects?: {

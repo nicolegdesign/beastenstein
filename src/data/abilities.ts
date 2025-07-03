@@ -40,7 +40,7 @@ export const ABILITIES: Record<string, Ability> = {
     id: 'dragonBreath',
     name: 'Dragon Breath',
     description: 'Breathes fire dealing magic damage',
-    type: 'attack',
+    type: 'magicAttack',
     damage: 18,
     cooldown: 3,
     manaCost: 12
