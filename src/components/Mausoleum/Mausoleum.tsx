@@ -4,7 +4,7 @@ import { getRandomPersonality } from '../../data/personalities';
 import type { Personality } from '../../data/personalities';
 import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
 import type { EnhancedBeastPart, EnhancedBeastPartSet, StatBonus, Ability } from '../../types/abilities';
-import { BEAST_PARTS, ARM_SETS, LEG_SETS } from '../../data/beastParts';
+import { BEAST_PARTS, ARM_SETS, LEG_SETS, EXTRA_LIMBS } from '../../data/beastParts';
 import { SOUL_ESSENCES, type SoulEssence } from '../../data/soulEssences';
 import './Mausoleum.css';
 
@@ -18,6 +18,8 @@ interface CustomBeast {
   armRight: EnhancedBeastPart;
   legLeft: EnhancedBeastPart;
   legRight: EnhancedBeastPart;
+  wings?: EnhancedBeastPart;
+  tail?: EnhancedBeastPart;
   soulEssence: SoulEssence;
   // Calculated stats and abilities
   totalStatBonus: StatBonus;
@@ -50,7 +52,9 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
       selectedParts.armLeft,
       selectedParts.armRight,
       selectedParts.legLeft,
-      selectedParts.legRight
+      selectedParts.legRight,
+      selectedParts.wings,
+      selectedParts.tail
     ];
 
     parts.forEach(part => {
@@ -81,7 +85,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     legRight: undefined,
     soulEssence: undefined,
   });
-  const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'soulEssence'>('head');
+  const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'extraLimbs' | 'soulEssence'>('head');
 
   const getPartsOfType = (type: EnhancedBeastPart['type']) => {
     return BEAST_PARTS.filter(part => part.type === type);
@@ -98,6 +102,15 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
       ...prev,
       [part.type]: part
     }));
+  };
+
+  const selectExtraLimb = (part: EnhancedBeastPart) => {
+    if (part.type === 'wings' || part.type === 'tail') {
+      setSelectedParts(prev => ({
+        ...prev,
+        [part.type]: part
+      }));
+    }
   };
 
   const selectPartSet = (partSet: EnhancedBeastPartSet) => {
@@ -185,7 +198,9 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         selectedParts.armRight!.id,
         selectedParts.legLeft!.id,
         selectedParts.legRight!.id,
-        selectedParts.soulEssence!.id
+        selectedParts.soulEssence!.id,
+        selectedParts.wings?.id,
+        selectedParts.tail?.id
       );
 
       if (!canCreate) {
@@ -201,7 +216,9 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         selectedParts.armRight!.id,
         selectedParts.legLeft!.id,
         selectedParts.legRight!.id,
-        selectedParts.soulEssence!.id
+        selectedParts.soulEssence!.id,
+        selectedParts.wings?.id,
+        selectedParts.tail?.id
       );
 
       if (!consumed) {
@@ -227,6 +244,8 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
         armRight: selectedParts.armRight!,
         legLeft: selectedParts.legLeft!,
         legRight: selectedParts.legRight!,
+        wings: selectedParts.wings,
+        tail: selectedParts.tail,
         soulEssence: selectedParts.soulEssence!,
         totalStatBonus,
         availableAbilities
@@ -240,6 +259,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
     { key: 'torso' as const, label: 'Torso' },
     { key: 'armSet' as const, label: 'Arms' },
     { key: 'legSet' as const, label: 'Legs' },
+    { key: 'extraLimbs' as const, label: 'Extra Limbs' },
     { key: 'soulEssence' as const, label: 'Soul Essence' },
   ];
 
@@ -300,6 +320,14 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                     <img src={selectedParts.legRight.imagePath} alt="Right Leg" className="preview-part preview-leg-right" />
                   )}
                   
+                  {/* Extra Limbs */}
+                  {selectedParts.wings && (
+                    <img src={selectedParts.wings.imagePath} alt="Wings" className="preview-part preview-wings" />
+                  )}
+                  {selectedParts.tail && (
+                    <img src={selectedParts.tail.imagePath} alt="Tail" className="preview-part preview-tail" />
+                  )}
+                  
                   {/* Soul Essence Display */}
                   {selectedParts.soulEssence && (
                     <div className="preview-soul-essence">
@@ -328,6 +356,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                   {partType.key === 'torso' && selectedParts.torso && <span className="tab-indicator">✓</span>}
                   {partType.key === 'armSet' && hasSelectedSet('armSet') && <span className="tab-indicator">✓</span>}
                   {partType.key === 'legSet' && hasSelectedSet('legSet') && <span className="tab-indicator">✓</span>}
+                  {partType.key === 'extraLimbs' && (selectedParts.wings || selectedParts.tail) && <span className="tab-indicator">✓</span>}
                   {partType.key === 'soulEssence' && selectedParts.soulEssence && <span className="tab-indicator">✓</span>}
                 </button>
               ))}
@@ -459,6 +488,49 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                         )}
                         
                         <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{setQuantity}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              }
+
+              {/* Render extra limbs */}
+              {activePartType === 'extraLimbs' && 
+                EXTRA_LIMBS.map(extraLimb => {
+                  const quantity = getPartQuantity(extraLimb.id);
+                  const isOutOfStock = quantity <= 0;
+                  const isSelected = (extraLimb.type === 'wings' && selectedParts.wings?.id === extraLimb.id) ||
+                                   (extraLimb.type === 'tail' && selectedParts.tail?.id === extraLimb.id);
+                  return (
+                    <div
+                      key={extraLimb.id}
+                      className={`part-option ${isSelected ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${extraLimb.rarity}`}
+                      onClick={() => !isOutOfStock && selectExtraLimb(extraLimb)}
+                    >
+                      <img src={extraLimb.imagePath} alt={extraLimb.name} className="part-image" />
+                      <div className="part-info">
+                        <span className="part-name">{extraLimb.name}</span>
+                        <span className={`part-rarity rarity-${extraLimb.rarity}`}>{extraLimb.rarity}</span>
+                        
+                        {/* Stat bonuses */}
+                        <div className="part-stats">
+                          {Object.entries(extraLimb.statBonus).map(([stat, value]) => 
+                            value && typeof value === 'number' && value > 0 && (
+                              <span key={stat} className={`stat-bonus ${stat}`}>
+                                +{value} {stat}
+                              </span>
+                            )
+                          ).filter(Boolean)}
+                        </div>
+                        
+                        {/* Ability */}
+                        {extraLimb.ability && (
+                          <div className="part-ability">
+                            <span className="ability-name">⚡ {extraLimb.ability.name}</span>
+                          </div>
+                        )}
+                        
+                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{quantity}</span>
                       </div>
                     </div>
                   );

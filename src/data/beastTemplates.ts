@@ -1,5 +1,5 @@
 import type { EnhancedBeastPart } from '../types/abilities';
-import { getPartsByBeastType } from './beastParts';
+import { getPartsByBeastType, findExtraLimbById } from './beastParts';
 import { findSoulEssenceById } from './soulEssences';
 import { getDefaultPersonality, type Personality } from './personalities';
 
@@ -28,6 +28,8 @@ interface CustomBeastData {
   armRight: EnhancedBeastPart;
   legLeft: EnhancedBeastPart;
   legRight: EnhancedBeastPart;
+  wings?: EnhancedBeastPart;
+  tail?: EnhancedBeastPart;
   soulEssence: {
     id: string;
     name: string;
@@ -47,6 +49,8 @@ export interface BeastTemplate {
   torsoId: string;
   armSetId: string;
   legSetId: string;
+  wingsId?: string;
+  tailId?: string;
   defaultSoulId: string;
   defaultGender: 'male' | 'female';
 }
@@ -62,6 +66,7 @@ export const BEAST_TEMPLATES: BeastTemplate[] = [
     torsoId: 'nightwolf-torso',
     armSetId: 'nightwolf-arms',
     legSetId: 'nightwolf-legs',
+    tailId: 'nightwolf-extra-tail',
     defaultSoulId: 'dim-soul',
     defaultGender: 'male'
   },
@@ -150,6 +155,10 @@ export const createBeastFromTemplate = (
     ability: parts.legSet.ability
   };
 
+  // Get optional extra limbs
+  const wings = template.wingsId ? findExtraLimbById(template.wingsId) : undefined;
+  const tail = template.tailId ? findExtraLimbById(template.tailId) : undefined;
+
   return {
     name: customName || template.name,
     gender: customGender || template.defaultGender,
@@ -160,6 +169,8 @@ export const createBeastFromTemplate = (
     armRight,
     legLeft,
     legRight,
+    wings,
+    tail,
     soulEssence: {
       id: soulEssence.id,
       name: soulEssence.name,

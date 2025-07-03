@@ -50,7 +50,9 @@ export const useBeastPartInventory = () => {
     armRightId: string,
     legLeftId: string,
     legRightId: string,
-    soulEssenceId: string
+    soulEssenceId: string,
+    wingsId?: string,
+    tailId?: string
   ): boolean => {
     // Check individual parts (head, torso)
     const hasHeadAndTorso = getPartQuantity(headId) > 0 && getPartQuantity(torsoId) > 0;
@@ -66,7 +68,11 @@ export const useBeastPartInventory = () => {
     // Check soul essence
     const hasSoulEssence = getSoulEssenceQuantity(soulEssenceId) > 0;
     
-    return hasHeadAndTorso && hasArmSet && hasLegSet && hasSoulEssence;
+    // Check optional extra limbs (only if provided)
+    const hasWings = !wingsId || getPartQuantity(wingsId) > 0;
+    const hasTail = !tailId || getPartQuantity(tailId) > 0;
+    
+    return hasHeadAndTorso && hasArmSet && hasLegSet && hasSoulEssence && hasWings && hasTail;
   }, [getPartQuantity, getSetQuantity, getSoulEssenceQuantity, getSetIdFromArmParts, getSetIdFromLegParts]);
 
   const consumePartsForBeast = useCallback((
@@ -76,10 +82,12 @@ export const useBeastPartInventory = () => {
     armRightId: string,
     legLeftId: string,
     legRightId: string,
-    soulEssenceId: string
+    soulEssenceId: string,
+    wingsId?: string,
+    tailId?: string
   ): boolean => {
     // Check if we can create the beast first
-    if (!canCreateBeast(headId, torsoId, armLeftId, armRightId, legLeftId, legRightId, soulEssenceId)) {
+    if (!canCreateBeast(headId, torsoId, armLeftId, armRightId, legLeftId, legRightId, soulEssenceId, wingsId, tailId)) {
       return false;
     }
 
@@ -92,23 +100,35 @@ export const useBeastPartInventory = () => {
     }
 
     // Consume individual parts and sets in a single state update
-    setInventory(prev => ({
-      ...prev,
-      parts: {
+    setInventory(prev => {
+      const newParts = {
         ...prev.parts,
         [headId]: Math.max(0, (prev.parts[headId] || 0) - 1),
         [torsoId]: Math.max(0, (prev.parts[torsoId] || 0) - 1)
-      },
-      sets: {
-        ...prev.sets,
-        [armSetId]: Math.max(0, (prev.sets[armSetId] || 0) - 1),
-        [legSetId]: Math.max(0, (prev.sets[legSetId] || 0) - 1)
-      },
-      soulEssences: {
-        ...prev.soulEssences,
-        [soulEssenceId]: Math.max(0, (prev.soulEssences[soulEssenceId] || 0) - 1)
+      };
+
+      // Consume extra limbs if provided
+      if (wingsId) {
+        newParts[wingsId] = Math.max(0, (prev.parts[wingsId] || 0) - 1);
       }
-    }));
+      if (tailId) {
+        newParts[tailId] = Math.max(0, (prev.parts[tailId] || 0) - 1);
+      }
+
+      return {
+        ...prev,
+        parts: newParts,
+        sets: {
+          ...prev.sets,
+          [armSetId]: Math.max(0, (prev.sets[armSetId] || 0) - 1),
+          [legSetId]: Math.max(0, (prev.sets[legSetId] || 0) - 1)
+        },
+        soulEssences: {
+          ...prev.soulEssences,
+          [soulEssenceId]: Math.max(0, (prev.soulEssences[soulEssenceId] || 0) - 1)
+        }
+      };
+    });
     
     return true;
   }, [canCreateBeast, getSetIdFromArmParts, getSetIdFromLegParts, setInventory]);

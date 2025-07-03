@@ -156,6 +156,34 @@ export const LEG_SETS: EnhancedBeastPartSet[] = [
   }
 ];
 
+// Extra Limbs - Special cosmetic parts with minor stat bonuses
+export const EXTRA_LIMBS: EnhancedBeastPart[] = [
+  {
+    id: 'nightwolf-extra-tail',
+    name: 'Night Wolf Extra Tail',
+    imagePath: './images/beasts/night-wolf/night-wolf-extra-tail.svg',
+    type: 'tail',
+    rarity: 'uncommon',
+    statBonus: { speed: 1 }
+  },
+  {
+    id: 'mountaindragon-extra-wings',
+    name: 'Mountain Dragon Extra Wings',
+    imagePath: './images/beasts/mountain-dragon/mountain-dragon-extra-wings.svg',
+    type: 'wings',
+    rarity: 'rare',
+    statBonus: { magic: 1 }
+  },
+  {
+    id: 'mountaindragon-extra-tail',
+    name: 'Mountain Dragon Extra Tail',
+    imagePath: './images/beasts/mountain-dragon/mountain-dragon-extra-tail.svg',
+    type: 'tail',
+    rarity: 'rare',
+    statBonus: { attack: 1, magic: 1 }
+  }
+];
+
 // Helper functions to find parts by ID or type
 export const findPartById = (id: string): EnhancedBeastPart | undefined => {
   return BEAST_PARTS.find(part => part.id === id);
@@ -169,7 +197,14 @@ export const findLegSetById = (id: string): EnhancedBeastPartSet | undefined => 
   return LEG_SETS.find(set => set.id === id);
 };
 
+export const findExtraLimbById = (id: string): EnhancedBeastPart | undefined => {
+  return EXTRA_LIMBS.find(part => part.id === id);
+};
+
 export const getPartsByType = (type: EnhancedBeastPart['type']): EnhancedBeastPart[] => {
+  if (type === 'wings' || type === 'tail') {
+    return EXTRA_LIMBS.filter(part => part.type === type);
+  }
   return BEAST_PARTS.filter(part => part.type === type);
 };
 

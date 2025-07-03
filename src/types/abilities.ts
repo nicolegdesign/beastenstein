@@ -30,7 +30,7 @@ export interface EnhancedBeastPart {
   id: string;
   name: string;
   imagePath: string;
-  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight' | 'wings' | 'tail';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   statBonus: StatBonus;
   ability?: Ability;

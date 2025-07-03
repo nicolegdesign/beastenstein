@@ -23,7 +23,10 @@ const createDefaultInventory = (): BeastPartInventory => {
     'forestsprite-head', 'forestsprite-torso',
     'shadowbeast-head', 'shadowbeast-torso',
     'thundereagle-head', 'thundereagle-torso',
-    'frostwolf-head', 'frostwolf-torso'
+    'frostwolf-head', 'frostwolf-torso',
+    'nightwolf-extra-tail',
+    'mountaindragon-extra-wings',
+    'mountaindragon-extra-tail'
   ];
   
   partIds.forEach(id => {

@@ -15,6 +15,8 @@ interface AnimatedCustomBeastProps {
     armRight: { imagePath: string };
     legLeft: { imagePath: string };
     legRight: { imagePath: string };
+    wings?: { imagePath: string };
+    tail?: { imagePath: string };
   };
 }
 
@@ -192,6 +194,76 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             zIndex: 6
           }}
         />
+
+        {/* Wings (behind everything) */}
+        {customBeast.wings && (
+          <motion.img
+            src={customBeast.wings.imagePath}
+            alt="Custom Beast Wings"
+            className="custom-beast-part custom-beast-wings"
+            animate={mood === 'attack' ? {
+              rotate: [0, 8, -5, 6, 0],
+              scaleY: [1, 1.1, 0.95, 1.05, 1],
+            } : {
+              rotate: [0, 3 * scale, 0, -2 * scale, 0],
+              scaleY: [1, 1 + (0.05 * scale), 1], // Wing flapping effect
+            }}
+            transition={mood === 'attack' ? {
+              duration: 0.6,
+              repeat: 0,
+              ease: "easeInOut",
+              delay: 0.1
+            } : {
+              duration: 2.0,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.3
+            }}
+            style={{ 
+              transformOrigin: "50% 50%",
+              width: '100%',
+              height: '100%',
+              left: '-52%',
+              top: '-37%',
+              zIndex: 0 // Behind everything
+            }}
+          />
+        )}
+
+        {/* Tail (behind legs but visible) */}
+        {customBeast.tail && (
+          <motion.img
+            src={customBeast.tail.imagePath}
+            alt="Custom Beast Tail"
+            className="custom-beast-part custom-beast-tail"
+            animate={mood === 'attack' ? {
+              rotate: [0, 15, -10, 12, 0],
+              x: [0, -5, 3, -4, 0],
+            } : {
+              rotate: [0, 8 * scale, 0, -6 * scale, 0],
+              x: [0, 2 * scale, 0, -2 * scale, 0], // Swaying motion
+            }}
+            transition={mood === 'attack' ? {
+              duration: 0.7,
+              repeat: 0,
+              ease: "easeInOut",
+              delay: 0.3
+            } : {
+              duration: 2.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.8
+            }}
+            style={{ 
+              transformOrigin: "90% 20%", // Connection point at base
+              width: '100%',
+              height: '100%',
+              left: '-70%',
+              bottom: '-6%',
+              zIndex: 2 // Behind legs but visible
+            }}
+          />
+        )}
 
         {/* Torso (center layer - main body) */}
         <motion.img

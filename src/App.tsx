@@ -27,14 +27,14 @@ import type { GameOptions } from './types/options';
 import type { Personality } from './data/personalities';
 import { createBeastFromTemplate } from './data/beastTemplates';
 import { getMaxLevelFromSoul } from './data/soulEssences';
-import { getPartsByBeastType } from './data/beastParts';
+import { getPartsByBeastType, findExtraLimbById } from './data/beastParts';
 import './App.css';
 
 interface BeastPart {
   id: string;
   name: string;
   imagePath: string;
-  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
+  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight' | 'wings' | 'tail';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number; health?: number };
   ability?: {
@@ -76,6 +76,8 @@ interface CustomBeastData {
   armRight: BeastPart;
   legLeft: BeastPart;
   legRight: BeastPart;
+  wings?: BeastPart;
+  tail?: BeastPart;
   soulEssence: SoulEssence;
 }
 
@@ -352,6 +354,15 @@ function App() {
                 customBeast.legRight.statBonus = nightWolfParts.legSet.statBonus;
                 customBeast.legRight.ability = nightWolfParts.legSet.ability;
                 shouldSave = true;
+              }
+              
+              // Add tail to Night Wolf if it doesn't have one
+              if (!customBeast.tail) {
+                const nightWolfTail = findExtraLimbById('nightwolf-extra-tail');
+                if (nightWolfTail) {
+                  customBeast.tail = nightWolfTail;
+                  shouldSave = true;
+                }
               }
             }
             
