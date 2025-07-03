@@ -25,6 +25,9 @@ import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import type { Personality } from './data/personalities';
+import { createBeastFromTemplate } from './data/beastTemplates';
+import { getMaxLevelFromSoul } from './data/soulEssences';
+import { getPartsByBeastType } from './data/beastParts';
 import './App.css';
 
 interface BeastPart {
@@ -33,6 +36,26 @@ interface BeastPart {
   imagePath: string;
   type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number; health?: number };
+  ability?: {
+    id: string;
+    name: string;
+    description: string;
+    type: 'attack' | 'defense' | 'heal' | 'buff' | 'debuff';
+    damage?: number;
+    healing?: number;
+    effects?: {
+      statModifier?: {
+        attack?: number;
+        defense?: number;
+        speed?: number;
+        magic?: number;
+      };
+      duration?: number;
+    };
+    cooldown: number;
+    manaCost?: number;
+  };
 }
 
 interface SoulEssence {
@@ -55,82 +78,6 @@ interface CustomBeastData {
   legRight: BeastPart;
   soulEssence: SoulEssence;
 }
-
-// Function to get max level based on soul essence
-const getMaxLevelFromSoul = (soulId: string): number => {
-  switch (soulId) {
-    case 'dim-soul':
-      return 5;
-    case 'glowing-soul':
-      return 10;
-    case 'bright-soul':
-      return 15;
-    case 'brilliant-soul':
-      return 20;
-    case 'luminescent-soul':
-      return 25;
-    default:
-      return 5; // Default to dim soul level
-  }
-};
-
-// Factory function to create Night Wolf beast configuration
-const createNightWolfBeast = (name: string): CustomBeastData => {
-  return {
-    name: name,
-    gender: 'male' as const,
-    personality: getDefaultPersonality(),
-    head: {
-      id: 'nightwolf-head',
-      name: 'Night Wolf Head',
-      imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
-      type: 'head' as const,
-      rarity: 'common' as const
-    },
-    torso: {
-      id: 'nightwolf-torso',
-      name: 'Night Wolf Torso',
-      imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
-      type: 'torso' as const,
-      rarity: 'common' as const
-    },
-    armLeft: {
-      id: 'nightwolf-arms-left',
-      name: 'Night Wolf Left Arm',
-      imagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-      type: 'armLeft' as const,
-      rarity: 'common' as const
-    },
-    armRight: {
-      id: 'nightwolf-arms-right',
-      name: 'Night Wolf Right Arm',
-      imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-      type: 'armRight' as const,
-      rarity: 'common' as const
-    },
-    legLeft: {
-      id: 'nightwolf-legs-left',
-      name: 'Night Wolf Left Leg',
-      imagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-      type: 'legLeft' as const,
-      rarity: 'common' as const
-    },
-    legRight: {
-      id: 'nightwolf-legs-right',
-      name: 'Night Wolf Right Leg',
-      imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-      type: 'legRight' as const,
-      rarity: 'common' as const
-    },
-    soulEssence: {
-      id: 'dim-soul',
-      name: 'Dim Soul',
-      description: 'A faint glimmer of spiritual energy',
-      imagePath: './images/items/dim-soul.png',
-      rarity: 'common' as const
-    }
-  };
-};
 
 function App() {
   // Game flow state
@@ -227,8 +174,10 @@ function App() {
       }
       
       // Create and save the default custom beast configuration
-      const defaultCustomBeast = createNightWolfBeast('Night Wolf');
-      localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
+      const defaultCustomBeast = createBeastFromTemplate('nightwolf', 'Night Wolf');
+      if (defaultCustomBeast) {
+        localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
+      }
     }
     
     return customBeastData;
@@ -357,6 +306,53 @@ function App() {
               customBeast.personality = customBeast.name === 'Night Wolf' ? 
                                         getDefaultPersonality() : getRandomPersonality();
               shouldSave = true;
+            }
+            
+            // Migrate Night Wolf parts to include stat bonuses and abilities
+            if (customBeast.name === 'Night Wolf' || 
+                (customBeast.head?.id === 'nightwolf-head' && customBeast.torso?.id === 'nightwolf-torso')) {
+              
+              // Get the centralized Night Wolf parts data
+              const nightWolfParts = getPartsByBeastType('nightwolf');
+              
+              // Update head with stat bonus and ability from centralized data
+              if (customBeast.head?.id === 'nightwolf-head' && !customBeast.head.statBonus && nightWolfParts.head) {
+                customBeast.head.statBonus = nightWolfParts.head.statBonus;
+                customBeast.head.ability = nightWolfParts.head.ability;
+                shouldSave = true;
+              }
+              
+              // Update torso with stat bonus from centralized data
+              if (customBeast.torso?.id === 'nightwolf-torso' && !customBeast.torso.statBonus && nightWolfParts.torso) {
+                customBeast.torso.statBonus = nightWolfParts.torso.statBonus;
+                shouldSave = true;
+              }
+              
+              // Update arms with stat bonuses and abilities from centralized data
+              if (customBeast.armLeft?.id?.includes('nightwolf') && !customBeast.armLeft.statBonus && nightWolfParts.armSet) {
+                customBeast.armLeft.statBonus = nightWolfParts.armSet.statBonus;
+                customBeast.armLeft.ability = nightWolfParts.armSet.ability;
+                shouldSave = true;
+              }
+              
+              if (customBeast.armRight?.id?.includes('nightwolf') && !customBeast.armRight.statBonus && nightWolfParts.armSet) {
+                customBeast.armRight.statBonus = nightWolfParts.armSet.statBonus;
+                customBeast.armRight.ability = nightWolfParts.armSet.ability;
+                shouldSave = true;
+              }
+              
+              // Update legs with stat bonuses and abilities from centralized data
+              if (customBeast.legLeft?.id?.includes('nightwolf') && !customBeast.legLeft.statBonus && nightWolfParts.legSet) {
+                customBeast.legLeft.statBonus = nightWolfParts.legSet.statBonus;
+                customBeast.legLeft.ability = nightWolfParts.legSet.ability;
+                shouldSave = true;
+              }
+              
+              if (customBeast.legRight?.id?.includes('nightwolf') && !customBeast.legRight.statBonus && nightWolfParts.legSet) {
+                customBeast.legRight.statBonus = nightWolfParts.legSet.statBonus;
+                customBeast.legRight.ability = nightWolfParts.legSet.ability;
+                shouldSave = true;
+              }
             }
             
             // Save the updated beast data if changes were made
@@ -512,7 +508,11 @@ function App() {
     };
     
     // Create the custom beast configuration using the factory function
-    const customBeast = createNightWolfBeast(name);
+    const customBeast = createBeastFromTemplate('nightwolf', name);
+    if (!customBeast) {
+      console.error('Failed to create Night Wolf beast from template');
+      return;
+    }
     
     // Save to state and localStorage
     setBeastData({ [customBeastId]: newBeastData });

@@ -4,16 +4,9 @@ import { getRandomPersonality } from '../../data/personalities';
 import type { Personality } from '../../data/personalities';
 import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
 import type { EnhancedBeastPart, EnhancedBeastPartSet, StatBonus, Ability } from '../../types/abilities';
-import { ABILITIES } from '../../data/abilities';
+import { BEAST_PARTS, ARM_SETS, LEG_SETS } from '../../data/beastParts';
+import { SOUL_ESSENCES, type SoulEssence } from '../../data/soulEssences';
 import './Mausoleum.css';
-
-interface SoulEssence {
-  id: string;
-  name: string;
-  description: string;
-  imagePath: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-}
 
 interface CustomBeast {
   name: string;
@@ -35,200 +28,6 @@ interface MausoleumProps {
   onClose: () => void;
   onCreateBeast: (beast: CustomBeast) => void;
 }
-
-// Available beast parts from existing beasts (head and torso only)
-const AVAILABLE_PARTS: EnhancedBeastPart[] = [
-  // Night Wolf parts
-  {
-    id: 'nightwolf-head',
-    name: 'Night Wolf Head',
-    imagePath: './images/beasts/night-wolf/night-wolf-head.svg',
-    type: 'head',
-    rarity: 'common',
-    statBonus: { magic: 2 },
-    ability: ABILITIES.howl
-  },
-  {
-    id: 'nightwolf-torso',
-    name: 'Night Wolf Torso',
-    imagePath: './images/beasts/night-wolf/night-wolf-torso.svg',
-    type: 'torso',
-    rarity: 'common',
-    statBonus: { defense: 3, health: 10 }
-    // No ability for torsos
-  },
-  // Mountain Dragon parts
-  {
-    id: 'mountaindragon-head',
-    name: 'Mountain Dragon Head',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
-    type: 'head',
-    rarity: 'common',
-    statBonus: { magic: 3, attack: 1 },
-    ability: ABILITIES.dragonBreath
-  },
-  {
-    id: 'mountaindragon-torso',
-    name: 'Mountain Dragon Torso',
-    imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg',
-    type: 'torso',
-    rarity: 'common',
-    statBonus: { defense: 4, health: 15 }
-    // No ability for torsos
-  },
-  // Wooden Puppet parts
-  {
-    id: 'woodenpuppet-head',
-    name: 'Wooden Puppet Head',
-    imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg',
-    type: 'head',
-    rarity: 'common',
-    statBonus: { defense: 2, health: 5 },
-    ability: {
-      id: 'splinter',
-      name: 'Splinter',
-      description: 'Wooden fragments pierce the enemy',
-      type: 'attack' as const,
-      damage: 8,
-      cooldown: 1,
-      manaCost: 3
-    }
-  },
-  {
-    id: 'woodenpuppet-torso',
-    name: 'Wooden Puppet Torso',
-    imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg',
-    type: 'torso',
-    rarity: 'common',
-    statBonus: { defense: 5, health: 20 }
-    // No ability for torsos
-  },
-];
-
-// Available arm and leg sets
-const AVAILABLE_ARM_SETS: EnhancedBeastPartSet[] = [
-  {
-    id: 'nightwolf-arms',
-    name: 'Night Wolf Arms',
-    leftImagePath: './images/beasts/night-wolf/night-wolf-arm-l.svg',
-    rightImagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg',
-    type: 'armSet',
-    rarity: 'common',
-    statBonus: { attack: 2, speed: 1 },
-    ability: ABILITIES.slash
-  },
-  {
-    id: 'mountaindragon-arms',
-    name: 'Mountain Dragon Arms',
-    leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
-    rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
-    type: 'armSet',
-    rarity: 'common',
-    statBonus: { attack: 3, magic: 1 },
-    ability: ABILITIES.dragonClaw
-  },
-  {
-    id: 'woodenpuppet-arms',
-    name: 'Wooden Puppet Arms',
-    leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-l.svg',
-    rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg',
-    type: 'armSet',
-    rarity: 'common',
-    statBonus: { defense: 2, health: 10 },
-    ability: {
-      id: 'woodenStrike',
-      name: 'Wooden Strike',
-      description: 'A sturdy wooden blow',
-      type: 'attack' as const,
-      damage: 6,
-      cooldown: 1,
-      manaCost: 2
-    }
-  },
-];
-
-const AVAILABLE_LEG_SETS: EnhancedBeastPartSet[] = [
-  {
-    id: 'nightwolf-legs',
-    name: 'Night Wolf Legs',
-    leftImagePath: './images/beasts/night-wolf/night-wolf-leg-l.svg',
-    rightImagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg',
-    type: 'legSet',
-    rarity: 'common',
-    statBonus: { speed: 3, defense: 1 },
-    ability: ABILITIES.charge
-  },
-  {
-    id: 'mountaindragon-legs',
-    name: 'Mountain Dragon Legs',
-    leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
-    rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
-    type: 'legSet',
-    rarity: 'common',
-    statBonus: { speed: 2, attack: 2 },
-    ability: ABILITIES.dragonLeap
-  },
-  {
-    id: 'woodenpuppet-legs',
-    name: 'Wooden Puppet Legs',
-    leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-l.svg',
-    rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg',
-    type: 'legSet',
-    rarity: 'common',
-    statBonus: { defense: 3, speed: 1 },
-    ability: {
-      id: 'rootedStance',
-      name: 'Rooted Stance',
-      description: 'Plant firmly for increased defense',
-      type: 'buff' as const,
-      cooldown: 3,
-      manaCost: 8,
-      effects: {
-        statModifier: { defense: 3 },
-        duration: 3
-      }
-    }
-  },
-];
-
-// Available soul essences
-const AVAILABLE_SOUL_ESSENCES: SoulEssence[] = [
-  {
-    id: 'dim-soul',
-    name: 'Dim Soul',
-    description: 'A faint glimmer of spiritual energy',
-    imagePath: './images/items/dim-soul.png',
-    rarity: 'common'
-  },
-  {
-    id: 'glowing-soul',
-    name: 'Glowing Soul',
-    description: 'A warm, steady spiritual glow',
-    imagePath: './images/items/glowing-soul.png',
-    rarity: 'uncommon'
-  },
-  {
-    id: 'bright-soul',
-    name: 'Bright Soul',
-    description: 'A radiant burst of spiritual power',
-    imagePath: './images/items/bright-soul.png',
-    rarity: 'rare'
-  },
-  {
-    id: 'brilliant-soul',
-    name: 'Brilliant Soul',
-    description: 'An intense blaze of spiritual energy',
-    imagePath: './images/items/brilliant-soul.png',
-    rarity: 'epic'
-  },
-  {
-    id: 'luminescent-soul',
-    name: 'Luminescent Soul',
-    description: 'The ultimate manifestation of spiritual essence',
-    imagePath: './images/items/luminescent-soul.png',
-    rarity: 'legendary'
-  },
-];
 
 export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) => {
   const { getPartQuantity, getSetQuantity, getSoulEssenceQuantity, canCreateBeast, consumePartsForBeast } = useBeastPartInventory();
@@ -285,12 +84,12 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
   const [activePartType, setActivePartType] = useState<'head' | 'torso' | 'armSet' | 'legSet' | 'soulEssence'>('head');
 
   const getPartsOfType = (type: EnhancedBeastPart['type']) => {
-    return AVAILABLE_PARTS.filter(part => part.type === type);
+    return BEAST_PARTS.filter(part => part.type === type);
   };
 
   const getSetsOfType = (type: EnhancedBeastPartSet['type']) => {
-    if (type === 'armSet') return AVAILABLE_ARM_SETS;
-    if (type === 'legSet') return AVAILABLE_LEG_SETS;
+    if (type === 'armSet') return ARM_SETS;
+    if (type === 'legSet') return LEG_SETS;
     return [];
   };
 
@@ -554,12 +353,12 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                         {/* Stat bonuses */}
                         <div className="part-stats">
                           {Object.entries(part.statBonus).map(([stat, value]) => 
-                            value && value > 0 && (
+                            value && typeof value === 'number' && value > 0 && (
                               <span key={stat} className={`stat-bonus ${stat}`}>
                                 +{value} {stat}
                               </span>
                             )
-                          )}
+                          ).filter(Boolean)}
                         </div>
                         
                         {/* Ability */}
@@ -599,12 +398,12 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                         {/* Stat bonuses */}
                         <div className="part-stats">
                           {Object.entries(armSet.statBonus).map(([stat, value]) => 
-                            value && value > 0 && (
+                            value && typeof value === 'number' && value > 0 && (
                               <span key={stat} className={`stat-bonus ${stat}`}>
                                 +{value} {stat}
                               </span>
                             )
-                          )}
+                          ).filter(Boolean)}
                         </div>
                         
                         {/* Ability */}
@@ -644,12 +443,12 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                         {/* Stat bonuses */}
                         <div className="part-stats">
                           {Object.entries(legSet.statBonus).map(([stat, value]) => 
-                            value && value > 0 && (
+                            value && typeof value === 'number' && value > 0 && (
                               <span key={stat} className={`stat-bonus ${stat}`}>
                                 +{value} {stat}
                               </span>
                             )
-                          )}
+                          ).filter(Boolean)}
                         </div>
                         
                         {/* Ability */}
@@ -668,7 +467,7 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
 
               {/* Render soul essences */}
               {activePartType === 'soulEssence' && 
-                AVAILABLE_SOUL_ESSENCES.map(soulEssence => {
+                SOUL_ESSENCES.map(soulEssence => {
                   const quantity = getSoulEssenceQuantity(soulEssence.id);
                   const isOutOfStock = quantity <= 0;
                   return (
