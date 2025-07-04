@@ -249,7 +249,7 @@ body {
 /* Adventure Button Styles - Positioned outside Beast Den */
 .adventure-button-container {
   position: fixed;
-  top: 50%;
+  top: 50px;
   right: 15px;
   transform: translateY(-50%);
   z-index: 20;

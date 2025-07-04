@@ -69,6 +69,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
   const battleMusicRef = useRef<HTMLAudioElement>(null);
+  const battleLogRef = useRef<HTMLDivElement>(null);
   
   const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
@@ -489,7 +490,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         const totalDamage = Math.max(1, baseDamage + bonusDamage);
         
         newState.opponentHealth = Math.max(0, prev.opponentHealth - totalDamage);
-        setBattleLog(prevLog => [...prevLog, `You use ${ability.name} for ${totalDamage} damage!`]);
         
         if (newState.opponentHealth <= 0) {
           handleVictory();
@@ -511,7 +511,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         }
         
         newState.opponentHealth = Math.max(0, prev.opponentHealth - totalDamage);
-        setBattleLog(prevLog => [...prevLog, `You cast ${ability.name} for ${totalDamage} magic damage!`]);
         
         if (newState.opponentHealth <= 0) {
           handleVictory();
@@ -520,7 +519,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       } else if (ability.type === 'heal') {
         const healing = ability.healing || 0;
         newState.playerHealth = Math.min(playerStats.health, prev.playerHealth + healing);
-        setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and heal for ${healing} HP!`]);
       } else if (ability.type === 'buff' && ability.effects?.statModifier) {
         // Apply buff to player
         const duration = ability.effects.duration || 3;
@@ -529,7 +527,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             newState.statusEffects.player[`${ability.id}_${stat}`] = { duration, value };
           }
         });
-        setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and feel empowered!`]);
       } else if (ability.type === 'debuff' && ability.effects?.statModifier) {
         // Apply debuff to opponent
         const duration = ability.effects.duration || 3;
@@ -538,7 +535,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             newState.statusEffects.opponent[`${ability.id}_${stat}`] = { duration, value };
           }
         });
-        setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and weaken your opponent!`]);
       }
       
       // Set cooldown
@@ -552,6 +548,26 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       newState.turn = 'opponent';
       return newState;
     });
+
+    // Add battle log messages outside of state callback to prevent duplicates
+    if (ability.type === 'attack') {
+      const baseDamage = ability.damage || 0;
+      const bonusDamage = Math.floor(playerEffectiveStats.attack / 2);
+      const totalDamage = Math.max(1, baseDamage + bonusDamage);
+      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} for ${totalDamage} damage!`]);
+    } else if (ability.type === 'magicAttack') {
+      const baseDamage = ability.damage || 0;
+      const magicBonusDamage = Math.floor(playerEffectiveStats.magic / 2);
+      const totalDamage = Math.max(1, baseDamage + magicBonusDamage);
+      setBattleLog(prevLog => [...prevLog, `You cast ${ability.name} for ${totalDamage} magic damage!`]);
+    } else if (ability.type === 'heal') {
+      const healing = ability.healing || 0;
+      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and heal for ${healing} HP!`]);
+    } else if (ability.type === 'buff') {
+      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and feel empowered!`]);
+    } else if (ability.type === 'debuff') {
+      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and weaken your opponent!`]);
+    }
 
     setCurrentTurn('opponent');
     
@@ -646,7 +662,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     
     setCombatState(prev => {
       const newOpponentHealth = Math.max(0, prev.opponentHealth - damage);
-      setBattleLog(prevLog => [...prevLog, `You attack for ${damage} damage!`]);
       
       if (newOpponentHealth <= 0) {
         handleVictory();
@@ -655,6 +670,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       
       return { ...prev, opponentHealth: newOpponentHealth, turn: 'opponent' };
     });
+
+    // Add battle log message outside of state callback to prevent duplicates
+    setBattleLog(prevLog => [...prevLog, `You attack for ${damage} damage!`]);
 
     setCurrentTurn('opponent');
     
@@ -723,7 +741,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           
           setCombatState(prev => {
             const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
-            setBattleLog(prevLog => [...prevLog, `Opponent uses ${randomAbility.name} for ${damage} damage!`]);
             
             if (newPlayerHealth <= 0) {
               setGameState('defeat');
@@ -733,6 +750,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             
             return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
           });
+          
+          // Add battle log message outside of state callback to prevent duplicates
+          setBattleLog(prevLog => [...prevLog, `Opponent uses ${randomAbility.name} for ${damage} damage!`]);
         } else if (randomAbility.type === 'magicAttack') {
           const finalMagic = opponentStats.magic + (opponent.totalStatBonus.magic || 0);
           const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
@@ -740,7 +760,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           
           setCombatState(prev => {
             const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
-            setBattleLog(prevLog => [...prevLog, `Opponent casts ${randomAbility.name} for ${damage} magic damage!`]);
             
             if (newPlayerHealth <= 0) {
               setGameState('defeat');
@@ -750,6 +769,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
             
             return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
           });
+          
+          // Add battle log message outside of state callback to prevent duplicates
+          setBattleLog(prevLog => [...prevLog, `Opponent casts ${randomAbility.name} for ${damage} magic damage!`]);
         } else {
           setBattleLog(prev => [...prev, `Opponent uses ${randomAbility.name}!`]);
           setCombatState(prev => ({ ...prev, turn: 'player' }));
@@ -768,7 +790,6 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     
     setCombatState(prev => {
       const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
-      setBattleLog(prevLog => [...prevLog, `The wild beast attacks for ${damage} damage!`]);
       
       if (newPlayerHealth <= 0) {
         setGameState('defeat');
@@ -778,6 +799,9 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       
       return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
     });
+
+    // Add battle log message outside of state callback to prevent duplicates
+    setBattleLog(prevLog => [...prevLog, `The wild beast attacks for ${damage} damage!`]);
 
     setCurrentTurn('player');
     updateCooldowns();
@@ -873,6 +897,13 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   };
 
   const playerBeast = getPlayerBeast();
+
+  // Auto-scroll battle log to bottom when new messages are added
+  useEffect(() => {
+    if (battleLogRef.current) {
+      battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
+    }
+  }, [battleLog]);
 
   return (
     <div className="adventure">
@@ -1136,7 +1167,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
           {/* Battle Log */}
           <div className="battle-log">
             <h4>Battle Log</h4>
-            <div className="log-content">
+            <div className="log-content" ref={battleLogRef}>
               {battleLog.map((log, index) => (
                 <div key={index} className="log-entry">
                   {log}

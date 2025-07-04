@@ -471,7 +471,8 @@ function App() {
     getBeastMood,
     getExperience,
     setExternalExperience,
-    resetToBaseStats
+    resetToBaseStats,
+    updateHealth
   } = useBeastStats({
     hunger: currentBeastData?.hunger || 50,
     happiness: currentBeastData?.happiness || 50,
@@ -750,7 +751,7 @@ function App() {
     if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0 && currentBeastData) {
       setShowLevelUp(true);
       setToast({
-        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}!`,
+        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}! (+1 to all stats, +10 health)`,
         show: true,
         type: 'success'
       });
@@ -764,9 +765,10 @@ function App() {
         });
       }
       
-      // Increase all combat stats by 1 for each level gained
+      // Increase all combat stats by 1 for each level gained, and health by 10
       const levelsGained = stats.level - previousLevel;
       const statIncrease = levelsGained * 1; // +1 per level
+      const healthIncrease = levelsGained * 10; // +10 health per level
       
       setBeastData(prev => {
         const updatedData = {
@@ -774,7 +776,8 @@ function App() {
           attack: prev[currentBeastId].attack + statIncrease,
           defense: prev[currentBeastId].defense + statIncrease,
           speed: prev[currentBeastId].speed + statIncrease,
-          magic: prev[currentBeastId].magic + statIncrease
+          magic: prev[currentBeastId].magic + statIncrease,
+          health: prev[currentBeastId].health + healthIncrease
         };
         
         saveBeastData(currentBeastId, updatedData);
@@ -784,6 +787,9 @@ function App() {
           [currentBeastId]: updatedData
         };
       });
+
+      // Also update the current health in the stats hook to match the new max health
+      updateHealth(stats.health + healthIncrease);
       
       // Hide level up effect after animation
       setTimeout(() => {
@@ -796,7 +802,7 @@ function App() {
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [stats.level, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData, gameOptions.soundEffectsEnabled]);
+  }, [stats.level, stats.health, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData, gameOptions.soundEffectsEnabled, updateHealth]);
 
   // Beast den music management
   useEffect(() => {

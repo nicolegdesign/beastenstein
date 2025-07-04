@@ -272,6 +272,13 @@ export const useBeastStats = (
     setExperience(0);
   }, []);
 
+  const updateHealth = useCallback((newHealth: number) => {
+    setStats(prev => ({
+      ...prev,
+      health: Math.max(0, newHealth)
+    }));
+  }, []);
+
   return {
     stats,
     isResting,
@@ -288,6 +295,7 @@ export const useBeastStats = (
     getExperience,
     setExternalExperience,
     getExpToNextLevel,
-    resetToBaseStats
+    resetToBaseStats,
+    updateHealth
   };
 };

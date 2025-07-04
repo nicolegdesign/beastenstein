@@ -30,6 +30,9 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
     },
     legRight: {
       imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg'
+    },
+    tail: {
+      imagePath: './images/beasts/night-wolf/night-wolf-extra-tail.svg'
     }
   };
 
