@@ -737,7 +737,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         if (randomAbility.type === 'attack') {
           const finalAttack = opponentStats.attack + (opponent.totalStatBonus.attack || 0);
           const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
-          const damage = (randomAbility.damage || 0) + Math.floor(finalAttack / 2) - Math.floor(finalPlayerDefense / 2);
+          const damage = Math.max(0, (randomAbility.damage || 0) + Math.floor(finalAttack / 2) - Math.floor(finalPlayerDefense / 2));
           
           setCombatState(prev => {
             const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
@@ -756,7 +756,7 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         } else if (randomAbility.type === 'magicAttack') {
           const finalMagic = opponentStats.magic + (opponent.totalStatBonus.magic || 0);
           const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
-          const damage = (randomAbility.damage || 0) + Math.floor(finalMagic / 2) - Math.floor(finalPlayerDefense / 2);
+          const damage = Math.max(0, (randomAbility.damage || 0) + Math.floor(finalMagic / 2) - Math.floor(finalPlayerDefense / 2));
           
           setCombatState(prev => {
             const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
