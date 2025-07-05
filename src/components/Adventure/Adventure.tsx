@@ -5,6 +5,7 @@ import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { useInventoryContext } from '../../contexts/InventoryContext';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { EnhancedBeastPart, Ability, StatBonus } from '../../types/abilities';
+import { EXTRA_LIMBS } from '../../data/beastParts';
 import './Adventure.css';
 
 interface SoulEssence {
@@ -24,6 +25,8 @@ interface CustomBeast {
   armRight: EnhancedBeastPart;
   legLeft: EnhancedBeastPart;
   legRight: EnhancedBeastPart;
+  wings?: EnhancedBeastPart;
+  tail?: EnhancedBeastPart;
   soulEssence: SoulEssence;
   colorScheme?: { id: string; name: string; primary: string; secondary: string; accent: string; rarity: string };
   totalStatBonus: StatBonus;
@@ -216,14 +219,49 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           ]
         };
 
+        // Get available extra limbs from the centralized beast parts
+        const availableWings = EXTRA_LIMBS.filter(limb => limb.type === 'wings');
+        const availableTails = EXTRA_LIMBS.filter(limb => limb.type === 'tail');
+
         const randomHead = availableParts.heads[Math.floor(Math.random() * availableParts.heads.length)];
         const randomTorso = availableParts.torsos[Math.floor(Math.random() * availableParts.torsos.length)];
         const randomArms = availableParts.arms[Math.floor(Math.random() * availableParts.arms.length)];
         const randomLegs = availableParts.legs[Math.floor(Math.random() * availableParts.legs.length)];
 
+        // Randomly decide if opponent gets extra parts (higher chance at higher levels)
+        const wingsChance = 0.3 + (opponentLevel - 1) * 0.1; // 30% base, +10% per level
+        const tailChance = 0.4 + (opponentLevel - 1) * 0.1; // 40% base, +10% per level
+        
+        const hasWings = Math.random() < wingsChance && availableWings.length > 0;
+        const hasTail = Math.random() < tailChance && availableTails.length > 0;
+
+        const randomWings = hasWings ? availableWings[Math.floor(Math.random() * availableWings.length)] : null;
+        const randomTail = hasTail ? availableTails[Math.floor(Math.random() * availableTails.length)] : null;
+
         // Scale part bonuses based on level
         const levelMultiplier = 1 + (opponentLevel - 1) * 0.2; // 20% increase per level
         
+        // Calculate total stat bonuses including extra parts
+        let totalAttack = Math.floor(4 * levelMultiplier);
+        let totalDefense = Math.floor(3 * levelMultiplier);
+        let totalSpeed = Math.floor(2 * levelMultiplier);
+        let totalMagic = Math.floor(2 * levelMultiplier);
+        const totalHealth = Math.floor(20 * levelMultiplier);
+
+        // Extra bonuses from wings and tail - use actual stat bonuses from EXTRA_LIMBS
+        if (hasWings && randomWings?.statBonus) {
+          totalSpeed += (randomWings.statBonus.speed || 0) * Math.floor(levelMultiplier);
+          totalMagic += (randomWings.statBonus.magic || 0) * Math.floor(levelMultiplier);
+          totalAttack += (randomWings.statBonus.attack || 0) * Math.floor(levelMultiplier);
+          totalDefense += (randomWings.statBonus.defense || 0) * Math.floor(levelMultiplier);
+        }
+        if (hasTail && randomTail?.statBonus) {
+          totalSpeed += (randomTail.statBonus.speed || 0) * Math.floor(levelMultiplier);
+          totalMagic += (randomTail.statBonus.magic || 0) * Math.floor(levelMultiplier);
+          totalAttack += (randomTail.statBonus.attack || 0) * Math.floor(levelMultiplier);
+          totalDefense += (randomTail.statBonus.defense || 0) * Math.floor(levelMultiplier);
+        }
+
         const opponent: CustomBeast = {
           name: 'Wild Beast',
           gender: Math.random() < 0.5 ? 'male' : 'female',
@@ -288,6 +326,32 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             rarity: 'common',
             statBonus: { speed: Math.floor(1 * levelMultiplier) }
           },
+          ...(randomWings && {
+            wings: {
+              ...randomWings,
+              statBonus: {
+                ...(randomWings.statBonus || {}),
+                // Scale existing bonuses by level
+                magic: (randomWings.statBonus?.magic || 0) * Math.floor(levelMultiplier),
+                speed: (randomWings.statBonus?.speed || 0) * Math.floor(levelMultiplier),
+                attack: (randomWings.statBonus?.attack || 0) * Math.floor(levelMultiplier),
+                defense: (randomWings.statBonus?.defense || 0) * Math.floor(levelMultiplier)
+              }
+            }
+          }),
+          ...(randomTail && {
+            tail: {
+              ...randomTail,
+              statBonus: {
+                ...(randomTail.statBonus || {}),
+                // Scale existing bonuses by level
+                magic: (randomTail.statBonus?.magic || 0) * Math.floor(levelMultiplier),
+                speed: (randomTail.statBonus?.speed || 0) * Math.floor(levelMultiplier),
+                attack: (randomTail.statBonus?.attack || 0) * Math.floor(levelMultiplier),
+                defense: (randomTail.statBonus?.defense || 0) * Math.floor(levelMultiplier)
+              }
+            }
+          }),
           soulEssence: {
             id: 'dim-soul',
             name: 'Dim Soul',
@@ -296,11 +360,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             rarity: 'common'
           },
           totalStatBonus: { 
-            attack: Math.floor(4 * levelMultiplier), 
-            defense: Math.floor(3 * levelMultiplier), 
-            speed: Math.floor(2 * levelMultiplier), 
-            magic: Math.floor(2 * levelMultiplier), 
-            health: Math.floor(20 * levelMultiplier) 
+            attack: totalAttack, 
+            defense: totalDefense, 
+            speed: totalSpeed, 
+            magic: totalMagic, 
+            health: totalHealth 
           },
           availableAbilities: [
             {
@@ -328,6 +392,15 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       };
 
       const newOpponent = generateOpponent();
+      setOpponent(newOpponent);
+      
+      // Log extra parts for testing
+      const extraParts = [];
+      if (newOpponent.wings) extraParts.push(`Wings: ${newOpponent.wings.name}`);
+      if (newOpponent.tail) extraParts.push(`Tail: ${newOpponent.tail.name}`);
+      if (extraParts.length > 0) {
+        console.log(`Generated opponent with extra parts: ${extraParts.join(', ')}`);
+      }
       setOpponent(newOpponent);
       
       // Update combat state with proper opponent health including part bonuses
@@ -371,7 +444,16 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       { id: 'mountaindragon-arms', name: 'Mountain Dragon Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg' },
       { id: 'mountaindragon-legs', name: 'Mountain Dragon Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg' },
       { id: 'woodenpuppet-arms', name: 'Wooden Puppet Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg' },
-      { id: 'woodenpuppet-legs', name: 'Wooden Puppet Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg' }
+      { id: 'woodenpuppet-legs', name: 'Wooden Puppet Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg' },
+      
+      // Extra parts (wings and tails) from centralized beast parts
+      ...EXTRA_LIMBS.map(limb => ({
+        id: limb.id,
+        name: limb.name,
+        type: 'part' as const,
+        rarity: limb.rarity,
+        imagePath: limb.imagePath
+      }))
     ];
 
     // Rarity weights (higher = more common)
@@ -922,6 +1004,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       };
       
       console.log(`Beast ${i + 1}: ${beast.name} at position ${positions[i]} with stats:`, beastStats);
+      console.log(`Beast ${i + 1} abilities:`, beast.availableAbilities);
       
       const battleBeast = createBattleBeast(beast, beastStats, positions[i]);
       playerBattleBeasts.push(battleBeast);
@@ -1023,6 +1106,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         
         // Ensure beast has abilities
         if (!beast.availableAbilities) {
+          console.log('Beast has no abilities, creating default ones for:', beast.name);
           const abilities: Ability[] = [];
           
           // Add abilities from parts
@@ -1046,6 +1130,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           }
           
           beast.availableAbilities = abilities;
+          console.log('Added abilities to beast:', beast.name, abilities);
+        } else {
+          console.log('Beast already has abilities:', beast.name, beast.availableAbilities);
         }
         
         return beast;
@@ -1116,7 +1203,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                     <span>MAG: {opponentStats.magic + (opponent?.totalStatBonus?.magic || 0)}</span>
                   </div>
                 </div>
-                
+               
                 {opponent && (
                   <div className="opponent-visual-preview">
                     <AnimatedCustomBeast 
@@ -1356,28 +1443,23 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           {/* Battle Controls */}
           <div className="battle-controls">
             <div className="turn-indicator">
-              {currentTurn === 'player' ? "Your Turn!" : "Opponent's Turn..."}
+              {(() => {
+                if (currentTurn === 'player') {
+                  const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
+                  if (selectedBeast) {
+                    return `It's your turn, ${selectedBeast.customBeast.name}!`;
+                  }
+                  return "Your Turn!";
+                } else {
+                  const activeOpponentBeasts = combatState.opponentBeasts.filter(b => !b.isDefeated);
+                  if (activeOpponentBeasts.length > 0) {
+                    return `${activeOpponentBeasts[0].customBeast.name} is attacking...`;
+                  }
+                  return "Opponent's Turn...";
+                }
+              })()}
             </div>
             
-            {/* Selected Beast Info */}
-            {combatState.selectedPlayerBeast && (
-              <div className="selected-beast-info">
-                {(() => {
-                  const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
-                  if (!selectedBeast) return null;
-                  return (
-                    <div className="active-beast">
-                      <span>Active: {selectedBeast.customBeast.name}</span>
-                      <div className="mini-stats">
-                        <span>HP: {selectedBeast.currentHealth}/{selectedBeast.stats.health}</span>
-                        <span>MP: {selectedBeast.currentMana}/50</span>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
             {/* Action Buttons */}
             <div className="action-buttons">
               <motion.button
@@ -1393,7 +1475,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               {/* Ability Buttons */}
               {(() => {
                 const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
-                if (!selectedBeast) return null;
+                if (!selectedBeast) {
+                  console.log('No selected beast found');
+                  return null;
+                }
+                
+                console.log('Selected beast abilities:', selectedBeast.customBeast.availableAbilities);
                 
                 return selectedBeast.customBeast.availableAbilities?.map(ability => {
                   const cooldown = selectedBeast.abilityCooldowns.find(cd => cd.abilityId === ability.id);
