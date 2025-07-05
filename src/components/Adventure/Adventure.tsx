@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { useInventoryContext } from '../../contexts/InventoryContext';
-import type { BeastCombatStats } from '../../types/game';
+import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { EnhancedBeastPart, Ability, StatBonus } from '../../types/abilities';
 import './Adventure.css';
 
@@ -35,16 +35,24 @@ interface AbilityCooldown {
   turnsLeft: number;
 }
 
+interface BattleBeast {
+  id: string;
+  customBeast: CustomBeast;
+  stats: BeastCombatStats & { health: number };
+  currentHealth: number;
+  currentMana: number;
+  position: 'frontLeft' | 'frontRight' | 'backLeft' | 'backRight';
+  abilityCooldowns: AbilityCooldown[];
+  statusEffects: { [key: string]: { duration: number; value: number } };
+  isDefeated: boolean;
+}
+
 interface CombatState {
-  playerHealth: number;
-  playerMana: number;
-  opponentHealth: number;
-  playerAbilityCooldowns: AbilityCooldown[];
-  statusEffects: {
-    player: { [key: string]: { duration: number; value: number } };
-    opponent: { [key: string]: { duration: number; value: number } };
-  };
+  playerBeasts: BattleBeast[];
+  opponentBeasts: BattleBeast[];
   turn: 'player' | 'opponent';
+  selectedPlayerBeast: string | null; // ID of currently selected player beast
+  selectedTarget: string | null; // ID of target opponent beast
 }
 
 interface DroppedLoot {
@@ -56,14 +64,14 @@ interface DroppedLoot {
 }
 
 interface AdventureProps {
-  currentBeastId: string;
   playerStats: BeastCombatStats & { health: number };
   onClose: () => void;
   onUpdateExperience: (beastId: string, newExperience: number) => boolean;
   soundEffectsEnabled?: boolean;
+  beastData?: Record<string, IndividualBeastData>; // Add beast data for accessing all beasts
 }
 
-export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true }) => {
+export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true, beastData }) => {
   const { setInventory } = useInventoryContext();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
@@ -141,15 +149,11 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   
   // Enhanced combat state
   const [combatState, setCombatState] = useState<CombatState>({
-    playerHealth: playerStats.health,
-    playerMana: 50, // Starting mana
-    opponentHealth: 30,
-    playerAbilityCooldowns: [],
-    statusEffects: {
-      player: {},
-      opponent: {}
-    },
-    turn: 'player'
+    playerBeasts: [],
+    opponentBeasts: [],
+    turn: 'player',
+    selectedPlayerBeast: null,
+    selectedTarget: null
   });
 
   // Handle level selection from map
@@ -393,181 +397,235 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     return selectedLoot;
   };
 
-  // Calculate experience gained based on opponent level
-  const calculateExperienceGain = (defeatedLevel: number): number => {
-    return defeatedLevel * 50; // 10 XP per opponent level
+  // Helper functions for multi-beast combat
+  const createBattleBeast = (customBeast: CustomBeast, stats: BeastCombatStats & { health: number }, position: BattleBeast['position']): BattleBeast => {
+    return {
+      id: `${customBeast.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      customBeast,
+      stats,
+      currentHealth: stats.health,
+      currentMana: 50,
+      position,
+      abilityCooldowns: [],
+      statusEffects: {},
+      isDefeated: false
+    };
   };
 
-  // Get current experience from main beastData storage
-  const getCurrentExperience = (): number => {
+  const getTargetableBeasts = (beasts: BattleBeast[]): BattleBeast[] => {
+    const frontLineBeasts = beasts.filter(b => !b.isDefeated && (b.position === 'frontLeft' || b.position === 'frontRight'));
+    if (frontLineBeasts.length > 0) {
+      return frontLineBeasts;
+    }
+    // If no front line beasts, back line becomes targetable
+    return beasts.filter(b => !b.isDefeated && (b.position === 'backLeft' || b.position === 'backRight'));
+  };
+
+  const getActiveBeast = (beasts: BattleBeast[], selectedId: string | null): BattleBeast | null => {
+    if (!selectedId) return beasts.find(b => !b.isDefeated) || null;
+    return beasts.find(b => b.id === selectedId && !b.isDefeated) || null;
+  };
+
+  const checkBattleEnd = (): 'playerWin' | 'opponentWin' | 'continue' => {
+    const playerAlive = combatState.playerBeasts.some(b => !b.isDefeated);
+    const opponentAlive = combatState.opponentBeasts.some(b => !b.isDefeated);
+    
+    if (!playerAlive) return 'opponentWin';
+    if (!opponentAlive) return 'playerWin';
+    return 'continue';
+  };
+
+  // Calculate experience gained based on opponent level
+  const calculateExperienceGain = (defeatedLevel: number): number => {
+    return defeatedLevel * 50; // 50 XP per opponent level
+  };
+
+  // Get current experience from main beastData storage for a specific beast
+  const getCurrentExperienceForBeast = (beastId: string): number => {
     try {
       const beastDataKey = `beastData`;
       const mainBeastData = localStorage.getItem(beastDataKey);
       
       if (mainBeastData) {
         const allBeastData = JSON.parse(mainBeastData);
-        if (allBeastData[currentBeastId]) {
-          return allBeastData[currentBeastId].experience || 0;
+        if (allBeastData[beastId]) {
+          return allBeastData[beastId].experience || 0;
         }
       }
       return 0;
     } catch (error) {
-      console.error('Failed to get current experience:', error);
+      console.error('Failed to get current experience for beast:', beastId, error);
       return 0;
     }
   };
 
-  // Add experience to the player's beast
-  const gainExperience = (expGained: number) => {
-    console.log('gainExperience called with:', expGained, 'for beast:', currentBeastId);
-    try {
-      // Get current experience from single source of truth
-      const currentExp = getCurrentExperience();
-      const newExp = currentExp + expGained;
-      
-      // Use the prop function to update experience globally
-      const success = onUpdateExperience(currentBeastId, newExp);
-      
-      if (success) {
-        console.log('Updated experience - Current exp:', currentExp, 'New exp:', newExp);
-        setExperienceGained(expGained);
-        setBattleLog(prev => [...prev, `Your beast gained ${expGained} experience!`]);
-        console.log('Experience updated successfully, UI state set to:', expGained);
-      } else {
-        console.error('Failed to update experience via prop function');
-      }
-    } catch (error) {
-      console.error('Failed to update beast experience:', error);
-    }
+  // Helper function to calculate effective stats with status effects
+  const getEffectiveStats = (beast: BattleBeast) => {
+    const baseStats = beast.stats;
+    const statusEffects = beast.statusEffects;
+    
+    let attackModifier = 0;
+    let defenseModifier = 0;
+    let speedModifier = 0;
+    let magicModifier = 0;
+    
+    // Apply all status effects
+    Object.entries(statusEffects).forEach(([key, effect]) => {
+      if (key.includes('_attack')) attackModifier += effect.value;
+      if (key.includes('_defense')) defenseModifier += effect.value;
+      if (key.includes('_speed')) speedModifier += effect.value;
+      if (key.includes('_magic')) magicModifier += effect.value;
+    });
+    
+    return {
+      attack: Math.max(1, baseStats.attack + attackModifier),
+      defense: Math.max(0, baseStats.defense + defenseModifier),
+      speed: Math.max(1, baseStats.speed + speedModifier),
+      magic: Math.max(1, baseStats.magic + magicModifier),
+      health: baseStats.health // Health is not affected by temporary status effects
+    };
   };
 
-  // Enhanced combat functions with abilities
-  const castAbility = (ability: Ability) => {
+  // Enhanced combat functions with abilities for multi-beast system
+  const castAbility = (ability: Ability, targetId?: string) => {
     if (currentTurn !== 'player' || gameState !== 'battle') return;
-    if (combatState.playerMana < (ability.manaCost || 0)) {
-      setBattleLog(prev => [...prev, `Not enough mana to use ${ability.name}! (Need ${ability.manaCost})`]);
+    
+    const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
+    if (!activeBeast) return;
+
+    if (activeBeast.currentMana < (ability.manaCost || 0)) {
+      setBattleLog(prev => [...prev, `${activeBeast.customBeast.name} doesn't have enough mana to use ${ability.name}! (Need ${ability.manaCost})`]);
       return;
     }
 
     // Check cooldown
-    const cooldown = combatState.playerAbilityCooldowns.find(cd => cd.abilityId === ability.id);
+    const cooldown = activeBeast.abilityCooldowns.find(cd => cd.abilityId === ability.id);
     if (cooldown && cooldown.turnsLeft > 0) {
       setBattleLog(prev => [...prev, `${ability.name} is on cooldown for ${cooldown.turnsLeft} more turns!`]);
       return;
     }
 
+    // For attack and debuff abilities, need a target
+    if ((ability.type === 'attack' || ability.type === 'magicAttack' || ability.type === 'debuff') && !targetId) {
+      setBattleLog(prev => [...prev, `Select a target for ${ability.name}!`]);
+      return;
+    }
+
     // Trigger player attack animation
     setPlayerAttacking(true);
-    setTimeout(() => setPlayerAttacking(false), 1200); // Animation duration
+    setTimeout(() => setPlayerAttacking(false), 1200);
 
-    // Calculate final stats with bonuses and status effects
-    const getEffectiveStats = (baseStats: BeastCombatStats, statBonuses: StatBonus, statusEffects: { [key: string]: { duration: number; value: number } }) => {
-      return {
-        attack: baseStats.attack + (statBonuses.attack || 0) + Object.values(statusEffects).reduce((acc: number, effect: { duration: number; value: number }) => acc + (effect.value || 0), 0),
-        defense: baseStats.defense + (statBonuses.defense || 0),
-        speed: baseStats.speed + (statBonuses.speed || 0),
-        magic: baseStats.magic + (statBonuses.magic || 0)
-      };
-    };
-
-    // Get player's effective stats
-    const playerEffectiveStats = getEffectiveStats(
-      playerStats, 
-      playerBeast?.totalStatBonus || {}, 
-      combatState.statusEffects.player
-    );
+    // Play magic attack sound for magic abilities
+    if (ability.type === 'magicAttack' && soundEffectsEnabled && magicAttackSoundRef.current) {
+      magicAttackSoundRef.current.play().catch(error => {
+        console.warn('Failed to play magic attack sound:', error);
+      });
+    }
 
     setCombatState(prev => {
       const newState = { ...prev };
       
-      // Consume mana
-      newState.playerMana -= (ability.manaCost || 0);
+      // Update the active beast's mana and cooldowns
+      const beastIndex = newState.playerBeasts.findIndex(b => b.id === activeBeast.id);
+      if (beastIndex === -1) return prev;
+      
+      newState.playerBeasts[beastIndex] = {
+        ...newState.playerBeasts[beastIndex],
+        currentMana: Math.max(0, newState.playerBeasts[beastIndex].currentMana - (ability.manaCost || 0))
+      };
+      
+      // Set cooldown
+      const cooldownIndex = newState.playerBeasts[beastIndex].abilityCooldowns.findIndex(cd => cd.abilityId === ability.id);
+      if (cooldownIndex >= 0) {
+        newState.playerBeasts[beastIndex].abilityCooldowns[cooldownIndex].turnsLeft = ability.cooldown;
+      } else {
+        newState.playerBeasts[beastIndex].abilityCooldowns.push({ abilityId: ability.id, turnsLeft: ability.cooldown });
+      }
       
       // Apply ability effects
-      if (ability.type === 'attack') {
-        const baseDamage = ability.damage || 0;
-        const bonusDamage = Math.floor(playerEffectiveStats.attack / 2);
-        const totalDamage = Math.max(1, baseDamage + bonusDamage);
-        
-        newState.opponentHealth = Math.max(0, prev.opponentHealth - totalDamage);
-        
-        if (newState.opponentHealth <= 0) {
-          handleVictory();
-          return newState;
-        }
-      } else if (ability.type === 'magicAttack') {
-        // Magic attacks use Magic stat instead of Attack stat
-        const baseDamage = ability.damage || 0;
-        const magicBonusDamage = Math.floor(playerEffectiveStats.magic / 2);
-        const totalDamage = Math.max(1, baseDamage + magicBonusDamage);
-        
-        // Play magic attack sound
-        if (magicAttackSoundRef.current && soundEffectsEnabled) {
-          magicAttackSoundRef.current.currentTime = 0;
-          magicAttackSoundRef.current.volume = 0.7;
-          magicAttackSoundRef.current.play().catch(error => {
-            console.log('Could not play magic attack sound:', error);
-          });
-        }
-        
-        newState.opponentHealth = Math.max(0, prev.opponentHealth - totalDamage);
-        
-        if (newState.opponentHealth <= 0) {
-          handleVictory();
-          return newState;
+      if (ability.type === 'attack' || ability.type === 'magicAttack') {
+        const targetBeast = newState.opponentBeasts.find(b => b.id === targetId);
+        if (targetBeast) {
+          const attackerEffectiveStats = getEffectiveStats(activeBeast);
+          const targetEffectiveStats = getEffectiveStats(targetBeast);
+          
+          const baseDamage = ability.damage || 0;
+          const statBonus = ability.type === 'magicAttack' 
+            ? Math.floor(attackerEffectiveStats.magic / 2)
+            : Math.floor(attackerEffectiveStats.attack / 2);
+          const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
+          const totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
+          
+          const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
+          newState.opponentBeasts[targetIndex] = {
+            ...newState.opponentBeasts[targetIndex],
+            currentHealth: Math.max(0, targetBeast.currentHealth - totalDamage)
+          };
+          
+          if (newState.opponentBeasts[targetIndex].currentHealth <= 0) {
+            newState.opponentBeasts[targetIndex].isDefeated = true;
+          }
+          
+          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} for ${totalDamage} damage!`]);
         }
       } else if (ability.type === 'heal') {
         const healing = ability.healing || 0;
-        newState.playerHealth = Math.min(playerStats.health, prev.playerHealth + healing);
-      } else if (ability.type === 'buff' && ability.effects?.statModifier) {
-        // Apply buff to player
-        const duration = ability.effects.duration || 3;
-        Object.entries(ability.effects.statModifier).forEach(([stat, value]) => {
-          if (value) {
-            newState.statusEffects.player[`${ability.id}_${stat}`] = { duration, value };
-          }
-        });
-      } else if (ability.type === 'debuff' && ability.effects?.statModifier) {
-        // Apply debuff to opponent
-        const duration = ability.effects.duration || 3;
-        Object.entries(ability.effects.statModifier).forEach(([stat, value]) => {
-          if (value) {
-            newState.statusEffects.opponent[`${ability.id}_${stat}`] = { duration, value };
-          }
-        });
-      }
-      
-      // Set cooldown
-      const cooldownIndex = newState.playerAbilityCooldowns.findIndex(cd => cd.abilityId === ability.id);
-      if (cooldownIndex >= 0) {
-        newState.playerAbilityCooldowns[cooldownIndex].turnsLeft = ability.cooldown;
-      } else {
-        newState.playerAbilityCooldowns.push({ abilityId: ability.id, turnsLeft: ability.cooldown });
+        newState.playerBeasts[beastIndex] = {
+          ...newState.playerBeasts[beastIndex],
+          currentHealth: Math.min(newState.playerBeasts[beastIndex].stats.health, newState.playerBeasts[beastIndex].currentHealth + healing)
+        };
+        setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} and heals for ${healing} HP!`]);
+      } else if (ability.type === 'buff') {
+        // Apply buff to the caster (self-buff)
+        if (ability.effects?.statModifier) {
+          const duration = ability.effects.duration || 3;
+          const effects = ability.effects.statModifier;
+          
+          // Apply status effects to the caster
+          Object.entries(effects).forEach(([stat, value]) => {
+            if (value && value !== 0) {
+              newState.playerBeasts[beastIndex].statusEffects[`${ability.id}_${stat}`] = {
+                duration,
+                value
+              };
+            }
+          });
+          
+          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} and gains a buff!`]);
+        }
+      } else if (ability.type === 'debuff') {
+        // Apply debuff to the target
+        const targetBeast = newState.opponentBeasts.find(b => b.id === targetId);
+        if (targetBeast && ability.effects?.statModifier) {
+          const duration = ability.effects.duration || 3;
+          const effects = ability.effects.statModifier;
+          
+          const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
+          
+          // Apply status effects to the target
+          Object.entries(effects).forEach(([stat, value]) => {
+            if (value && value !== 0) {
+              newState.opponentBeasts[targetIndex].statusEffects[`${ability.id}_${stat}`] = {
+                duration,
+                value: -Math.abs(value) // Debuffs are negative
+              };
+            }
+          });
+          
+          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} and applies a debuff!`]);
+        }
       }
       
       newState.turn = 'opponent';
+      
+      // Check for battle end
+      const battleResult = checkBattleEnd();
+      if (battleResult === 'playerWin') {
+        handleVictory();
+      }
+      
       return newState;
     });
-
-    // Add battle log messages outside of state callback to prevent duplicates
-    if (ability.type === 'attack') {
-      const baseDamage = ability.damage || 0;
-      const bonusDamage = Math.floor(playerEffectiveStats.attack / 2);
-      const totalDamage = Math.max(1, baseDamage + bonusDamage);
-      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} for ${totalDamage} damage!`]);
-    } else if (ability.type === 'magicAttack') {
-      const baseDamage = ability.damage || 0;
-      const magicBonusDamage = Math.floor(playerEffectiveStats.magic / 2);
-      const totalDamage = Math.max(1, baseDamage + magicBonusDamage);
-      setBattleLog(prevLog => [...prevLog, `You cast ${ability.name} for ${totalDamage} magic damage!`]);
-    } else if (ability.type === 'heal') {
-      const healing = ability.healing || 0;
-      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and heal for ${healing} HP!`]);
-    } else if (ability.type === 'buff') {
-      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and feel empowered!`]);
-    } else if (ability.type === 'debuff') {
-      setBattleLog(prevLog => [...prevLog, `You use ${ability.name} and weaken your opponent!`]);
-    }
 
     setCurrentTurn('opponent');
     
@@ -608,10 +666,27 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
       }));
     }
     
-    // Calculate and gain experience
-    const expGained = calculateExperienceGain(opponentLevel);
-    console.log('Victory! Calculating experience:', expGained, 'for opponent level:', opponentLevel);
-    gainExperience(expGained);
+    // Calculate and distribute experience among all participating beasts
+    const totalExpGained = calculateExperienceGain(opponentLevel);
+    const expPerBeast = Math.floor(totalExpGained / combatState.playerBeasts.length);
+    const orderedBeastIds = getOrderedBeastIds();
+    
+    console.log('Victory! Distributing experience:', totalExpGained, 'total,', expPerBeast, 'per beast');
+    
+    // Give experience to all participating beasts
+    let totalDistributedExp = 0;
+    for (let i = 0; i < combatState.playerBeasts.length; i++) {
+      const beastId = orderedBeastIds[i];
+      if (beastId) {
+        const success = onUpdateExperience(beastId, getCurrentExperienceForBeast(beastId) + expPerBeast);
+        if (success) {
+          totalDistributedExp += expPerBeast;
+        }
+      }
+    }
+    
+    setExperienceGained(totalDistributedExp);
+    setBattleLog(prev => [...prev, `Your team gained ${totalDistributedExp} experience total!`]);
   };
 
   // Update adventure progress when a level is completed
@@ -648,35 +723,45 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
     }
   };
 
+  // Basic attack function for multi-beast system
   const basicAttack = () => {
-    if (currentTurn !== 'player' || gameState !== 'battle') return;
-
-    // Trigger player attack animation
+    const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
+    const targetableBeasts = getTargetableBeasts(combatState.opponentBeasts);
+    
+    if (!activeBeast || targetableBeasts.length === 0) return;
+    
+    // Auto-select first targetable beast for basic attack
+    const target = targetableBeasts[0];
+    
     setPlayerAttacking(true);
-    setTimeout(() => setPlayerAttacking(false), 1200); // Animation duration
+    setTimeout(() => setPlayerAttacking(false), 1200);
 
-    // Calculate damage with stat bonuses
-    const playerEffectiveAttack = playerStats.attack + (playerBeast?.totalStatBonus?.attack || 0);
-    const opponentEffectiveDefense = opponentStats.defense + (opponent?.totalStatBonus?.defense || 0);
-    const damage = Math.max(1, playerEffectiveAttack - Math.floor(opponentEffectiveDefense / 2) + Math.floor(Math.random() * 3) - 1);
+    const attackerEffectiveStats = getEffectiveStats(activeBeast);
+    const targetEffectiveStats = getEffectiveStats(target);
+    const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
     
     setCombatState(prev => {
-      const newOpponentHealth = Math.max(0, prev.opponentHealth - damage);
+      const newState = { ...prev };
+      const targetIndex = newState.opponentBeasts.findIndex(b => b.id === target.id);
       
-      if (newOpponentHealth <= 0) {
-        handleVictory();
-        return { ...prev, opponentHealth: newOpponentHealth };
+      newState.opponentBeasts[targetIndex] = {
+        ...newState.opponentBeasts[targetIndex],
+        currentHealth: Math.max(0, target.currentHealth - damage)
+      };
+      
+      if (newState.opponentBeasts[targetIndex].currentHealth <= 0) {
+        newState.opponentBeasts[targetIndex].isDefeated = true;
       }
       
-      return { ...prev, opponentHealth: newOpponentHealth, turn: 'opponent' };
+      newState.turn = 'opponent';
+      
+      return newState;
     });
 
-    // Add battle log message outside of state callback to prevent duplicates
-    setBattleLog(prevLog => [...prevLog, `You attack for ${damage} damage!`]);
+    setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
 
     setCurrentTurn('opponent');
     
-    // Opponent attacks after a delay
     setTimeout(() => {
       opponentAttack();
     }, 1500);
@@ -684,124 +769,98 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
 
   const updateCooldowns = () => {
     setCombatState(prev => {
-      // Update status effects
-      const newPlayerEffects: { [key: string]: { duration: number; value: number } } = {};
-      const newOpponentEffects: { [key: string]: { duration: number; value: number } } = {};
+      const newState = { ...prev };
       
-      // Reduce duration and keep active effects
-      Object.entries(prev.statusEffects.player).forEach(([key, effect]) => {
-        if (effect.duration > 1) {
-          newPlayerEffects[key] = { ...effect, duration: effect.duration - 1 };
-        }
+      // Update player beast cooldowns, regenerate mana, and update status effects
+      newState.playerBeasts = newState.playerBeasts.map(beast => {
+        // Update status effects
+        const updatedStatusEffects: { [key: string]: { duration: number; value: number } } = {};
+        Object.entries(beast.statusEffects).forEach(([key, effect]) => {
+          const newDuration = effect.duration - 1;
+          if (newDuration > 0) {
+            updatedStatusEffects[key] = { ...effect, duration: newDuration };
+          }
+        });
+
+        return {
+          ...beast,
+          currentMana: Math.min(50, beast.currentMana + 2), // Reduced from 5 to 2 for slower mana regen
+          abilityCooldowns: beast.abilityCooldowns.map(cd => ({
+            ...cd,
+            turnsLeft: Math.max(0, cd.turnsLeft - 1)
+          })).filter(cd => cd.turnsLeft > 0),
+          statusEffects: updatedStatusEffects
+        };
+      });
+
+      // Update opponent beast status effects too
+      newState.opponentBeasts = newState.opponentBeasts.map(beast => {
+        // Update status effects
+        const updatedStatusEffects: { [key: string]: { duration: number; value: number } } = {};
+        Object.entries(beast.statusEffects).forEach(([key, effect]) => {
+          const newDuration = effect.duration - 1;
+          if (newDuration > 0) {
+            updatedStatusEffects[key] = { ...effect, duration: newDuration };
+          }
+        });
+
+        return {
+          ...beast,
+          statusEffects: updatedStatusEffects
+        };
       });
       
-      Object.entries(prev.statusEffects.opponent).forEach(([key, effect]) => {
-        if (effect.duration > 1) {
-          newOpponentEffects[key] = { ...effect, duration: effect.duration - 1 };
-        }
-      });
-      
-      return {
-        ...prev,
-        playerMana: Math.min(50, prev.playerMana + 5), // Regenerate 5 mana per turn
-        playerAbilityCooldowns: prev.playerAbilityCooldowns.map(cd => ({
-          ...cd,
-          turnsLeft: Math.max(0, cd.turnsLeft - 1)
-        })).filter(cd => cd.turnsLeft > 0),
-        statusEffects: {
-          player: newPlayerEffects,
-          opponent: newOpponentEffects
-        }
-      };
+      return newState;
     });
   };
 
   const opponentAttack = () => {
     if (gameState !== 'battle') return;
 
-    // Trigger opponent attack animation
-    setOpponentAttacking(true);
-    setTimeout(() => setOpponentAttacking(false), 1200); // Animation duration
+    const activeOpponentBeasts = combatState.opponentBeasts.filter(b => !b.isDefeated);
+    const targetablePlayerBeasts = getTargetableBeasts(combatState.playerBeasts);
+    
+    if (activeOpponentBeasts.length === 0 || targetablePlayerBeasts.length === 0) return;
+    
+    // Simple AI: first active opponent attacks first targetable player beast
+    const attacker = activeOpponentBeasts[0];
+    const target = targetablePlayerBeasts[0];
 
-    // Opponent might use an ability (simple AI)
-    const shouldUseAbility = opponent?.availableAbilities && Math.random() < 0.3; // 30% chance
-    
-    if (shouldUseAbility && opponent?.availableAbilities.length > 0) {
-      const availableAbilities = opponent.availableAbilities.filter(ability => 
-        !(ability.manaCost && ability.manaCost > 30) // Assume opponent has 30 mana
-      );
-      
-      if (availableAbilities.length > 0) {
-        const randomAbility = availableAbilities[Math.floor(Math.random() * availableAbilities.length)];
-        
-        if (randomAbility.type === 'attack') {
-          const finalAttack = opponentStats.attack + (opponent.totalStatBonus.attack || 0);
-          const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
-          const damage = Math.max(0, (randomAbility.damage || 0) + Math.floor(finalAttack / 2) - Math.floor(finalPlayerDefense / 2));
-          
-          setCombatState(prev => {
-            const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
-            
-            if (newPlayerHealth <= 0) {
-              setGameState('defeat');
-              setBattleLog(prevLog => [...prevLog, 'Defeat! Your beast has fallen...']);
-              return { ...prev, playerHealth: newPlayerHealth };
-            }
-            
-            return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
-          });
-          
-          // Add battle log message outside of state callback to prevent duplicates
-          setBattleLog(prevLog => [...prevLog, `Opponent uses ${randomAbility.name} for ${damage} damage!`]);
-        } else if (randomAbility.type === 'magicAttack') {
-          const finalMagic = opponentStats.magic + (opponent.totalStatBonus.magic || 0);
-          const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
-          const damage = Math.max(0, (randomAbility.damage || 0) + Math.floor(finalMagic / 2) - Math.floor(finalPlayerDefense / 2));
-          
-          setCombatState(prev => {
-            const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
-            
-            if (newPlayerHealth <= 0) {
-              setGameState('defeat');
-              setBattleLog(prevLog => [...prevLog, 'Defeat! Your beast has fallen...']);
-              return { ...prev, playerHealth: newPlayerHealth };
-            }
-            
-            return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
-          });
-          
-          // Add battle log message outside of state callback to prevent duplicates
-          setBattleLog(prevLog => [...prevLog, `Opponent casts ${randomAbility.name} for ${damage} magic damage!`]);
-        } else {
-          setBattleLog(prev => [...prev, `Opponent uses ${randomAbility.name}!`]);
-          setCombatState(prev => ({ ...prev, turn: 'player' }));
-        }
-        
-        setCurrentTurn('player');
-        updateCooldowns();
-        return;
-      }
-    }
-    
-    // Basic attack with stat bonuses
-    const finalAttack = opponentStats.attack + (opponent?.totalStatBonus?.attack || 0);
-    const finalPlayerDefense = playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0);
-    const damage = Math.max(1, finalAttack - Math.floor(finalPlayerDefense / 2) + Math.floor(Math.random() * 3) - 1);
+    setOpponentAttacking(true);
+    setTimeout(() => setOpponentAttacking(false), 1200);
+
+    const attackerEffectiveStats = getEffectiveStats(attacker);
+    const targetEffectiveStats = getEffectiveStats(target);
+    const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
     
     setCombatState(prev => {
-      const newPlayerHealth = Math.max(0, prev.playerHealth - damage);
+      const newState = { ...prev };
+      const targetIndex = newState.playerBeasts.findIndex(b => b.id === target.id);
       
-      if (newPlayerHealth <= 0) {
-        setGameState('defeat');
-        setBattleLog(prevLog => [...prevLog, 'Defeat! Your beast has fallen...']);
-        return { ...prev, playerHealth: newPlayerHealth };
+      newState.playerBeasts[targetIndex] = {
+        ...newState.playerBeasts[targetIndex],
+        currentHealth: Math.max(0, target.currentHealth - damage)
+      };
+      
+      if (newState.playerBeasts[targetIndex].currentHealth <= 0) {
+        newState.playerBeasts[targetIndex].isDefeated = true;
       }
       
-      return { ...prev, playerHealth: newPlayerHealth, turn: 'player' };
+      newState.turn = 'player';
+      
+      // Check for battle end
+      const battleResult = checkBattleEnd();
+      if (battleResult === 'opponentWin') {
+        setGameState('defeat');
+        setBattleLog(prevLog => [...prevLog, 'Defeat! All your beasts have fallen...']);
+      } else if (battleResult === 'playerWin') {
+        handleVictory();
+      }
+      
+      return newState;
     });
 
-    // Add battle log message outside of state callback to prevent duplicates
-    setBattleLog(prevLog => [...prevLog, `The wild beast attacks for ${damage} damage!`]);
+    setBattleLog(prevLog => [...prevLog, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
 
     setCurrentTurn('player');
     updateCooldowns();
@@ -816,37 +875,138 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
   };
 
   const startBattle = () => {
-    // Calculate opponent's total health
-    const baseHealth = 100;
-    const levelHealthBonus = (selectedLevel - 1) * 20;
-    const partHealthBonus = opponent?.totalStatBonus?.health || 0;
-    const totalOpponentHealth = baseHealth + levelHealthBonus + partHealthBonus;
+    // Initialize beasts for battle - get first 4 beasts from user's collection
+    const playerBeasts = getPlayerBeasts();
+    const orderedBeastIds = getOrderedBeastIds();
     
-    setOpponentMaxHealth(totalOpponentHealth);
+    console.log('Starting battle with beasts:', playerBeasts.map(b => b.name), 'from ordered IDs:', orderedBeastIds);
     
-    // Reset battle state
+    if (playerBeasts.length === 0 || !opponent) {
+      console.error('No player beasts available or no opponent generated');
+      setBattleLog(['Error: No beasts available for battle!']);
+      return;
+    }
+
+    // Create battle beasts for each player beast
+    const playerBattleBeasts: BattleBeast[] = [];
+    const positions: Array<'frontLeft' | 'frontRight' | 'backLeft' | 'backRight'> = ['frontLeft', 'frontRight', 'backLeft', 'backRight'];
+    
+    for (let i = 0; i < Math.min(4, playerBeasts.length); i++) {
+      const beast = playerBeasts[i];
+      
+      // Find the corresponding beast ID for this beast
+      let beastId = '';
+      if (beastData) {
+        // Look for the beast ID that matches this beast data
+        const matchingBeastId = orderedBeastIds[i];
+        if (matchingBeastId && beastData[matchingBeastId]) {
+          beastId = matchingBeastId;
+        }
+      }
+      
+      // Get the beast's individual data (stats, level, etc.)
+      const beastIndividualData = beastId && beastData ? beastData[beastId] : null;
+      
+      const beastStats = beastIndividualData ? {
+        attack: beastIndividualData.attack + (beast.totalStatBonus.attack || 0),
+        defense: beastIndividualData.defense + (beast.totalStatBonus.defense || 0),
+        speed: beastIndividualData.speed + (beast.totalStatBonus.speed || 0),
+        magic: beastIndividualData.magic + (beast.totalStatBonus.magic || 0),
+        health: beastIndividualData.health + (beast.totalStatBonus.health || 0)
+      } : {
+        attack: playerStats.attack + (beast.totalStatBonus.attack || 0),
+        defense: playerStats.defense + (beast.totalStatBonus.defense || 0),
+        speed: playerStats.speed + (beast.totalStatBonus.speed || 0),
+        magic: playerStats.magic + (beast.totalStatBonus.magic || 0),
+        health: playerStats.health + (beast.totalStatBonus.health || 0)
+      };
+      
+      console.log(`Beast ${i + 1}: ${beast.name} at position ${positions[i]} with stats:`, beastStats);
+      
+      const battleBeast = createBattleBeast(beast, beastStats, positions[i]);
+      playerBattleBeasts.push(battleBeast);
+    }
+    
+    const opponentBattleBeast = createBattleBeast(
+      opponent, 
+      {
+        attack: opponentStats.attack + (opponent.totalStatBonus.attack || 0),
+        defense: opponentStats.defense + (opponent.totalStatBonus.defense || 0),
+        speed: opponentStats.speed + (opponent.totalStatBonus.speed || 0),
+        magic: opponentStats.magic + (opponent.totalStatBonus.magic || 0),
+        health: opponentMaxHealth
+      }, 
+      'frontLeft'
+    );
+
+    // Reset battle state with all player beasts
     setCombatState({
-      playerHealth: playerStats.health,
-      playerMana: 50,
-      opponentHealth: totalOpponentHealth,
-      playerAbilityCooldowns: [],
-      statusEffects: {
-        player: {},
-        opponent: {}
-      },
-      turn: 'player'
+      playerBeasts: playerBattleBeasts,
+      opponentBeasts: [opponentBattleBeast],
+      turn: 'player',
+      selectedPlayerBeast: playerBattleBeasts[0]?.id || null,
+      selectedTarget: null
     });
     
     // Reset battle log
-    setBattleLog(['Battle begins! You move first!']);
+    setBattleLog([`Battle begins with ${playerBattleBeasts.length} beast${playerBattleBeasts.length > 1 ? 's' : ''}! You move first!`]);
     
     // Start the battle
     setGameState('battle');
   };
 
-  const getPlayerBeast = (): CustomBeast | null => {
+  // Helper function to get the ordered beast list from localStorage
+  const getOrderedBeastIds = (): string[] => {
+    const stored = localStorage.getItem('beastOrder');
+    const order = stored ? JSON.parse(stored) : [];
+    
+    // Get all available beast IDs from beastData
+    const allBeastIds = beastData ? Object.keys(beastData) : [];
+    
+    // Return ordered beasts, plus any that weren't in the saved order
+    const orderedIds: string[] = [];
+    const unorderedIds: string[] = [];
+    
+    // Add beasts in saved order
+    order.forEach((id: string) => {
+      if (allBeastIds.includes(id)) {
+        orderedIds.push(id);
+      }
+    });
+    
+    // Add any remaining beasts that weren't in the saved order
+    allBeastIds.forEach(id => {
+      if (!orderedIds.includes(id)) {
+        unorderedIds.push(id);
+      }
+    });
+    
+    return [...orderedIds, ...unorderedIds];
+  };
+
+  // Get up to 4 player beasts for battle (in user's preferred order)
+  const getPlayerBeasts = (): CustomBeast[] => {
+    const orderedBeastIds = getOrderedBeastIds();
+    const playerBeasts: CustomBeast[] = [];
+    
+    // Get the first 4 beasts (or as many as available)
+    for (let i = 0; i < Math.min(4, orderedBeastIds.length); i++) {
+      const beastId = orderedBeastIds[i];
+      const beast = getPlayerBeastById(beastId);
+      if (beast) {
+        playerBeasts.push(beast);
+      }
+    }
+    
+    // If we don't have any beasts, something is wrong - return empty array
+    // The battle initialization will handle this gracefully
+    return playerBeasts;
+  };
+
+  // Get a specific player beast by ID
+  const getPlayerBeastById = (beastId: string): CustomBeast | null => {
     try {
-      const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
+      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
       if (customBeastData) {
         const beast = JSON.parse(customBeastData);
         
@@ -891,12 +1051,10 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         return beast;
       }
     } catch (e) {
-      console.error('Failed to load player beast:', e);
+      console.error(`Failed to load player beast ${beastId}:`, e);
     }
     return null;
   };
-
-  const playerBeast = getPlayerBeast();
 
   // Auto-scroll battle log to bottom when new messages are added
   useEffect(() => {
@@ -1005,87 +1163,191 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
         <div className="battle-arena">
           {/* Background */}
           <div className="adventure-background">
-            <img src="./images/arenas/arena2.jpg" alt="Adventure Arena" className="adventure-bg-image" />
+            <img src="./images/arenas/forrest-arena1.jpg" alt="Adventure Arena" className="adventure-bg-image" />
           </div>
           
           {/* Battle Content */}
           <div className="battle-content">
-            {/* Player Beast */}
+            {/* Player Beasts */}
             <div className="beast-container player-beast">
               <div className="beast-info">
-                <h3>{playerBeast?.name || 'Your Beast'}</h3>
-                <div className="health-bar">
+                <h3>Your Team</h3>
+                {combatState.playerBeasts.map((beast) => (
                   <div 
-                    className="health-fill player-health" 
-                    style={{ width: `${(combatState.playerHealth / playerStats.health) * 100}%` }}
-                  />
-                  <span className="health-text">{combatState.playerHealth}/{playerStats.health}</span>
-                </div>
-                <div className="stats-mini">
-                  <span>ATK: {playerStats.attack + (playerBeast?.totalStatBonus?.attack || 0)}</span>
-                  <span>DEF: {playerStats.defense + (playerBeast?.totalStatBonus?.defense || 0)}</span>
-                  <span>SPD: {playerStats.speed + (playerBeast?.totalStatBonus?.speed || 0)}</span>
-                  <span>MAG: {playerStats.magic + (playerBeast?.totalStatBonus?.magic || 0)}</span>
-                </div>
-                {Object.keys(combatState.statusEffects.player).length > 0 && (
-                  <div className="status-effects">
-                    <div className="status-label">Active Effects:</div>
-                    {Object.entries(combatState.statusEffects.player).map(([key, effect]) => (
-                      <div key={key} className="status-effect buff">
-                        {key.split('_')[0]} ({effect.duration} turns)
+                    key={beast.id} 
+                    className={`beast-card ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedPlayerBeast === beast.id ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (!beast.isDefeated) {
+                        setCombatState(prev => ({ ...prev, selectedPlayerBeast: beast.id }));
+                      }
+                    }}
+                  >
+                    <div className="beast-name">{beast.customBeast.name}</div>
+                    <div className="health-bar">
+                      <div 
+                        className="health-fill player-health" 
+                        style={{ width: `${(beast.currentHealth / beast.stats.health) * 100}%` }}
+                      />
+                      <span className="health-text">{beast.currentHealth}/{beast.stats.health}</span>
+                    </div>
+                    <div className="mana-bar-mini">
+                      <div 
+                        className="mana-fill" 
+                        style={{ width: `${(beast.currentMana / 50) * 100}%` }}
+                      />
+                      <span className="mana-text-mini">{beast.currentMana}/50</span>
+                    </div>
+                    <div className="position-indicator">{beast.position}</div>
+                    {Object.keys(beast.statusEffects).length > 0 && (
+                      <div className="status-effects-indicator">
+                        {Object.entries(beast.statusEffects).map(([effectKey, effect]) => (
+                          <span key={effectKey} className={`status-effect ${effect.value > 0 ? 'buff' : 'debuff'}`}>
+                            {effect.value > 0 ? '↑' : '↓'}{effect.duration}
+                          </span>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-              {playerBeast && (
-                <div className="beast-visual">
-                  <AnimatedCustomBeast 
-                    mood={playerAttacking ? "attack" : "normal"} 
-                    size={300}
-                    soundEffectsEnabled={soundEffectsEnabled}
-                    customBeast={playerBeast}
-                  />
+              {combatState.playerBeasts.length > 0 && (
+                <div className="beast-visual-grid">
+                  <div className="beast-line backLine">
+                    {combatState.playerBeasts
+                      .filter(beast => beast.position === 'backLeft' || beast.position === 'backRight')
+                      .map((beast) => (
+                        <div 
+                          key={beast.id} 
+                          className={`beast-visual-slot ${beast.position} ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedPlayerBeast === beast.id ? 'selected' : ''}`}
+                          onClick={() => setCombatState(prev => ({ ...prev, selectedPlayerBeast: beast.id }))}
+                        >
+                          <AnimatedCustomBeast 
+                            mood={playerAttacking && combatState.selectedPlayerBeast === beast.id ? "attack" : beast.isDefeated ? "laying" : "normal"} 
+                            size={150}
+                            soundEffectsEnabled={soundEffectsEnabled}
+                            customBeast={beast.customBeast}
+                          />
+                          <div className="beast-visual-label">{beast.customBeast.name}</div>
+                          <div className="beast-visual-position">{beast.position}</div>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="beast-line frontLine">
+                    {combatState.playerBeasts
+                      .filter(beast => beast.position === 'frontLeft' || beast.position === 'frontRight')
+                      .map((beast) => (
+                        <div 
+                          key={beast.id} 
+                          className={`beast-visual-slot ${beast.position} ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedPlayerBeast === beast.id ? 'selected' : ''}`}
+                          onClick={() => setCombatState(prev => ({ ...prev, selectedPlayerBeast: beast.id }))}
+                        >
+                          <AnimatedCustomBeast 
+                            mood={playerAttacking && combatState.selectedPlayerBeast === beast.id ? "attack" : beast.isDefeated ? "laying" : "normal"} 
+                            size={150}
+                            soundEffectsEnabled={soundEffectsEnabled}
+                            customBeast={beast.customBeast}
+                          />
+                          <div className="beast-visual-label">{beast.customBeast.name}</div>
+                          <div className="beast-visual-position">{beast.position}</div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Opponent Beast */}
+            {/* Opponent Beasts */}
             <div className="beast-container opponent-beast">
               <div className="beast-info">
-                <h3>{opponent?.name || 'Wild Beast'} (Lvl {opponentLevel})</h3>
-                <div className="health-bar">
+                <h3>Enemy Team</h3>
+                {combatState.opponentBeasts.map((beast) => (
                   <div 
-                    className="health-fill opponent-health" 
-                    style={{ width: `${(combatState.opponentHealth / opponentMaxHealth) * 100}%` }}
-                  />
-                  <span className="health-text">{combatState.opponentHealth}/{opponentMaxHealth}</span>
-                </div>
-                <div className="stats-mini">
-                  <span>ATK: {opponentStats.attack + (opponent?.totalStatBonus?.attack || 0)}</span>
-                  <span>DEF: {opponentStats.defense + (opponent?.totalStatBonus?.defense || 0)}</span>
-                  <span>SPD: {opponentStats.speed + (opponent?.totalStatBonus?.speed || 0)}</span>
-                  <span>MAG: {opponentStats.magic + (opponent?.totalStatBonus?.magic || 0)}</span>
-                </div>
-                {Object.keys(combatState.statusEffects.opponent).length > 0 && (
-                  <div className="status-effects">
-                    <div className="status-label">Active Effects:</div>
-                    {Object.entries(combatState.statusEffects.opponent).map(([key, effect]) => (
-                      <div key={key} className="status-effect debuff">
-                        {key.split('_')[0]} ({effect.duration} turns)
+                    key={beast.id} 
+                    className={`beast-card ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedTarget === beast.id ? 'target-selected' : ''} ${getTargetableBeasts(combatState.opponentBeasts).includes(beast) ? 'targetable' : 'not-targetable'}`}
+                    onClick={() => {
+                      if (getTargetableBeasts(combatState.opponentBeasts).includes(beast)) {
+                        setCombatState(prev => ({ ...prev, selectedTarget: beast.id }));
+                      }
+                    }}
+                    style={{ cursor: getTargetableBeasts(combatState.opponentBeasts).includes(beast) ? 'pointer' : 'not-allowed' }}
+                  >
+                    <div className="beast-name">{beast.customBeast.name} (Lvl {opponentLevel})</div>
+                    <div className="health-bar">
+                      <div 
+                        className="health-fill opponent-health" 
+                        style={{ width: `${(beast.currentHealth / beast.stats.health) * 100}%` }}
+                      />
+                      <span className="health-text">{beast.currentHealth}/{beast.stats.health}</span>
+                    </div>
+                    <div className="position-indicator">{beast.position}</div>
+                    {Object.keys(beast.statusEffects).length > 0 && (
+                      <div className="status-effects-indicator">
+                        {Object.entries(beast.statusEffects).map(([effectKey, effect]) => (
+                          <span key={effectKey} className={`status-effect ${effect.value > 0 ? 'buff' : 'debuff'}`}>
+                            {effect.value > 0 ? '↑' : '↓'}{effect.duration}
+                          </span>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                )}
+                ))}
               </div>
-              {opponent && (
-                <div className="beast-visual">
-                  <AnimatedCustomBeast 
-                    mood={opponentAttacking ? "attack" : "normal"} 
-                    size={300}
-                    soundEffectsEnabled={soundEffectsEnabled}
-                    customBeast={opponent}
-                  />
+              {combatState.opponentBeasts.length > 0 && (
+                <div className="beast-visual-grid opponent-grid">
+                  <div className="beast-line backLine">
+                    {combatState.opponentBeasts
+                      .filter(beast => beast.position === 'backLeft' || beast.position === 'backRight')
+                      .map((beast) => (
+                        <div 
+                          key={beast.id} 
+                          className={`beast-visual-slot ${beast.position} ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedTarget === beast.id ? 'target-selected' : ''}`}
+                          onClick={() => {
+                            if (getTargetableBeasts(combatState.opponentBeasts).includes(beast)) {
+                              setCombatState(prev => ({ ...prev, selectedTarget: beast.id }));
+                            }
+                          }}
+                        >
+                          <AnimatedCustomBeast 
+                            mood={opponentAttacking ? "attack" : beast.isDefeated ? "laying" : "normal"} 
+                            size={150}
+                            soundEffectsEnabled={soundEffectsEnabled}
+                            customBeast={beast.customBeast}
+                          />
+                          <div className="beast-visual-label">{beast.customBeast.name}</div>
+                          <div className="beast-visual-position">{beast.position}</div>
+                          {getTargetableBeasts(combatState.opponentBeasts).includes(beast) && (
+                            <div className="targetable-indicator">🎯</div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                  <div className="beast-line frontLine">
+                    {combatState.opponentBeasts
+                      .filter(beast => beast.position === 'frontLeft' || beast.position === 'frontRight')
+                      .map((beast) => (
+                        <div 
+                          key={beast.id} 
+                          className={`beast-visual-slot ${beast.position} ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedTarget === beast.id ? 'target-selected' : ''}`}
+                          onClick={() => {
+                            if (getTargetableBeasts(combatState.opponentBeasts).includes(beast)) {
+                              setCombatState(prev => ({ ...prev, selectedTarget: beast.id }));
+                            }
+                          }}
+                        >
+                          <AnimatedCustomBeast 
+                            mood={opponentAttacking ? "attack" : beast.isDefeated ? "laying" : "normal"} 
+                            size={150}
+                            soundEffectsEnabled={soundEffectsEnabled}
+                            customBeast={beast.customBeast}
+                          />
+                          <div className="beast-visual-label">{beast.customBeast.name}</div>
+                          <div className="beast-visual-position">{beast.position}</div>
+                          {getTargetableBeasts(combatState.opponentBeasts).includes(beast) && (
+                            <div className="targetable-indicator">🎯</div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1097,17 +1359,24 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
               {currentTurn === 'player' ? "Your Turn!" : "Opponent's Turn..."}
             </div>
             
-            {/* Player Mana */}
-            <div className="mana-bar">
-              <div className="mana-label">Mana</div>
-              <div className="mana-fill-container">
-                <div 
-                  className="mana-fill" 
-                  style={{ width: `${(combatState.playerMana / 50) * 100}%` }}
-                />
-                <span className="mana-text">{combatState.playerMana}/50</span>
+            {/* Selected Beast Info */}
+            {combatState.selectedPlayerBeast && (
+              <div className="selected-beast-info">
+                {(() => {
+                  const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
+                  if (!selectedBeast) return null;
+                  return (
+                    <div className="active-beast">
+                      <span>Active: {selectedBeast.customBeast.name}</span>
+                      <div className="mini-stats">
+                        <span>HP: {selectedBeast.currentHealth}/{selectedBeast.stats.health}</span>
+                        <span>MP: {selectedBeast.currentMana}/50</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
+            )}
 
             {/* Action Buttons */}
             <div className="action-buttons">
@@ -1122,32 +1391,39 @@ export const Adventure: React.FC<AdventureProps> = ({ currentBeastId, playerStat
               </motion.button>
 
               {/* Ability Buttons */}
-              {playerBeast?.availableAbilities?.map(ability => {
-                const cooldown = combatState.playerAbilityCooldowns.find(cd => cd.abilityId === ability.id);
-                const isOnCooldown = cooldown && cooldown.turnsLeft > 0;
-                const hasEnoughMana = combatState.playerMana >= (ability.manaCost || 0);
-                const canUse = currentTurn === 'player' && !isOnCooldown && hasEnoughMana;
+              {(() => {
+                const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
+                if (!selectedBeast) return null;
+                
+                return selectedBeast.customBeast.availableAbilities?.map(ability => {
+                  const cooldown = selectedBeast.abilityCooldowns.find(cd => cd.abilityId === ability.id);
+                  const isOnCooldown = cooldown && cooldown.turnsLeft > 0;
+                  const hasEnoughMana = selectedBeast.currentMana >= (ability.manaCost || 0);
+                  const needsTarget = ability.type === 'attack' || ability.type === 'magicAttack' || ability.type === 'debuff';
+                  const hasTarget = combatState.selectedTarget !== null;
+                  const canUse = currentTurn === 'player' && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
 
-                return (
-                  <motion.button
-                    key={ability.id}
-                    className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type}`}
-                    onClick={() => castAbility(ability)}
-                    disabled={!canUse}
-                    whileHover={canUse ? { scale: 1.05 } : {}}
-                    whileTap={canUse ? { scale: 0.95 } : {}}
-                    title={`${ability.description}\nDamage: ${ability.damage || 'N/A'}\nMana: ${ability.manaCost || 0}\nCooldown: ${ability.cooldown} turns`}
-                  >
-                    <div className="ability-name">{ability.name}</div>
-                    <div className="ability-cost">💧{ability.manaCost || 0}</div>
-                    {isOnCooldown && (
-                      <div className="cooldown-overlay">
-                        {cooldown.turnsLeft}
-                      </div>
-                    )}
-                  </motion.button>
-                );
-              })}
+                  return (
+                    <motion.button
+                      key={ability.id}
+                      className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type}`}
+                      onClick={() => castAbility(ability, combatState.selectedTarget || undefined)}
+                      disabled={!canUse}
+                      whileHover={canUse ? { scale: 1.05 } : {}}
+                      whileTap={canUse ? { scale: 0.95 } : {}}
+                      title={`${ability.description}\nDamage: ${ability.damage || 'N/A'}\nMana: ${ability.manaCost || 0}\nCooldown: ${ability.cooldown} turns`}
+                    >
+                      <div className="ability-name">{ability.name}</div>
+                      <div className="ability-cost">💧{ability.manaCost || 0}</div>
+                      {isOnCooldown && (
+                        <div className="cooldown-overlay">
+                          {cooldown?.turnsLeft}
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                });
+              })()}
 
               {/* Flee Button */}
               <motion.button

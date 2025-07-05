@@ -69,20 +69,22 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
-  max-width: 300px;
+  max-width: 500px;
 }
 
 .beast-info {
-  margin-bottom: 15px;
+  margin-bottom: 5px;
   text-align: center;
   width: 100%;
   background: rgba(0, 0, 0, 0.8);
-  padding: 15px;
+  padding: 5px;
   border-radius: 10px;
   border: 2px solid rgba(139, 92, 246, 0.3);
+  flex-wrap: wrap;
 }
 
 .beast-info h3 {
+  width: 100%;
   color: #fff;
   margin: 0 0 10px 0;
   font-size: 1.2rem;
@@ -264,7 +266,7 @@
   max-height: 150px;
   overflow-y: auto;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
 }
 
 .log-entry {
@@ -634,6 +636,35 @@
   color: #ef4444;
 }
 
+/* Status Effects Indicators */
+.status-effects-indicator {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.status-effect {
+  font-size: 0.6rem;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: bold;
+  min-width: 12px;
+  text-align: center;
+}
+
+.status-effect.buff {
+  background-color: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+  border: 1px solid rgba(0, 255, 0, 0.5);
+}
+
+.status-effect.debuff {
+  background-color: rgba(255, 0, 0, 0.2);
+  color: #ff4444;
+  border: 1px solid rgba(255, 0, 0, 0.5);
+}
+
 /* Setup Screen Styles */
 .setup-screen {
   position: relative;
@@ -785,7 +816,345 @@
   background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
-/* Responsive Design */
+/* Multi-Beast Battle System Styles */
+.beast-card {
+  min-width: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 5px 0;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  cursor: pointer;
+}
+
+.beast-card:hover:not(.defeated) {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.6);
+  transform: scale(1.02);
+}
+
+.beast-card.selected {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.2);
+  box-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+}
+
+.beast-card.target-selected {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+.beast-card.defeated {
+  opacity: 0.5;
+  background: rgba(128, 128, 128, 0.2);
+  border-color: rgba(128, 128, 128, 0.5);
+}
+
+.beast-card.targetable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.beast-card.targetable:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.beast-card.not-targetable {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.beast-card.not-targetable:hover {
+  background: rgba(107, 114, 128, 0.2);
+  border-color: rgba(107, 114, 128, 0.5);
+}
+
+.beast-name {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.mana-bar-mini {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  height: 8px;
+  margin: 3px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mana-text-mini {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7em;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
+}
+
+.position-indicator {
+  font-size: 0.7em;
+  color: #a0a0a0;
+  text-transform: capitalize;
+  margin-top: 3px;
+}
+
+.selected-beast-info {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  color: white;
+}
+
+.active-beast {
+  text-align: center;
+}
+
+.mini-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 5px;
+  font-size: 0.9em;
+}
+
+.mini-stats span {
+  color: #a0a0a0;
+}
+
+/* Battle formation layout hints */
+.beast-container .beast-info {
+  min-height: 100px;
+  display: flex;
+  flex-direction: row;
+}
+
+.beast-container .beast-info h3 {
+  margin: 0 0 3px 0;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced health bars for individual beasts */
+.beast-card .health-bar {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  height: 12px;
+  margin: 5px 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.beast-card .health-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7em;
+  color: white;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+  font-weight: bold;
+}
+
+/* Front/Back line visual indicators */
+.beast-card[data-position*="front"]::before {
+  content: "FRONT";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(34, 197, 94, 0.8);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.6em;
+  font-weight: bold;
+}
+
+.beast-card[data-position*="back"]::before {
+  content: "BACK";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.6em;
+  font-weight: bold;
+}
+
+/* Beast Visual Grid Styles */
+.beast-visual-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 320px;
+  height: 320px;
+  padding: 10px;
+  flex-direction: row;
+}
+.beast-visual-grid.opponent-grid {
+  flex-direction: row-reverse;
+}
+
+.beast-line {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex: 1;
+  position: relative;
+  margin: 5px 0;
+}
+
+.beast-line.backLine {
+  padding: 5px;
+  position: relative;
+  order: 1; /* Back line appears first */
+  display: flex;
+  flex-direction: column;
+  margin-top: 80px;
+}
+
+.beast-line.frontLine {
+  padding: 5px;
+  position: relative;
+  order: 2; /* Front line appears second */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Beast visual slot base styles */
+.beast-visual-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 5px;
+  flex: 1;
+  min-width: 120px;
+  max-width: 140px;
+  border-radius: 100%;
+}
+
+.beast-visual-slot .sleep-animation {
+  display: none;
+}
+
+.beast-visual-slot:hover {
+  transform: scale(1.05);
+}
+
+.beast-visual-slot.selected {
+  background: rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+}
+
+.beast-visual-slot.target-selected {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+.beast-visual-slot.defeated {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  cursor: not-allowed;
+}
+
+.beast-visual-label {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90%;
+}
+
+.beast-visual-position {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  color: #fff;
+  font-size: 0.6rem;
+  background: rgba(139, 92, 246, 0.8);
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.targetable-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Position-specific grid placement */
+.beast-visual-slot.frontLeft {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.beast-visual-slot.frontRight {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.beast-visual-slot.backLeft {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.beast-visual-slot.backRight {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+/* Make opponent beasts face the player */
+.opponent-grid .beast-visual-slot {
+  transform: scaleX(-1);
+}
+
+.opponent-grid .beast-visual-label,
+.opponent-grid .beast-visual-position,
+.opponent-grid .targetable-indicator {
+  transform: scaleX(-1);
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .adventure-content {
     padding: 20px;
@@ -856,5 +1225,19 @@
   .setup-btn {
     width: 100%;
     max-width: 200px;
+  }
+  
+  .beast-visual-grid {
+    width: 250px;
+    height: 250px;
+    gap: 8px;
+  }
+  
+  .beast-visual-label {
+    font-size: 0.6rem;
+  }
+  
+  .beast-visual-position {
+    font-size: 0.5rem;
   }
 }
