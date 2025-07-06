@@ -59,7 +59,7 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
       
       <div className="selection-content">
         <div className="forest-clearing">
-          <h1 className="selection-title">You've Stiched your first Beast!</h1>
+          <h1 className="selection-title">You've Stitched your first Beast!</h1>
           <p className="selection-subtitle">
             The seams look a bit loose,  but they should hold... Choose your beast's name and begin your journey.
           </p>

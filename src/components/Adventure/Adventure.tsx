@@ -6,6 +6,7 @@ import { useInventoryContext } from '../../contexts/InventoryContext';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { EnhancedBeastPart, Ability, StatBonus } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
+import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
 import './Adventure.css';
 
 interface SoulEssence {
@@ -58,14 +59,6 @@ interface CombatState {
   selectedTarget: string | null; // ID of target opponent beast
 }
 
-interface DroppedLoot {
-  id: string;
-  name: string;
-  type: 'part' | 'set';
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  imagePath: string;
-}
-
 interface AdventureProps {
   playerStats: BeastCombatStats & { health: number };
   onClose: () => void;
@@ -94,7 +87,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   });
   const [opponentMaxHealth, setOpponentMaxHealth] = useState<number>(100);
   const [battleLog, setBattleLog] = useState<string[]>([]);
-  const [droppedLoot, setDroppedLoot] = useState<DroppedLoot | null>(null);
+  const [droppedLoot, setDroppedLoot] = useState<LootItem | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
   
   // Animation states for attack visuals
@@ -419,55 +412,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   }, [gameState, selectedLevel, opponentLevel]);
 
   // Generate loot drop based on rarity weights
-  const generateLoot = (): DroppedLoot => {
-    const availableLoot = [
-      // Individual parts (head, torso only)
-      { id: 'nightwolf-head', name: 'Night Wolf Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-head.svg' },
-      { id: 'nightwolf-torso', name: 'Night Wolf Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-torso.svg' },
-      { id: 'mountaindragon-head', name: 'Mountain Dragon Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg' },
-      { id: 'mountaindragon-torso', name: 'Mountain Dragon Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg' },
-      { id: 'woodenpuppet-head', name: 'Wooden Puppet Head', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg' },
-      { id: 'woodenpuppet-torso', name: 'Wooden Puppet Torso', type: 'part' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg' },
-      { id: 'forestsprite-head', name: 'Forest Sprite Head', type: 'part' as const, rarity: 'uncommon' as const, imagePath: './images/beasts/forest-sprite/forest-sprite-head.svg' },
-      { id: 'forestsprite-torso', name: 'Forest Sprite Torso', type: 'part' as const, rarity: 'uncommon' as const, imagePath: './images/beasts/forest-sprite/forest-sprite-torso.svg' },
-      { id: 'shadowbeast-head', name: 'Shadow Beast Head', type: 'part' as const, rarity: 'rare' as const, imagePath: './images/beasts/shadow-beast/shadow-beast-head.svg' },
-      { id: 'shadowbeast-torso', name: 'Shadow Beast Torso', type: 'part' as const, rarity: 'rare' as const, imagePath: './images/beasts/shadow-beast/shadow-beast-torso.svg' },
-      { id: 'thundereagle-head', name: 'Thunder Eagle Head', type: 'part' as const, rarity: 'epic' as const, imagePath: './images/beasts/thunder-eagle/thunder-eagle-head.svg' },
-      { id: 'thundereagle-torso', name: 'Thunder Eagle Torso', type: 'part' as const, rarity: 'epic' as const, imagePath: './images/beasts/thunder-eagle/thunder-eagle-torso.svg' },
-      { id: 'frostwolf-head', name: 'Frost Wolf Head', type: 'part' as const, rarity: 'legendary' as const, imagePath: './images/beasts/frost-wolf/frost-wolf-head.svg' },
-      { id: 'frostwolf-torso', name: 'Frost Wolf Torso', type: 'part' as const, rarity: 'legendary' as const, imagePath: './images/beasts/frost-wolf/frost-wolf-torso.svg' },
-      
-      // Arm and leg sets
-      { id: 'nightwolf-arms', name: 'Night Wolf Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-arm-r.svg' },
-      { id: 'nightwolf-legs', name: 'Night Wolf Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/night-wolf/night-wolf-leg-r.svg' },
-      { id: 'mountaindragon-arms', name: 'Mountain Dragon Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg' },
-      { id: 'mountaindragon-legs', name: 'Mountain Dragon Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg' },
-      { id: 'woodenpuppet-arms', name: 'Wooden Puppet Arms', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg' },
-      { id: 'woodenpuppet-legs', name: 'Wooden Puppet Legs', type: 'set' as const, rarity: 'common' as const, imagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg' },
-      
-      // Extra parts (wings and tails) from centralized beast parts
-      ...EXTRA_LIMBS.map(limb => ({
-        id: limb.id,
-        name: limb.name,
-        type: 'part' as const,
-        rarity: limb.rarity,
-        imagePath: limb.imagePath
-      }))
-    ];
-
-    // Rarity weights (higher = more common)
-    const rarityWeights = {
-      'common': 50,
-      'uncommon': 25,
-      'rare': 15,
-      'epic': 8,
-      'legendary': 2
-    };
-
+  const generateLoot = (): LootItem => {
     // Create weighted array
-    const weightedLoot: typeof availableLoot = [];
-    availableLoot.forEach(item => {
-      const weight = rarityWeights[item.rarity];
+    const weightedLoot: LootItem[] = [];
+    LOOT_ITEMS.forEach(item => {
+      const weight = RARITY_WEIGHTS[item.rarity];
       for (let i = 0; i < weight; i++) {
         weightedLoot.push(item);
       }
@@ -569,9 +518,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   };
 
   // Enhanced combat functions with abilities for multi-beast system
-  const castAbility = (ability: Ability, targetId?: string) => {
-    if (combatState.turn !== 'player' || gameState !== 'battle') return;
-    
+  const castAbility = (ability: Ability, targetId?: string) => { 
+    if (combatState.turn !== 'player' || gameState !== 'battle') {
+      return;
+    }
+
     const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
     if (!activeBeast) return;
 
@@ -593,19 +544,59 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       return;
     }
 
-    // Trigger player attack animation
-    setPlayerAttacking(true);
-    setTimeout(() => setPlayerAttacking(false), 1200);
-
-    // Play magic attack sound for magic abilities
-    if (ability.type === 'magicAttack' && soundEffectsEnabled && magicAttackSoundRef.current) {
-      magicAttackSoundRef.current.play().catch(error => {
-        console.warn('Failed to play magic attack sound:', error);
-      });
+    // Calculate damage/healing/mana once, then apply all changes atomically
+    let battleMessage = '';
+    let targetHealthAfterDamage = 0;
+    let casterHealthAfterHealing = 0;
+    let casterManaAfterUse = 0;
+    
+    // Pre-calculate all values based on current state
+    if (ability.type === 'attack' || ability.type === 'magicAttack') {
+      const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
+      if (targetBeast) {
+        const attackerEffectiveStats = getEffectiveStats(activeBeast);
+        const targetEffectiveStats = getEffectiveStats(targetBeast);
+        
+        const baseDamage = ability.damage || 0;
+        const statBonus = ability.type === 'magicAttack' 
+          ? Math.floor(attackerEffectiveStats.magic / 2)
+          : Math.floor(attackerEffectiveStats.attack / 2);
+        const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
+        const totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
+        
+        targetHealthAfterDamage = Math.max(0, targetBeast.currentHealth - totalDamage);
+        
+        battleMessage = `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} for ${totalDamage} damage!`;
+      }
+    } else if (ability.type === 'heal') {
+      const healing = ability.healing || 0;
+      casterHealthAfterHealing = Math.min(activeBeast.stats.health, activeBeast.currentHealth + healing);
+      battleMessage = `${activeBeast.customBeast.name} uses ${ability.name} and heals for ${healing} HP!`;
+    } else if (ability.type === 'buff') {
+      battleMessage = `${activeBeast.customBeast.name} uses ${ability.name} and gains a buff!`;
+    } else if (ability.type === 'debuff') {
+      const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
+      if (targetBeast) {
+        battleMessage = `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} and applies a debuff!`;
+      }
     }
-
+    
+    // Pre-calculate mana consumption
+    casterManaAfterUse = Math.max(0, activeBeast.currentMana - (ability.manaCost || 0));
+    
+    // Immediately set turn to 'opponent' to prevent double execution
     setCombatState(prev => {
-      const newState = { ...prev };
+      // Early exit if not player's turn (double-click protection)
+      if (prev.turn !== 'player') return prev;
+      
+      // Idempotency check: verify if this update has already been applied
+      const currentBeast = prev.playerBeasts.find(b => b.id === activeBeast.id);
+      if (currentBeast && currentBeast.currentMana === casterManaAfterUse) {
+        // If mana is already at the expected value, this update was already applied
+        return { ...prev, turn: 'opponent' as const };
+      }
+      
+      const newState = { ...prev, turn: 'opponent' as const };
       
       // Update the active beast's mana and cooldowns
       const beastIndex = newState.playerBeasts.findIndex(b => b.id === activeBeast.id);
@@ -613,7 +604,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       
       newState.playerBeasts[beastIndex] = {
         ...newState.playerBeasts[beastIndex],
-        currentMana: Math.max(0, newState.playerBeasts[beastIndex].currentMana - (ability.manaCost || 0))
+        currentMana: casterManaAfterUse
       };
       
       // Set cooldown
@@ -624,39 +615,24 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         newState.playerBeasts[beastIndex].abilityCooldowns.push({ abilityId: ability.id, turnsLeft: ability.cooldown });
       }
       
-      // Apply ability effects
+      // Apply ability effects using pre-calculated final values
       if (ability.type === 'attack' || ability.type === 'magicAttack') {
-        const targetBeast = newState.opponentBeasts.find(b => b.id === targetId);
-        if (targetBeast) {
-          const attackerEffectiveStats = getEffectiveStats(activeBeast);
-          const targetEffectiveStats = getEffectiveStats(targetBeast);
-          
-          const baseDamage = ability.damage || 0;
-          const statBonus = ability.type === 'magicAttack' 
-            ? Math.floor(attackerEffectiveStats.magic / 2)
-            : Math.floor(attackerEffectiveStats.attack / 2);
-          const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
-          const totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
-          
-          const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
+        const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
+        if (targetIndex >= 0) {
           newState.opponentBeasts[targetIndex] = {
             ...newState.opponentBeasts[targetIndex],
-            currentHealth: Math.max(0, targetBeast.currentHealth - totalDamage)
+            currentHealth: targetHealthAfterDamage
           };
           
           if (newState.opponentBeasts[targetIndex].currentHealth <= 0) {
             newState.opponentBeasts[targetIndex].isDefeated = true;
           }
-          
-          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} for ${totalDamage} damage!`]);
         }
       } else if (ability.type === 'heal') {
-        const healing = ability.healing || 0;
         newState.playerBeasts[beastIndex] = {
           ...newState.playerBeasts[beastIndex],
-          currentHealth: Math.min(newState.playerBeasts[beastIndex].stats.health, newState.playerBeasts[beastIndex].currentHealth + healing)
+          currentHealth: casterHealthAfterHealing
         };
-        setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} and heals for ${healing} HP!`]);
       } else if (ability.type === 'buff') {
         // Apply buff to the caster (self-buff)
         if (ability.effects?.statModifier) {
@@ -672,17 +648,13 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               };
             }
           });
-          
-          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} and gains a buff!`]);
         }
       } else if (ability.type === 'debuff') {
         // Apply debuff to the target
-        const targetBeast = newState.opponentBeasts.find(b => b.id === targetId);
-        if (targetBeast && ability.effects?.statModifier) {
+        const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
+        if (targetIndex >= 0 && ability.effects?.statModifier) {
           const duration = ability.effects.duration || 3;
           const effects = ability.effects.statModifier;
-          
-          const targetIndex = newState.opponentBeasts.findIndex(b => b.id === targetId);
           
           // Apply status effects to the target
           Object.entries(effects).forEach(([stat, value]) => {
@@ -693,26 +665,39 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               };
             }
           });
-          
-          setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} and applies a debuff!`]);
         }
-      }
-      
-      newState.turn = 'opponent';
-      
-      // Check for battle end
-      const battleResult = checkBattleEnd(newState);
-      if (battleResult === 'playerWin') {
-        handleVictory();
       }
       
       return newState;
     });
 
-    // Opponent attacks after a delay
+    // Add battle log message outside of setState to prevent double execution (same pattern as basicAttack)
+    if (battleMessage) {
+      setBattleLog(prev => [...prev, battleMessage]);
+    }
+
+    // Trigger player attack animation
+    setPlayerAttacking(true);
+    setTimeout(() => setPlayerAttacking(false), 1200);
+
+    // Play magic attack sound for magic abilities
+    if (ability.type === 'magicAttack' && soundEffectsEnabled && magicAttackSoundRef.current) {
+      magicAttackSoundRef.current.play().catch(error => {
+        console.warn('Failed to play magic attack sound:', error);
+      });
+    }
+
+    // Check for victory and proceed with next turn after a delay
     setTimeout(() => {
-      opponentAttack();
-    }, 1500);
+      const finalBattleResult = checkBattleEnd();
+      if (finalBattleResult === 'playerWin') {
+        handleVictory();
+      } else if (finalBattleResult === 'continue') {
+        // Only proceed with opponent attack if battle is still ongoing
+        opponentAttack();
+      }
+      // If finalBattleResult === 'opponentWin', the game should have already transitioned to defeat
+    }, 1500); // Use the same delay as opponent attack
   };
 
   const handleVictory = () => {
@@ -808,20 +793,24 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
     const targetableBeasts = getTargetableBeasts(combatState.opponentBeasts);
     
-    if (!activeBeast || targetableBeasts.length === 0) return;
+    if (!activeBeast || targetableBeasts.length === 0) {
+      return;
+    }
     
     // Auto-select first targetable beast for basic attack
     const target = targetableBeasts[0];
-    
-    setPlayerAttacking(true);
-    setTimeout(() => setPlayerAttacking(false), 1200);
 
+    // Calculate damage outside of setState so we can use it for the battle log
     const attackerEffectiveStats = getEffectiveStats(activeBeast);
     const targetEffectiveStats = getEffectiveStats(target);
     const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
-    
+
+    // Immediately set turn to 'opponent' to prevent double execution
     setCombatState(prev => {
-      const newState = { ...prev };
+      // Early exit if not player's turn (double-click protection)
+      if (prev.turn !== 'player') return prev;
+      
+      const newState = { ...prev, turn: 'opponent' as const };
       const targetIndex = newState.opponentBeasts.findIndex(b => b.id === target.id);
       
       newState.opponentBeasts[targetIndex] = {
@@ -833,16 +822,26 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         newState.opponentBeasts[targetIndex].isDefeated = true;
       }
       
-      newState.turn = 'opponent';
-      
       return newState;
     });
 
-    setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+    // Add battle log message outside of setState to prevent double execution
+    setBattleLog(prev => [...prev, `${activeBeast.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
 
+    setPlayerAttacking(true);
+    setTimeout(() => setPlayerAttacking(false), 1200);
+
+    // Check for victory and proceed with next turn after a delay
     setTimeout(() => {
-      opponentAttack();
-    }, 1500);
+      const battleResult = checkBattleEnd();
+      if (battleResult === 'playerWin') {
+        handleVictory();
+      } else if (battleResult === 'continue') {
+        // Only proceed with opponent attack if battle is still ongoing
+        opponentAttack();
+      }
+      // If battleResult === 'opponentWin', the game should have already transitioned to defeat
+    }, 1500); // Use the same delay as opponent attack
   };
 
   const updateCooldowns = () => {
@@ -926,19 +925,22 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       
       newState.turn = 'player';
       
-      // Check for battle end
-      const battleResult = checkBattleEnd(newState);
-      if (battleResult === 'opponentWin') {
-        setGameState('defeat');
-        setBattleLog(prevLog => [...prevLog, 'Defeat! All your beasts have fallen...']);
-      } else if (battleResult === 'playerWin') {
-        handleVictory();
-      }
-      
       return newState;
     });
 
-    setBattleLog(prevLog => [...prevLog, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+    // Add battle log messages outside of setState to prevent double execution
+    setBattleLog(prev => [...prev, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+    
+    // Check for battle end after state update
+    setTimeout(() => {
+      const battleResult = checkBattleEnd();
+      if (battleResult === 'opponentWin') {
+        setGameState('defeat');
+        setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+      } else if (battleResult === 'playerWin') {
+        handleVictory();
+      }
+    }, 100); // Small delay to ensure state has updated
 
     updateCooldowns();
   };
@@ -1471,12 +1473,8 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               {(() => {
                 const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
                 if (!selectedBeast) {
-                  console.log('No selected beast found');
                   return null;
                 }
-                
-                console.log('Selected beast abilities:', selectedBeast.customBeast.availableAbilities);
-                console.log('Combat state:', { selectedTarget: combatState.selectedTarget, currentTurn: combatState.turn });
                 
                 return selectedBeast.customBeast.availableAbilities?.map(ability => {
                   const cooldown = selectedBeast.abilityCooldowns.find(cd => cd.abilityId === ability.id);
@@ -1485,18 +1483,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                   const needsTarget = ability.type === 'attack' || ability.type === 'magicAttack' || ability.type === 'debuff';
                   const hasTarget = combatState.selectedTarget !== null;
                   const canUse = combatState.turn === 'player' && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
-
-                  // Debug logging for all abilities
-                  console.log(`Ability check for ${ability.name}:`, {
-                    abilityType: ability.type,
-                    currentTurn: combatState.turn, // Use combatState.turn instead
-                    isOnCooldown,
-                    hasEnoughMana,
-                    needsTarget,
-                    hasTarget,
-                    selectedTarget: combatState.selectedTarget,
-                    canUse
-                  });
 
                   return (
                     <motion.button
