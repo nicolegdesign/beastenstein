@@ -85,7 +85,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const [gameState, setGameState] = useState<'map' | 'setup' | 'battle' | 'victory' | 'defeat' | 'loot'>('map');
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [opponentLevel, setOpponentLevel] = useState<number>(1);
-  const [currentTurn, setCurrentTurn] = useState<'player' | 'opponent'>('player');
   const [opponent, setOpponent] = useState<CustomBeast | null>(null);
   const [opponentStats, setOpponentStats] = useState<BeastCombatStats>({
     attack: 5,
@@ -508,9 +507,10 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     return beasts.find(b => b.id === selectedId && !b.isDefeated) || null;
   };
 
-  const checkBattleEnd = (): 'playerWin' | 'opponentWin' | 'continue' => {
-    const playerAlive = combatState.playerBeasts.some(b => !b.isDefeated);
-    const opponentAlive = combatState.opponentBeasts.some(b => !b.isDefeated);
+  const checkBattleEnd = (state?: CombatState): 'playerWin' | 'opponentWin' | 'continue' => {
+    const currentState = state || combatState;
+    const playerAlive = currentState.playerBeasts.some(b => !b.isDefeated);
+    const opponentAlive = currentState.opponentBeasts.some(b => !b.isDefeated);
     
     if (!playerAlive) return 'opponentWin';
     if (!opponentAlive) return 'playerWin';
@@ -570,7 +570,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
   // Enhanced combat functions with abilities for multi-beast system
   const castAbility = (ability: Ability, targetId?: string) => {
-    if (currentTurn !== 'player' || gameState !== 'battle') return;
+    if (combatState.turn !== 'player' || gameState !== 'battle') return;
     
     const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
     if (!activeBeast) return;
@@ -701,7 +701,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       newState.turn = 'opponent';
       
       // Check for battle end
-      const battleResult = checkBattleEnd();
+      const battleResult = checkBattleEnd(newState);
       if (battleResult === 'playerWin') {
         handleVictory();
       }
@@ -709,8 +709,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       return newState;
     });
 
-    setCurrentTurn('opponent');
-    
     // Opponent attacks after a delay
     setTimeout(() => {
       opponentAttack();
@@ -842,8 +840,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
     setBattleLog(prevLog => [...prevLog, `${activeBeast.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
 
-    setCurrentTurn('opponent');
-    
     setTimeout(() => {
       opponentAttack();
     }, 1500);
@@ -931,7 +927,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       newState.turn = 'player';
       
       // Check for battle end
-      const battleResult = checkBattleEnd();
+      const battleResult = checkBattleEnd(newState);
       if (battleResult === 'opponentWin') {
         setGameState('defeat');
         setBattleLog(prevLog => [...prevLog, 'Defeat! All your beasts have fallen...']);
@@ -944,7 +940,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
     setBattleLog(prevLog => [...prevLog, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
 
-    setCurrentTurn('player');
     updateCooldowns();
   };
 
@@ -1444,7 +1439,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           <div className="battle-controls">
             <div className="turn-indicator">
               {(() => {
-                if (currentTurn === 'player') {
+                if (combatState.turn === 'player') {
                   const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
                   if (selectedBeast) {
                     return `It's your turn, ${selectedBeast.customBeast.name}!`;
@@ -1463,11 +1458,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             {/* Action Buttons */}
             <div className="action-buttons">
               <motion.button
-                className={`action-btn basic-attack ${currentTurn !== 'player' ? 'disabled' : ''}`}
+                className={`action-btn basic-attack ${combatState.turn !== 'player' ? 'disabled' : ''}`}
                 onClick={basicAttack}
-                disabled={currentTurn !== 'player'}
-                whileHover={currentTurn === 'player' ? { scale: 1.05 } : {}}
-                whileTap={currentTurn === 'player' ? { scale: 0.95 } : {}}
+                disabled={combatState.turn !== 'player'}
+                whileHover={combatState.turn === 'player' ? { scale: 1.05 } : {}}
+                whileTap={combatState.turn === 'player' ? { scale: 0.95 } : {}}
               >
                 ⚔️ Basic Attack
               </motion.button>
@@ -1481,6 +1476,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                 }
                 
                 console.log('Selected beast abilities:', selectedBeast.customBeast.availableAbilities);
+                console.log('Combat state:', { selectedTarget: combatState.selectedTarget, currentTurn: combatState.turn });
                 
                 return selectedBeast.customBeast.availableAbilities?.map(ability => {
                   const cooldown = selectedBeast.abilityCooldowns.find(cd => cd.abilityId === ability.id);
@@ -1488,7 +1484,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                   const hasEnoughMana = selectedBeast.currentMana >= (ability.manaCost || 0);
                   const needsTarget = ability.type === 'attack' || ability.type === 'magicAttack' || ability.type === 'debuff';
                   const hasTarget = combatState.selectedTarget !== null;
-                  const canUse = currentTurn === 'player' && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
+                  const canUse = combatState.turn === 'player' && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
+
+                  // Debug logging for all abilities
+                  console.log(`Ability check for ${ability.name}:`, {
+                    abilityType: ability.type,
+                    currentTurn: combatState.turn, // Use combatState.turn instead
+                    isOnCooldown,
+                    hasEnoughMana,
+                    needsTarget,
+                    hasTarget,
+                    selectedTarget: combatState.selectedTarget,
+                    canUse
+                  });
 
                   return (
                     <motion.button
