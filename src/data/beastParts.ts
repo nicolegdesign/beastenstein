@@ -28,7 +28,7 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     name: 'Mountain Dragon Head',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-head.svg',
     type: 'head',
-    rarity: 'common',
+    rarity: 'legendary',
     statBonus: { magic: 3, attack: 1 },
     ability: ABILITIES.dragonBreath
   },
@@ -37,7 +37,7 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     name: 'Mountain Dragon Torso',
     imagePath: './images/beasts/mountain-dragon/mountain-dragon-torso.svg',
     type: 'torso',
-    rarity: 'common',
+    rarity: 'uncommon',
     statBonus: { defense: 4, health: 15 }
   },
   
@@ -47,7 +47,7 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     name: 'Wooden Puppet Head',
     imagePath: './images/beasts/wooden-puppet/wooden-puppet-head.svg',
     type: 'head',
-    rarity: 'common',
+    rarity: 'uncommon',
     statBonus: { defense: 2, health: 5 },
     ability: {
       id: 'splinter',
@@ -64,7 +64,7 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     name: 'Wooden Puppet Torso',
     imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg',
     type: 'torso',
-    rarity: 'common',
+    rarity: 'epic',
     statBonus: { defense: 5, health: 20 }
   }
 ];
@@ -87,7 +87,7 @@ export const ARM_SETS: EnhancedBeastPartSet[] = [
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-arm-r.svg',
     type: 'armSet',
-    rarity: 'common',
+    rarity: 'uncommon',
     statBonus: { attack: 3, magic: 1 },
     ability: ABILITIES.dragonClaw
   },
@@ -97,7 +97,7 @@ export const ARM_SETS: EnhancedBeastPartSet[] = [
     leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-l.svg',
     rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-arm-r.svg',
     type: 'armSet',
-    rarity: 'common',
+    rarity: 'uncommon',
     statBonus: { defense: 2, health: 10 },
     ability: {
       id: 'woodenStrike',
@@ -129,7 +129,7 @@ export const LEG_SETS: EnhancedBeastPartSet[] = [
     leftImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-l.svg',
     rightImagePath: './images/beasts/mountain-dragon/mountain-dragon-leg-r.svg',
     type: 'legSet',
-    rarity: 'common',
+    rarity: 'rare',
     statBonus: { speed: 2, attack: 2 },
     ability: ABILITIES.dragonLeap
   },
@@ -139,7 +139,7 @@ export const LEG_SETS: EnhancedBeastPartSet[] = [
     leftImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-l.svg',
     rightImagePath: './images/beasts/wooden-puppet/wooden-puppet-leg-r.svg',
     type: 'legSet',
-    rarity: 'common',
+    rarity: 'uncommon',
     statBonus: { defense: 3, speed: 1 },
     ability: {
       id: 'rootedStance',

@@ -213,8 +213,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
               transformOrigin: "50% 50%",
               width: '100%',
               height: '100%',
-              left: '-52%',
-              top: '-37%',
+              left: '-49%',
+              top: '-35%',
               zIndex: 0 // Behind everything
             }}
           />
