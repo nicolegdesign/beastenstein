@@ -29,16 +29,6 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
 }) => {
   const attackSoundRef = useRef<HTMLAudioElement>(null);
 
-  // Debug facing direction
-  useEffect(() => {
-    console.log('AnimatedCustomBeast facing:', facing);
-  }, [facing]);
-
-  // Debug styles applied
-  useEffect(() => {
-    console.log('CSS transform being applied:', facing === 'left' ? 'scaleX(-1)' : 'scaleX(1)');
-  }, [facing]);
-
   // Play attack sound when entering attack mode
   useEffect(() => {
     if (mood === 'attack' && attackSoundRef.current && soundEffectsEnabled) {

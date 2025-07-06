@@ -1421,7 +1421,6 @@ function App() {
       
       {inAdventure ? (
         <Adventure
-          currentBeastId={currentBeastId}
           playerStats={{
             ...getEnhancedCombatStats(currentBeastId),
             health: getEnhancedHealth(currentBeastId)
@@ -1429,6 +1428,7 @@ function App() {
           onClose={() => setInAdventure(false)}
           onUpdateExperience={updateBeastExperience}
           soundEffectsEnabled={gameOptions.soundEffectsEnabled}
+          beastData={beastData}
         />
       ) : (
         <>
