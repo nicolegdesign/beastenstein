@@ -30,8 +30,12 @@ const createDefaultInventory = (): BeastPartInventory => {
   ];
   
   partIds.forEach(id => {
-    parts[id] = 99; // Changed to 99 for testing
+    parts[id] = 0; // Start with 0, will be earned through gameplay
   });
+  
+  // Give the player some starting parts for initial beast creation
+  parts['nightwolf-head'] = 1;
+  parts['nightwolf-torso'] = 1;
   
   // Arm and leg sets
   const setIds = [
@@ -40,17 +44,24 @@ const createDefaultInventory = (): BeastPartInventory => {
   ];
   
   setIds.forEach(id => {
-    sets[id] = 99; // Changed to 99 for testing
+    sets[id] = 0; // Start with 0, will be earned through gameplay
   });
   
-  // Soul essences
+  // Give the player some starting sets for initial beast creation
+  sets['nightwolf-arms'] = 1;
+  sets['nightwolf-legs'] = 1;
+  
+  // Soul essences - start with realistic values
   const soulIds = [
     'dim-soul', 'glowing-soul', 'bright-soul', 'brilliant-soul', 'luminescent-soul'
   ];
   
   soulIds.forEach(id => {
-    soulEssences[id] = 99; // Changed to 99 for testing
+    soulEssences[id] = 0; // Start with 0, will be earned through gameplay
   });
+  
+  // Give the player a starting dim soul for their first beast creation
+  soulEssences['dim-soul'] = 1;
   
   return { parts, sets, soulEssences };
 };

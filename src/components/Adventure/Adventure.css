@@ -69,7 +69,7 @@
   flex-direction: column;
   align-items: center;
   flex: 1;
-  max-width: 500px;
+  max-width: 550px;
 }
 
 .beast-info {
@@ -1004,7 +1004,7 @@
   flex-direction: column;
   gap: 10px;
   width: 320px;
-  height: 320px;
+  height: 500px;
   padding: 10px;
   flex-direction: row;
 }

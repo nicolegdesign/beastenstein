@@ -254,8 +254,37 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           totalDefense += (randomTail.statBonus.defense || 0) * Math.floor(levelMultiplier);
         }
 
+        // Generate species name using same logic as getBeastSpecies in App.tsx
+        // Extract species from torso part image path (first word)
+        let torsoSpecies = '';
+        if (randomTorso.imagePath) {
+          const torsoFileName = randomTorso.imagePath.split('/').pop()?.replace(/\.(svg|png|jpg|jpeg)$/i, '') || '';
+          const torsoParts = torsoFileName.split('-');
+          if (torsoParts.length >= 1) {
+            torsoSpecies = torsoParts[0]; // "night-wolf-torso" -> "night"
+          }
+        }
+        
+        // Extract species from head part image path (second word)
+        let headSpecies = '';
+        if (randomHead.imagePath) {
+          const headFileName = randomHead.imagePath.split('/').pop()?.replace(/\.(svg|png|jpg|jpeg)$/i, '') || '';
+          const headParts = headFileName.split('-');
+          if (headParts.length >= 2) {
+            headSpecies = headParts[1]; // "night-wolf-head" -> "wolf"
+          }
+        }
+        
+        // Capitalize and combine like in App.tsx
+        let speciesName = 'Wild Beast'; // fallback
+        if (headSpecies && torsoSpecies) {
+          const capitalizedTorso = torsoSpecies.charAt(0).toUpperCase() + torsoSpecies.slice(1);
+          const capitalizedHead = headSpecies.charAt(0).toUpperCase() + headSpecies.slice(1);
+          speciesName = `${capitalizedTorso} ${capitalizedHead}`;
+        }
+
         const opponent: CustomBeast = {
-          name: 'Wild Beast',
+          name: speciesName,
           gender: Math.random() < 0.5 ? 'male' : 'female',
           head: {
             ...randomHead,
@@ -702,7 +731,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
   const handleVictory = () => {
     setGameState('victory');
-    setBattleLog(prev => [...prev, 'Victory! You defeated the wild beast!']);
+    setBattleLog(prev => [...prev, `Victory! You defeated the ${opponent?.name?.toLowerCase() || 'wild beast'}!`]);
     
     // Update adventure progress
     updateAdventureProgress(selectedLevel);
@@ -1181,7 +1210,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h3>Wild Beast (Level {opponentLevel})</h3>
+                <h3>{opponent?.name || 'Wild Beast'} (Level {opponentLevel})</h3>
                 <div className="opponent-stats-preview">
                   <div className="stat-preview">
                     <span className="stat-icon">⚔️</span>
@@ -1266,7 +1295,16 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                       }
                     }}
                   >
-                    <div className="beast-name">{beast.customBeast.name}</div>
+                    <div className="beast-name">
+                      {beast.customBeast.name}
+                      <span className="beast-level" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '8px' }}>Lvl {(() => {
+                        // Get the beast's level from beastData using the ordered beast IDs
+                        const orderedBeastIds = getOrderedBeastIds();
+                        const beastIndex = combatState.playerBeasts.findIndex(b => b.id === beast.id);
+                        const beastId = orderedBeastIds[beastIndex];
+                        return beastData && beastId && beastData[beastId] ? beastData[beastId].level : 1;
+                      })()}</span>
+                    </div>
                     <div className="health-bar">
                       <div 
                         className="health-fill player-health" 
@@ -1307,7 +1345,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         >
                           <AnimatedCustomBeast 
                             mood={playerAttacking && combatState.selectedPlayerBeast === beast.id ? "attack" : beast.isDefeated ? "laying" : "normal"} 
-                            size={150}
+                            size={200}
                             soundEffectsEnabled={soundEffectsEnabled}
                             customBeast={beast.customBeast}
                           />
@@ -1327,7 +1365,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         >
                           <AnimatedCustomBeast 
                             mood={playerAttacking && combatState.selectedPlayerBeast === beast.id ? "attack" : beast.isDefeated ? "laying" : "normal"} 
-                            size={150}
+                            size={200}
                             soundEffectsEnabled={soundEffectsEnabled}
                             customBeast={beast.customBeast}
                           />
@@ -1355,7 +1393,10 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                     }}
                     style={{ cursor: getTargetableBeasts(combatState.opponentBeasts).includes(beast) ? 'pointer' : 'not-allowed' }}
                   >
-                    <div className="beast-name">{beast.customBeast.name} (Lvl {opponentLevel})</div>
+                    <div className="beast-name">
+                      {beast.customBeast.name} 
+                      <span className="beast-level" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '8px' }}>Lvl {opponentLevel}</span>
+                    </div>
                     <div className="health-bar">
                       <div 
                         className="health-fill opponent-health" 
@@ -1393,7 +1434,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         >
                           <AnimatedCustomBeast 
                             mood={opponentAttacking ? "attack" : beast.isDefeated ? "laying" : "normal"} 
-                            size={150}
+                            size={200}
                             soundEffectsEnabled={soundEffectsEnabled}
                             customBeast={beast.customBeast}
                           />
@@ -1420,7 +1461,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         >
                           <AnimatedCustomBeast 
                             mood={opponentAttacking ? "attack" : beast.isDefeated ? "laying" : "normal"} 
-                            size={150}
+                            size={200}
                             soundEffectsEnabled={soundEffectsEnabled}
                             customBeast={beast.customBeast}
                           />

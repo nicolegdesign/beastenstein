@@ -13,7 +13,7 @@ import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
 import { IntroStory } from './components/IntroStory/IntroStory';
 import { BeastSelection } from './components/BeastSelection/BeastSelection';
-import { InventoryProvider } from './contexts/InventoryContext';
+import { InventoryProvider, useInventoryContext } from './contexts/InventoryContext';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
@@ -82,6 +82,15 @@ interface CustomBeastData {
 }
 
 function App() {
+  return (
+    <InventoryProvider>
+      <AppContent />
+    </InventoryProvider>
+  );
+}
+
+function AppContent() {
+  const { setInventory: setBeastPartInventory } = useInventoryContext();
   // Game flow state
   const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
     // Check if this is a first-time user
@@ -1130,16 +1139,42 @@ function App() {
       setCurrentBeastId(firstRemainingBeast);
     }
     
+    // Add a Dim Soul to inventory as a reward for releasing the beast
+    setInventoryItems(prevItems => {
+      const updatedItems = prevItems.map(item => {
+        if (item.id === 'dim-soul') {
+          return { ...item, quantity: item.quantity + 1 };
+        }
+        return item;
+      });
+      
+      // Save to localStorage
+      localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+    
+    // Also add a Dim Soul to the beast part inventory (used by Mausoleum)
+    setBeastPartInventory(prevInventory => {
+      const updatedInventory = {
+        ...prevInventory,
+        soulEssences: {
+          ...prevInventory.soulEssences,
+          'dim-soul': (prevInventory.soulEssences['dim-soul'] || 0) + 1
+        }
+      };
+      return updatedInventory;
+    });
+    
     // Trigger sidebar refresh to update the beast list
     setSidebarRefreshTrigger(prev => prev + 1);
     
     // Show confirmation message
     setToast({
-      message: `${beastName} has been released to the wild 🌿`,
+      message: `${beastName} has been released to the wild 🌿 You received a Dim Soul!`,
       show: true,
       type: 'info'
     });
-  }, [currentBeastId, currentBeastData, beastData, setBeastData, setSidebarRefreshTrigger, setToast]);
+  }, [currentBeastId, currentBeastData, beastData, setBeastData, setSidebarRefreshTrigger, setToast, setBeastPartInventory]);
 
   const handlePlay = useCallback(() => {
     play();
@@ -1303,7 +1338,6 @@ function App() {
   };
 
   return (
-    <InventoryProvider>
       <div className="App">
         {/* Intro Story Screen */}
         {gameState === 'intro' && (
@@ -1551,7 +1585,6 @@ function App() {
           </>
         )}
       </div>
-    </InventoryProvider>
   );
 }
 
