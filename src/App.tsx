@@ -26,7 +26,7 @@ import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import type { Personality } from './data/personalities';
 import { createBeastFromTemplate } from './data/beastTemplates';
-import { getMaxLevelFromSoul } from './data/soulEssences';
+import { getMaxLevelFromSoul, getSoulStatMultiplier } from './data/soulEssences';
 import { getPartsByBeastType, findExtraLimbById } from './data/beastParts';
 import './App.css';
 
@@ -758,9 +758,23 @@ function AppContent() {
   useEffect(() => {
     // Don't trigger level up animation on initial load or if previous level is invalid or no beast data
     if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0 && currentBeastData) {
+      // Get the soul essence multiplier for this beast
+      let soulMultiplier = 1; // Default multiplier
+      try {
+        const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
+        if (customBeastData) {
+          const customBeast = JSON.parse(customBeastData);
+          if (customBeast.soulEssence?.id) {
+            soulMultiplier = getSoulStatMultiplier(customBeast.soulEssence.id);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get soul multiplier:', error);
+      }
+      
       setShowLevelUp(true);
       setToast({
-        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}! (+1 to all stats, +10 health)`,
+        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}! (+${soulMultiplier} to all stats, +10 health)`,
         show: true,
         type: 'success'
       });
@@ -774,10 +788,10 @@ function AppContent() {
         });
       }
       
-      // Increase all combat stats by 1 for each level gained, and health by 10
+      // Increase all combat stats based on soul essence rarity
       const levelsGained = stats.level - previousLevel;
-      const statIncrease = levelsGained * 1; // +1 per level
-      const healthIncrease = levelsGained * 10; // +10 health per level
+      const statIncrease = levelsGained * soulMultiplier; // Base +1 per level, multiplied by soul rarity
+      const healthIncrease = levelsGained * 10; // +10 health per level (unchanged)
       
       setBeastData(prev => {
         const updatedData = {

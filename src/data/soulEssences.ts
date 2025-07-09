@@ -58,3 +58,24 @@ export const getMaxLevelFromSoul = (soulId: string): number => {
   const soul = findSoulEssenceById(soulId);
   return soul?.maxLevel || 5; // Default to dim soul level
 };
+
+// Get the stat bonus multiplier for level ups based on soul essence rarity
+export const getSoulStatMultiplier = (soulId: string): number => {
+  const soul = findSoulEssenceById(soulId);
+  if (!soul) return 1; // Default to 1 if soul not found
+  
+  switch (soul.rarity) {
+    case 'common':     // dim-soul
+      return 1;
+    case 'uncommon':   // glowing-soul
+      return 2;
+    case 'rare':       // bright-soul
+      return 3;
+    case 'epic':       // brilliant-soul
+      return 4;
+    case 'legendary':  // luminescent-soul
+      return 5;
+    default:
+      return 1;
+  }
+};
