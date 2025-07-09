@@ -90,6 +90,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const [droppedLoot, setDroppedLoot] = useState<LootItem | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
   
+  // Enhanced experience tracking for victory screen
+  const [victoryData, setVictoryData] = useState<{
+    teamBeasts: Array<{
+      beastId: string;
+      beast: CustomBeast;
+      expGained: number;
+      oldLevel: number;
+      newLevel: number;
+      leveledUp: boolean;
+    }>;
+    totalExpGained: number;
+  } | null>(null);
+  
   // Animation states for attack visuals
   const [playerAttacking, setPlayerAttacking] = useState<boolean>(false);
   const [opponentAttacking, setOpponentAttacking] = useState<boolean>(false);
@@ -500,6 +513,23 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     return defeatedLevel * 50; // 50 XP per opponent level
   };
 
+  // Helper function to check if adding experience would cause a level up
+  const checkLevelUp = (currentLevel: number, currentExp: number, expToAdd: number): { newLevel: number; leveledUp: boolean } => {
+    let level = currentLevel;
+    let exp = currentExp + expToAdd;
+    
+    // Keep checking if we can level up (matches useBeastStats logic)
+    while (exp >= (level * 100)) {
+      exp -= (level * 100);
+      level++;
+    }
+    
+    return {
+      newLevel: level,
+      leveledUp: level > currentLevel
+    };
+  };
+
   // Get current experience from main beastData storage for a specific beast
   const getCurrentExperienceForBeast = (beastId: string): number => {
     try {
@@ -767,17 +797,52 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     
     console.log('Victory! Distributing experience:', totalExpGained, 'total,', expPerBeast, 'per beast');
     
-    // Give experience to all participating beasts
+    // Collect detailed experience information for victory screen
+    const teamVictoryData: Array<{
+      beastId: string;
+      beast: CustomBeast;
+      expGained: number;
+      oldLevel: number;
+      newLevel: number;
+      leveledUp: boolean;
+    }> = [];
+    
+    // Give experience to all participating beasts and track level changes
     let totalDistributedExp = 0;
     for (let i = 0; i < combatState.playerBeasts.length; i++) {
       const beastId = orderedBeastIds[i];
-      if (beastId) {
-        const success = onUpdateExperience(beastId, getCurrentExperienceForBeast(beastId) + expPerBeast);
+      const battleBeast = combatState.playerBeasts[i];
+      
+      if (beastId && battleBeast) {
+        // Get current level and experience from beastData
+        const currentBeastData = beastData ? beastData[beastId] : null;
+        const oldLevel = currentBeastData ? currentBeastData.level : 1;
+        const currentExp = getCurrentExperienceForBeast(beastId);
+        
+        // Calculate what the new level would be after adding experience
+        const { newLevel, leveledUp } = checkLevelUp(oldLevel, currentExp, expPerBeast);
+        
+        const success = onUpdateExperience(beastId, currentExp + expPerBeast);
         if (success) {
           totalDistributedExp += expPerBeast;
+          
+          teamVictoryData.push({
+            beastId,
+            beast: battleBeast.customBeast,
+            expGained: expPerBeast,
+            oldLevel,
+            newLevel,
+            leveledUp
+          });
         }
       }
     }
+    
+    // Set victory data for the enhanced victory screen
+    setVictoryData({
+      teamBeasts: teamVictoryData,
+      totalExpGained: totalDistributedExp
+    });
     
     setExperienceGained(totalDistributedExp);
     setBattleLog(prev => [...prev, `Your team gained ${totalDistributedExp} experience total!`]);
@@ -994,6 +1059,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       setBattleLog(['Error: No beasts available for battle!']);
       return;
     }
+
+    // Reset victory data for new battle
+    setVictoryData(null);
 
     // Create battle beasts for each player beast
     const playerBattleBeasts: BattleBeast[] = [];
@@ -1587,7 +1655,65 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           >
             {gameState === 'victory' ? '🎉 Victory!' : '💀 Defeat!'}
           </motion.div>
-          {gameState === 'victory' && experienceGained > 0 && (
+          
+          {gameState === 'victory' && victoryData && (
+            <motion.div 
+              className="victory-details"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <h3 className="victory-subtitle">Your Victorious Team</h3>
+              <div className="victory-team-grid">
+                {victoryData.teamBeasts.map((beastData, index) => (
+                  <motion.div
+                    key={beastData.beastId}
+                    className="victory-beast-card"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                  >
+                    <div className="victory-beast-visual">
+                      <AnimatedCustomBeast 
+                        mood="happy" 
+                        size={120}
+                        soundEffectsEnabled={false}
+                        customBeast={beastData.beast}
+                      />
+                    </div>
+                    <div className="victory-beast-info">
+                      <h4 className="victory-beast-name">{beastData.beast.name}</h4>
+                      <div className="victory-exp-info">
+                        <div className="exp-gained">+{beastData.expGained} EXP</div>
+                        <div className="level-info">
+                          Level {beastData.oldLevel}
+                          {beastData.leveledUp && (
+                            <>
+                              {' → '}
+                              <span className="level-up">Level {beastData.newLevel}</span>
+                            </>
+                          )}
+                        </div>
+                        {beastData.leveledUp && (
+                          <div className="level-up-badge">LEVEL UP!</div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              <div className="victory-summary">
+                <div className="total-exp">Total Team Experience: +{victoryData.totalExpGained} EXP</div>
+                {victoryData.teamBeasts.some(b => b.leveledUp) && (
+                  <div className="level-ups-count">
+                    {victoryData.teamBeasts.filter(b => b.leveledUp).length} beast{victoryData.teamBeasts.filter(b => b.leveledUp).length > 1 ? 's' : ''} leveled up!
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+          
+          {gameState === 'victory' && !victoryData && experienceGained > 0 && (
             <motion.div 
               className="experience-gained"
               initial={{ opacity: 0, y: 20 }}
@@ -1597,12 +1723,16 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               +{experienceGained} XP Gained!
             </motion.div>
           )}
+          
           {gameState === 'victory' ? (
             <motion.button
               className="result-btn"
               onClick={proceedToLoot}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
             >
               Claim Loot
             </motion.button>
