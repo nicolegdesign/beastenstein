@@ -26,7 +26,7 @@ import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import type { Personality } from './data/personalities';
 import { createBeastFromTemplate } from './data/beastTemplates';
-import { getMaxLevelFromSoul, getSoulStatMultiplier } from './data/soulEssences';
+import { getMaxLevelFromSoul, getSoulStatMultiplier, findSoulEssenceById } from './data/soulEssences';
 import { getPartsByBeastType, findExtraLimbById } from './data/beastParts';
 import './App.css';
 
@@ -983,7 +983,7 @@ function AppContent() {
     // Play adventure sound effect
     if (adventureSoundRef.current && gameOptions.soundEffectsEnabled) {
       adventureSoundRef.current.currentTime = 0;
-      adventureSoundRef.current.volume = 0.8;
+      adventureSoundRef.current.volume = 0.1;
       adventureSoundRef.current.play().catch(error => {
         console.log('Could not play adventure sound:', error);
       });
@@ -1542,6 +1542,47 @@ function AppContent() {
                   <span className="stat-label">Health</span>
                   <span className="stat-value">{getEnhancedHealth(currentBeastId)}</span>
                 </div>
+              </div>
+              
+              {/* Soul Essence Display */}
+              <div className="soul-essence-display">
+                <h5 className="soul-essence-title">Soul Essence</h5>
+                {(() => {
+                  let soulEssence = null;
+                  
+                  try {
+                    const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
+                    if (customBeastData) {
+                      const customBeast = JSON.parse(customBeastData);
+                      if (customBeast.soulEssence?.id) {
+                        soulEssence = findSoulEssenceById(customBeast.soulEssence.id);
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Failed to get soul essence:', error);
+                  }
+                  
+                  if (soulEssence) {
+                    return (
+                      <div className="soul-essence-info">
+                        <div className="soul-essence-icon">
+                          <img src={soulEssence.imagePath} alt={soulEssence.name} />
+                        </div>
+                        <div className="soul-essence-details">
+                          <div className="soul-essence-name">{soulEssence.name}</div>
+                          <div className={`soul-essence-rarity ${soulEssence.rarity}`}>{soulEssence.rarity}</div>
+                          <div className="soul-essence-level-cap">Max Level: {soulEssence.maxLevel}</div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div className="soul-essence-info">
+                      <div className="soul-essence-name">No Soul</div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

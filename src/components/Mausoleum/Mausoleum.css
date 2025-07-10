@@ -70,6 +70,9 @@
   font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .mausoleum-close-btn:hover {
@@ -266,7 +269,7 @@
 
 .part-option {
   max-width: 190px;
-  max-height: 190px;
+  max-height: 200px;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid transparent;
   border-radius: 10px;

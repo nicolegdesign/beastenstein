@@ -1242,6 +1242,25 @@
   font-weight: 500;
 }
 
+.max-level-indicator {
+  color: #8b5cf6;
+  font-weight: bold;
+  font-size: 0.8em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.max-level-badge {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: maxLevelGlow 3s infinite;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
 
 @keyframes levelUpPulse {
   0%, 100% { 
@@ -1251,6 +1270,17 @@
   50% { 
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(251, 191, 36, 0.6);
+  }
+}
+
+@keyframes maxLevelGlow {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.6);
   }
 }
 
@@ -1275,6 +1305,14 @@
   color: #fbbf24;
   font-weight: bold;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Wasted experience indicator */
+.exp-wasted {
+  color: #ef4444;
+  font-size: 0.8em;
+  font-weight: normal;
+  opacity: 0.8;
 }
 
 /* Responsive adjustments */

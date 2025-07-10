@@ -98,7 +98,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       expGained: number;
       oldLevel: number;
       newLevel: number;
+      maxLevel: number;
       leveledUp: boolean;
+      isAtMaxLevel: boolean;
     }>;
     totalExpGained: number;
   } | null>(null);
@@ -514,12 +516,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   };
 
   // Helper function to check if adding experience would cause a level up
-  const checkLevelUp = (currentLevel: number, currentExp: number, expToAdd: number): { newLevel: number; leveledUp: boolean } => {
+  const checkLevelUp = (currentLevel: number, currentExp: number, expToAdd: number, maxLevel: number): { newLevel: number; leveledUp: boolean } => {
     let level = currentLevel;
     let exp = currentExp + expToAdd;
     
-    // Keep checking if we can level up (matches useBeastStats logic)
-    while (exp >= (level * 100)) {
+    // Keep checking if we can level up (matches useBeastStats logic) but respect max level
+    while (exp >= (level * 100) && level < maxLevel) {
       exp -= (level * 100);
       level++;
     }
@@ -804,7 +806,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       expGained: number;
       oldLevel: number;
       newLevel: number;
+      maxLevel: number;
       leveledUp: boolean;
+      isAtMaxLevel: boolean;
     }> = [];
     
     // Give experience to all participating beasts and track level changes
@@ -818,9 +822,10 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         const currentBeastData = beastData ? beastData[beastId] : null;
         const oldLevel = currentBeastData ? currentBeastData.level : 1;
         const currentExp = getCurrentExperienceForBeast(beastId);
+        const maxLevel = currentBeastData ? currentBeastData.maxLevel : 5; // Default to 5 if not found
         
         // Calculate what the new level would be after adding experience
-        const { newLevel, leveledUp } = checkLevelUp(oldLevel, currentExp, expPerBeast);
+        const { newLevel, leveledUp } = checkLevelUp(oldLevel, currentExp, expPerBeast, maxLevel);
         
         const success = onUpdateExperience(beastId, currentExp + expPerBeast);
         if (success) {
@@ -832,7 +837,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             expGained: expPerBeast,
             oldLevel,
             newLevel,
-            leveledUp
+            maxLevel,
+            leveledUp,
+            isAtMaxLevel: newLevel >= maxLevel
           });
         }
       }
@@ -1684,7 +1691,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                     <div className="victory-beast-info">
                       <h4 className="victory-beast-name">{beastData.beast.name}</h4>
                       <div className="victory-exp-info">
-                        <div className="exp-gained">+{beastData.expGained} EXP</div>
+                        <div className="exp-gained">
+                          +{beastData.expGained} EXP
+                          {beastData.isAtMaxLevel && !beastData.leveledUp && (
+                            <span className="exp-wasted"> (Wasted)</span>
+                          )}
+                        </div>
                         <div className="level-info">
                           Level {beastData.oldLevel}
                           {beastData.leveledUp && (
@@ -1693,9 +1705,15 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                               <span className="level-up">Level {beastData.newLevel}</span>
                             </>
                           )}
+                          {beastData.isAtMaxLevel && (
+                            <span className="max-level-indicator"> (MAX)</span>
+                          )}
                         </div>
                         {beastData.leveledUp && (
                           <div className="level-up-badge">LEVEL UP!</div>
+                        )}
+                        {beastData.isAtMaxLevel && !beastData.leveledUp && (
+                          <div className="max-level-badge">MAX LEVEL REACHED</div>
                         )}
                       </div>
                     </div>

@@ -34,8 +34,8 @@ const createDefaultInventory = (): BeastPartInventory => {
   });
   
   // Give the player some starting parts for initial beast creation
-  parts['nightwolf-head'] = 1;
-  parts['nightwolf-torso'] = 1;
+  parts['woodenpuppet-head'] = 1;
+  parts['woodenpuppet-torso'] = 1;
   
   // Arm and leg sets
   const setIds = [
@@ -48,8 +48,8 @@ const createDefaultInventory = (): BeastPartInventory => {
   });
   
   // Give the player some starting sets for initial beast creation
-  sets['nightwolf-arms'] = 1;
-  sets['nightwolf-legs'] = 1;
+  sets['woodenpuppet-arms'] = 1;
+  sets['woodenpuppet-legs'] = 1;
   
   // Soul essences - start with realistic values
   const soulIds = [
