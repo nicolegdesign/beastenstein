@@ -54,7 +54,9 @@ interface BattleBeast {
 interface CombatState {
   playerBeasts: BattleBeast[];
   opponentBeasts: BattleBeast[];
-  turn: 'player' | 'opponent';
+  turnOrder: string[]; // Array of beast IDs in speed order
+  currentTurnIndex: number; // Index in turnOrder array
+  currentRound: number; // Current round number
   selectedPlayerBeast: string | null; // ID of currently selected player beast
   selectedTarget: string | null; // ID of target opponent beast
 }
@@ -161,7 +163,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const [combatState, setCombatState] = useState<CombatState>({
     playerBeasts: [],
     opponentBeasts: [],
-    turn: 'player',
+    turnOrder: [],
+    currentTurnIndex: 0,
+    currentRound: 1,
     selectedPlayerBeast: null,
     selectedTarget: null
   });
@@ -495,11 +499,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     return beasts.filter(b => !b.isDefeated && (b.position === 'backLeft' || b.position === 'backRight'));
   };
 
-  const getActiveBeast = (beasts: BattleBeast[], selectedId: string | null): BattleBeast | null => {
-    if (!selectedId) return beasts.find(b => !b.isDefeated) || null;
-    return beasts.find(b => b.id === selectedId && !b.isDefeated) || null;
-  };
-
   const checkBattleEnd = (state?: CombatState): 'playerWin' | 'opponentWin' | 'continue' => {
     const currentState = state || combatState;
     const playerAlive = currentState.playerBeasts.some(b => !b.isDefeated);
@@ -578,14 +577,102 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     };
   };
 
+  // New turn-based system helper functions
+  const calculateTurnOrder = (playerBeasts: BattleBeast[], opponentBeasts: BattleBeast[]): string[] => {
+    const allBeasts = [...playerBeasts, ...opponentBeasts]
+      .filter(beast => !beast.isDefeated)
+      .map(beast => ({
+        id: beast.id,
+        speed: getEffectiveStats(beast).speed,
+        name: beast.customBeast.name // For debugging
+      }))
+      .sort((a, b) => b.speed - a.speed); // Sort by speed descending (fastest first)
+    
+    console.log('Turn order calculated:', allBeasts.map(b => `${b.name} (${b.speed} speed)`));
+    return allBeasts.map(beast => beast.id);
+  };
+
+  const getCurrentTurnBeast = (state: CombatState): BattleBeast | null => {
+    if (state.turnOrder.length === 0 || state.currentTurnIndex >= state.turnOrder.length) {
+      return null;
+    }
+    
+    const currentBeastId = state.turnOrder[state.currentTurnIndex];
+    const allBeasts = [...state.playerBeasts, ...state.opponentBeasts];
+    return allBeasts.find(beast => beast.id === currentBeastId && !beast.isDefeated) || null;
+  };
+
+  const isPlayerTurn = (state: CombatState): boolean => {
+    const currentBeast = getCurrentTurnBeast(state);
+    return currentBeast ? state.playerBeasts.some(beast => beast.id === currentBeast.id) : false;
+  };
+
+  const advanceTurn = (): void => {
+    setCombatState(prev => {
+      let newTurnIndex = prev.currentTurnIndex + 1;
+      let newRound = prev.currentRound;
+      let newTurnOrder = prev.turnOrder;
+
+      // If we've gone through all beasts in the turn order, start a new round
+      if (newTurnIndex >= prev.turnOrder.length) {
+        newTurnIndex = 0;
+        newRound = prev.currentRound + 1;
+        // Recalculate turn order in case beasts have been defeated or speed has changed
+        newTurnOrder = calculateTurnOrder(prev.playerBeasts, prev.opponentBeasts);
+        
+        console.log(`Starting round ${newRound}`);
+        
+        // If turn order is empty (all beasts defeated), battle should end
+        if (newTurnOrder.length === 0) {
+          return prev; // Don't advance turn if battle is over
+        }
+      }
+
+      // Skip defeated beasts
+      while (newTurnIndex < newTurnOrder.length) {
+        const nextBeastId = newTurnOrder[newTurnIndex];
+        const allBeasts = [...prev.playerBeasts, ...prev.opponentBeasts];
+        const nextBeast = allBeasts.find(beast => beast.id === nextBeastId);
+        
+        if (nextBeast && !nextBeast.isDefeated) {
+          break; // Found a valid beast for the next turn
+        }
+        
+        newTurnIndex++;
+      }
+
+      // If we still don't have a valid turn, start a new round
+      if (newTurnIndex >= newTurnOrder.length) {
+        newTurnIndex = 0;
+        newRound++;
+        newTurnOrder = calculateTurnOrder(prev.playerBeasts, prev.opponentBeasts);
+      }
+
+      const newState = {
+        ...prev,
+        currentTurnIndex: newTurnIndex,
+        currentRound: newRound,
+        turnOrder: newTurnOrder
+      };
+
+      const currentBeast = getCurrentTurnBeast(newState);
+      console.log(`Turn ${newTurnIndex + 1}: ${currentBeast?.customBeast.name || 'Unknown'} (${isPlayerTurn(newState) ? 'Player' : 'AI'})`);
+
+      return newState;
+    });
+  };
+
   // Enhanced combat functions with abilities for multi-beast system
   const castAbility = (ability: Ability, targetId?: string) => { 
-    if (combatState.turn !== 'player' || gameState !== 'battle') {
+    // Check if it's currently a player beast's turn and the game is in battle state
+    if (gameState !== 'battle' || !isPlayerTurn(combatState)) {
       return;
     }
 
-    const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
-    if (!activeBeast) return;
+    const currentBeast = getCurrentTurnBeast(combatState);
+    if (!currentBeast) return;
+
+    const activeBeast = currentBeast;
 
     if (activeBeast.currentMana < (ability.manaCost || 0)) {
       setBattleLog(prev => [...prev, `${activeBeast.customBeast.name} doesn't have enough mana to use ${ability.name}! (Need ${ability.manaCost})`]);
@@ -645,19 +732,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     // Pre-calculate mana consumption
     casterManaAfterUse = Math.max(0, activeBeast.currentMana - (ability.manaCost || 0));
     
-    // Immediately set turn to 'opponent' to prevent double execution
+    // Apply ability effects using setCombatState
     setCombatState(prev => {
-      // Early exit if not player's turn (double-click protection)
-      if (prev.turn !== 'player') return prev;
+      // Early exit if it's not a player's turn (double-click protection)
+      if (!isPlayerTurn(prev)) return prev;
       
       // Idempotency check: verify if this update has already been applied
       const currentBeast = prev.playerBeasts.find(b => b.id === activeBeast.id);
       if (currentBeast && currentBeast.currentMana === casterManaAfterUse) {
         // If mana is already at the expected value, this update was already applied
-        return { ...prev, turn: 'opponent' as const };
+        return prev;
       }
       
-      const newState = { ...prev, turn: 'opponent' as const };
+      const newState = { ...prev };
       
       // Update the active beast's mana and cooldowns
       const beastIndex = newState.playerBeasts.findIndex(b => b.id === activeBeast.id);
@@ -748,17 +835,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       });
     }
 
-    // Check for victory and proceed with next turn after a delay
+    // Check for victory and advance turn after a delay
     setTimeout(() => {
       const finalBattleResult = checkBattleEnd();
       if (finalBattleResult === 'playerWin') {
         handleVictory();
-      } else if (finalBattleResult === 'continue') {
-        // Only proceed with opponent attack if battle is still ongoing
-        opponentAttack();
+      } else if (finalBattleResult === 'opponentWin') {
+        setGameState('defeat');
+        setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+      } else {
+        // Battle continues, advance to next turn
+        advanceTurn();
       }
-      // If finalBattleResult === 'opponentWin', the game should have already transitioned to defeat
-    }, 1500); // Use the same delay as opponent attack
+    }, 1500);
   };
 
   const handleVictory = () => {
@@ -891,10 +980,22 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
   // Basic attack function for multi-beast system
   const basicAttack = () => {
-    const activeBeast = getActiveBeast(combatState.playerBeasts, combatState.selectedPlayerBeast);
+    // Check if it's currently a player beast's turn and the game is in battle state
+    if (gameState !== 'battle' || !isPlayerTurn(combatState)) {
+      return;
+    }
+
+    const currentBeast = getCurrentTurnBeast(combatState);
+    if (!currentBeast) return;
+
+    // Ensure the current turn beast is a player beast
+    const isCurrentBeastPlayerBeast = combatState.playerBeasts.some(b => b.id === currentBeast.id);
+    if (!isCurrentBeastPlayerBeast) return;
+
+    const activeBeast = currentBeast;
     const targetableBeasts = getTargetableBeasts(combatState.opponentBeasts);
     
-    if (!activeBeast || targetableBeasts.length === 0) {
+    if (targetableBeasts.length === 0) {
       return;
     }
     
@@ -906,12 +1007,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     const targetEffectiveStats = getEffectiveStats(target);
     const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
 
-    // Immediately set turn to 'opponent' to prevent double execution
+    // Apply damage to target
     setCombatState(prev => {
       // Early exit if not player's turn (double-click protection)
-      if (prev.turn !== 'player') return prev;
+      if (!isPlayerTurn(prev)) return prev;
       
-      const newState = { ...prev, turn: 'opponent' as const };
+      const newState = { ...prev };
       const targetIndex = newState.opponentBeasts.findIndex(b => b.id === target.id);
       
       newState.opponentBeasts[targetIndex] = {
@@ -932,17 +1033,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     setPlayerAttacking(true);
     setTimeout(() => setPlayerAttacking(false), 1200);
 
-    // Check for victory and proceed with next turn after a delay
+    // Check for victory and advance turn after a delay
     setTimeout(() => {
       const battleResult = checkBattleEnd();
       if (battleResult === 'playerWin') {
         handleVictory();
-      } else if (battleResult === 'continue') {
-        // Only proceed with opponent attack if battle is still ongoing
-        opponentAttack();
+      } else if (battleResult === 'opponentWin') {
+        setGameState('defeat');
+        setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+      } else {
+        // Battle continues, advance to next turn
+        advanceTurn();
       }
-      // If battleResult === 'opponentWin', the game should have already transitioned to defeat
-    }, 1500); // Use the same delay as opponent attack
+    }, 1500);
   };
 
   const updateCooldowns = () => {
@@ -992,59 +1095,95 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     });
   };
 
-  const opponentAttack = () => {
-    if (gameState !== 'battle') return;
+  // Auto-process AI turns
+  useEffect(() => {
+    const processAITurn = () => {
+      if (gameState !== 'battle') return;
 
-    const activeOpponentBeasts = combatState.opponentBeasts.filter(b => !b.isDefeated);
-    const targetablePlayerBeasts = getTargetableBeasts(combatState.playerBeasts);
-    
-    if (activeOpponentBeasts.length === 0 || targetablePlayerBeasts.length === 0) return;
-    
-    // Simple AI: first active opponent attacks first targetable player beast
-    const attacker = activeOpponentBeasts[0];
-    const target = targetablePlayerBeasts[0];
-
-    setOpponentAttacking(true);
-    setTimeout(() => setOpponentAttacking(false), 1200);
-
-    const attackerEffectiveStats = getEffectiveStats(attacker);
-    const targetEffectiveStats = getEffectiveStats(target);
-    const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
-    
-    setCombatState(prev => {
-      const newState = { ...prev };
-      const targetIndex = newState.playerBeasts.findIndex(b => b.id === target.id);
-      
-      newState.playerBeasts[targetIndex] = {
-        ...newState.playerBeasts[targetIndex],
-        currentHealth: Math.max(0, target.currentHealth - damage)
-      };
-      
-      if (newState.playerBeasts[targetIndex].currentHealth <= 0) {
-        newState.playerBeasts[targetIndex].isDefeated = true;
+      const currentBeast = getCurrentTurnBeast(combatState);
+      if (!currentBeast || isPlayerTurn(combatState)) {
+        return; // Not an AI turn
       }
-      
-      newState.turn = 'player';
-      
-      return newState;
-    });
 
-    // Add battle log messages outside of setState to prevent double execution
-    setBattleLog(prev => [...prev, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
-    
-    // Check for battle end after state update
-    setTimeout(() => {
-      const battleResult = checkBattleEnd();
-      if (battleResult === 'opponentWin') {
-        setGameState('defeat');
-        setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
-      } else if (battleResult === 'playerWin') {
-        handleVictory();
+      const targetablePlayerBeasts = getTargetableBeasts(combatState.playerBeasts);
+      
+      if (targetablePlayerBeasts.length === 0) return;
+      
+      // Simple AI: attack first targetable player beast
+      const attacker = currentBeast;
+      const target = targetablePlayerBeasts[0];
+
+      setOpponentAttacking(true);
+      setTimeout(() => setOpponentAttacking(false), 1200);
+
+      const attackerEffectiveStats = getEffectiveStats(attacker);
+      const targetEffectiveStats = getEffectiveStats(target);
+      const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
+      
+      setCombatState(prev => {
+        const newState = { ...prev };
+        const targetIndex = newState.playerBeasts.findIndex(b => b.id === target.id);
+        
+        newState.playerBeasts[targetIndex] = {
+          ...newState.playerBeasts[targetIndex],
+          currentHealth: Math.max(0, target.currentHealth - damage)
+        };
+        
+        if (newState.playerBeasts[targetIndex].currentHealth <= 0) {
+          newState.playerBeasts[targetIndex].isDefeated = true;
+        }
+        
+        return newState;
+      });
+
+      // Add battle log messages outside of setState to prevent double execution
+      setBattleLog(prev => [...prev, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+      
+      // Check for battle end and advance turn after state update
+      setTimeout(() => {
+        const battleResult = checkBattleEnd();
+        if (battleResult === 'opponentWin') {
+          setGameState('defeat');
+          setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+        } else if (battleResult === 'playerWin') {
+          handleVictory();
+        } else {
+          // Battle continues, advance to next turn
+          advanceTurn();
+        }
+      }, 1500);
+
+      updateCooldowns();
+    };
+
+    if (gameState === 'battle' && !isPlayerTurn(combatState)) {
+      const currentBeast = getCurrentTurnBeast(combatState);
+      if (currentBeast && !currentBeast.isDefeated) {
+        // Delay AI action to make it feel more natural
+        const timeoutId = setTimeout(() => {
+          processAITurn();
+        }, 1000);
+        
+        return () => clearTimeout(timeoutId);
       }
-    }, 100); // Small delay to ensure state has updated
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, combatState.currentTurnIndex, combatState.turnOrder]);
 
-    updateCooldowns();
-  };
+  // Auto-select the beast whose turn it is
+  useEffect(() => {
+    if (gameState === 'battle') {
+      const currentBeast = getCurrentTurnBeast(combatState);
+      if (currentBeast && isPlayerTurn(combatState)) {
+        // Only auto-select if it's a player beast's turn
+        setCombatState(prev => ({
+          ...prev,
+          selectedPlayerBeast: currentBeast.id
+        }));
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, combatState.currentTurnIndex, combatState.turnOrder]);
 
   const proceedToLoot = () => {
     setGameState('loot');
@@ -1123,17 +1262,35 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       'frontLeft'
     );
 
-    // Reset battle state with all player beasts
+    // Reset battle state with all player beasts and calculate initial turn order
+    const allBattleBeasts = [...playerBattleBeasts, opponentBattleBeast];
+    const initialTurnOrder = allBattleBeasts
+      .map(beast => ({
+        id: beast.id,
+        speed: getEffectiveStats(beast).speed,
+        name: beast.customBeast.name
+      }))
+      .sort((a, b) => b.speed - a.speed) // Sort by speed descending (fastest first)
+      .map(beast => beast.id);
+
+    console.log('Initial turn order:', allBattleBeasts.map(b => `${b.customBeast.name} (${getEffectiveStats(b).speed} speed)`));
+
     setCombatState({
       playerBeasts: playerBattleBeasts,
       opponentBeasts: [opponentBattleBeast],
-      turn: 'player',
+      turnOrder: initialTurnOrder,
+      currentTurnIndex: 0,
+      currentRound: 1,
       selectedPlayerBeast: playerBattleBeasts[0]?.id || null,
       selectedTarget: null
     });
     
-    // Reset battle log
-    setBattleLog([`Battle begins with ${playerBattleBeasts.length} beast${playerBattleBeasts.length > 1 ? 's' : ''}! You move first!`]);
+    // Reset battle log with information about turn order
+    const firstBeast = allBattleBeasts.find(b => b.id === initialTurnOrder[0]);
+    setBattleLog([
+      `Battle begins with ${playerBattleBeasts.length} beast${playerBattleBeasts.length > 1 ? 's' : ''}!`,
+      `${firstBeast?.customBeast.name || 'Unknown'} goes first!`
+    ]);
     
     // Start the battle
     setGameState('battle');
@@ -1360,52 +1517,59 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             <div className="beast-container player-beast">
               <div className="beast-info">
                 <h3>Your Team</h3>
-                {combatState.playerBeasts.map((beast) => (
-                  <div 
-                    key={beast.id} 
-                    className={`beast-card ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedPlayerBeast === beast.id ? 'selected' : ''}`}
-                    onClick={() => {
-                      if (!beast.isDefeated) {
-                        setCombatState(prev => ({ ...prev, selectedPlayerBeast: beast.id }));
-                      }
-                    }}
-                  >
-                    <div className="beast-name">
-                      {beast.customBeast.name}
-                      <span className="beast-level" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '8px' }}>Lvl {(() => {
-                        // Get the beast's level from beastData using the ordered beast IDs
-                        const orderedBeastIds = getOrderedBeastIds();
-                        const beastIndex = combatState.playerBeasts.findIndex(b => b.id === beast.id);
-                        const beastId = orderedBeastIds[beastIndex];
-                        return beastData && beastId && beastData[beastId] ? beastData[beastId].level : 1;
-                      })()}</span>
-                    </div>
-                    <div className="health-bar">
-                      <div 
-                        className="health-fill player-health" 
-                        style={{ width: `${(beast.currentHealth / beast.stats.health) * 100}%` }}
-                      />
-                      <span className="health-text">{beast.currentHealth}/{beast.stats.health}</span>
-                    </div>
-                    <div className="mana-bar-mini">
-                      <div 
-                        className="mana-fill" 
-                        style={{ width: `${(beast.currentMana / 50) * 100}%` }}
-                      />
-                      <span className="mana-text-mini">{beast.currentMana}/50</span>
-                    </div>
-                    <div className="position-indicator">{beast.position}</div>
-                    {Object.keys(beast.statusEffects).length > 0 && (
-                      <div className="status-effects-indicator">
-                        {Object.entries(beast.statusEffects).map(([effectKey, effect]) => (
-                          <span key={effectKey} className={`status-effect ${effect.value > 0 ? 'buff' : 'debuff'}`}>
-                            {effect.value > 0 ? '↑' : '↓'}{effect.duration}
-                          </span>
-                        ))}
+                {combatState.playerBeasts.map((beast) => {
+                  const currentTurnBeast = getCurrentTurnBeast(combatState);
+                  const isThisBeastsTurn = currentTurnBeast && currentTurnBeast.id === beast.id;
+                  const isPlayersTurn = isPlayerTurn(combatState);
+                  
+                  return (
+                    <div 
+                      key={beast.id} 
+                      className={`beast-card ${beast.isDefeated ? 'defeated' : ''} ${combatState.selectedPlayerBeast === beast.id ? 'selected' : ''} ${isThisBeastsTurn && isPlayersTurn ? 'active-turn' : ''}`}
+                      onClick={() => {
+                        if (!beast.isDefeated) {
+                          setCombatState(prev => ({ ...prev, selectedPlayerBeast: beast.id }));
+                        }
+                      }}
+                    >
+                      <div className="beast-name">
+                        {beast.customBeast.name}
+                        {isThisBeastsTurn && isPlayersTurn && <span className="turn-indicator-badge">🎯</span>}
+                        <span className="beast-level" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '8px' }}>Lvl {(() => {
+                          // Get the beast's level from beastData using the ordered beast IDs
+                          const orderedBeastIds = getOrderedBeastIds();
+                          const beastIndex = combatState.playerBeasts.findIndex(b => b.id === beast.id);
+                          const beastId = orderedBeastIds[beastIndex];
+                          return beastData && beastId && beastData[beastId] ? beastData[beastId].level : 1;
+                        })()}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="health-bar">
+                        <div 
+                          className="health-fill player-health" 
+                          style={{ width: `${(beast.currentHealth / beast.stats.health) * 100}%` }}
+                        />
+                        <span className="health-text">{beast.currentHealth}/{beast.stats.health}</span>
+                      </div>
+                      <div className="mana-bar-mini">
+                        <div 
+                          className="mana-fill" 
+                          style={{ width: `${(beast.currentMana / 50) * 100}%` }}
+                        />
+                        <span className="mana-text-mini">{beast.currentMana}/50</span>
+                      </div>
+                      <div className="position-indicator">{beast.position}</div>
+                      {Object.keys(beast.statusEffects).length > 0 && (
+                        <div className="status-effects-indicator">
+                          {Object.entries(beast.statusEffects).map(([effectKey, effect]) => (
+                            <span key={effectKey} className={`status-effect ${effect.value > 0 ? 'buff' : 'debuff'}`}>
+                              {effect.value > 0 ? '↑' : '↓'}{effect.duration}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               {combatState.playerBeasts.length > 0 && (
                 <div className="beast-visual-grid">
@@ -1557,18 +1721,17 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           <div className="battle-controls">
             <div className="turn-indicator">
               {(() => {
-                if (combatState.turn === 'player') {
-                  const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
-                  if (selectedBeast) {
-                    return `It's your turn, ${selectedBeast.customBeast.name}!`;
-                  }
-                  return "Your Turn!";
+                const currentBeast = getCurrentTurnBeast(combatState);
+                const isPlayer = isPlayerTurn(combatState);
+                
+                if (!currentBeast) {
+                  return "Calculating turn...";
+                }
+                
+                if (isPlayer) {
+                  return `It's your turn, ${currentBeast.customBeast.name}! (Round ${combatState.currentRound})`;
                 } else {
-                  const activeOpponentBeasts = combatState.opponentBeasts.filter(b => !b.isDefeated);
-                  if (activeOpponentBeasts.length > 0) {
-                    return `${activeOpponentBeasts[0].customBeast.name} is attacking...`;
-                  }
-                  return "Opponent's Turn...";
+                  return `${currentBeast.customBeast.name} is acting... (Round ${combatState.currentRound})`;
                 }
               })()}
             </div>
@@ -1576,11 +1739,24 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             {/* Action Buttons */}
             <div className="action-buttons">
               <motion.button
-                className={`action-btn basic-attack ${combatState.turn !== 'player' ? 'disabled' : ''}`}
-                onClick={basicAttack}
-                disabled={combatState.turn !== 'player'}
-                whileHover={combatState.turn === 'player' ? { scale: 1.05 } : {}}
-                whileTap={combatState.turn === 'player' ? { scale: 0.95 } : {}}
+                className={`action-btn basic-attack ${!isPlayerTurn(combatState) ? 'disabled' : ''}`}
+                onClick={() => {
+                  const currentTurnBeast = getCurrentTurnBeast(combatState);
+                  const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
+                  const isCorrectBeastSelected = currentTurnBeast && selectedBeast && currentTurnBeast.id === selectedBeast.id;
+                  
+                  if (isPlayerTurn(combatState) && isCorrectBeastSelected) {
+                    basicAttack();
+                  }
+                }}
+                disabled={!isPlayerTurn(combatState)}
+                whileHover={isPlayerTurn(combatState) ? { scale: 1.05 } : {}}
+                whileTap={isPlayerTurn(combatState) ? { scale: 0.95 } : {}}
+                title={
+                  !isPlayerTurn(combatState) 
+                    ? "Not a player beast's turn"
+                    : "Attack with the currently active beast"
+                }
               >
                 ⚔️ Basic Attack
               </motion.button>
@@ -1588,6 +1764,10 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               {/* Ability Buttons */}
               {(() => {
                 const selectedBeast = combatState.playerBeasts.find(b => b.id === combatState.selectedPlayerBeast);
+                const currentTurnBeast = getCurrentTurnBeast(combatState);
+                const isCurrentBeastSelected = selectedBeast && currentTurnBeast && selectedBeast.id === currentTurnBeast.id;
+                const isPlayersTurn = isPlayerTurn(combatState);
+                
                 if (!selectedBeast) {
                   return null;
                 }
@@ -1598,23 +1778,37 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                   const hasEnoughMana = selectedBeast.currentMana >= (ability.manaCost || 0);
                   const needsTarget = ability.type === 'attack' || ability.type === 'magicAttack' || ability.type === 'debuff';
                   const hasTarget = combatState.selectedTarget !== null;
-                  const canUse = combatState.turn === 'player' && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
+                  
+                  // Can only use ability if it's this beast's turn, it's a player turn, and all other conditions are met
+                  const canUse = isPlayersTurn && isCurrentBeastSelected && !isOnCooldown && hasEnoughMana && (!needsTarget || hasTarget);
+                  
+                  // Show as disabled if it's not this beast's turn (even if other conditions are met)
+                  const isDisabledDueToTurn = !isCurrentBeastSelected || !isPlayersTurn;
 
                   return (
                     <motion.button
                       key={ability.id}
-                      className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type}`}
-                      onClick={() => castAbility(ability, combatState.selectedTarget || undefined)}
+                      className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type} ${isDisabledDueToTurn ? 'not-turn' : ''}`}
+                      onClick={() => canUse ? castAbility(ability, combatState.selectedTarget || undefined) : undefined}
                       disabled={!canUse}
                       whileHover={canUse ? { scale: 1.05 } : {}}
                       whileTap={canUse ? { scale: 0.95 } : {}}
-                      title={`${ability.description}\nDamage: ${ability.damage || 'N/A'}\nMana: ${ability.manaCost || 0}\nCooldown: ${ability.cooldown} turns`}
+                      title={
+                        isDisabledDueToTurn 
+                          ? `Not ${selectedBeast.customBeast.name}'s turn`
+                          : `${ability.description}\nDamage: ${ability.damage || 'N/A'}\nMana: ${ability.manaCost || 0}\nCooldown: ${ability.cooldown} turns`
+                      }
                     >
                       <div className="ability-name">{ability.name}</div>
                       <div className="ability-cost">💧{ability.manaCost || 0}</div>
                       {isOnCooldown && (
                         <div className="cooldown-overlay">
                           {cooldown?.turnsLeft}
+                        </div>
+                      )}
+                      {isDisabledDueToTurn && (
+                        <div className="turn-overlay">
+                          Not your turn
                         </div>
                       )}
                     </motion.button>
