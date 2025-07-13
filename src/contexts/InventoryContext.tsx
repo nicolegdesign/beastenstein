@@ -61,7 +61,7 @@ const createDefaultInventory = (): BeastPartInventory => {
   });
   
   // Give the player a starting dim soul for their first beast creation
-  soulEssences['dim-soul'] = 1;
+  soulEssences['dim-soul'] = 8;
   
   return { parts, sets, soulEssences };
 };
