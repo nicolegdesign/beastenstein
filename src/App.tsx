@@ -122,11 +122,27 @@ function AppContent() {
     // Reset all state to initial values
     setBeastData(() => ({}));
     setCurrentBeastId('');
+    
+    // Give the player some starter beast parts and soul essences
     setBeastPartInventory(() => ({
-      parts: {},
-      sets: {},
-      soulEssences: {}
+      parts: {
+        'nightwolf-head': 2,
+        'nightwolf-torso': 2,
+        'woodenpuppet-head': 1,
+        'woodenpuppet-torso': 1
+      },
+      sets: {
+        'nightwolf-arms': 2,
+        'nightwolf-legs': 2,
+        'woodenpuppet-arms': 1,
+        'woodenpuppet-legs': 1
+      },
+      soulEssences: {
+        'dim-soul': 5,
+        'glowing-soul': 3
+      }
     }));
+    
     setGameOptions(() => ({
       disableStatDecay: false,
       disablePooSpawning: false,

@@ -106,6 +106,10 @@ export const BeastSelection: React.FC<BeastSelectionProps> = ({ onBeastSelected 
                 className={`name-input ${isNaming ? 'focused' : ''}`}
                 placeholder="Enter a name..."
                 maxLength={20}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
             </div>
             

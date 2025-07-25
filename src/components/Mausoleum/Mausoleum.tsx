@@ -573,6 +573,10 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
                 onChange={(e) => setBeastName(e.target.value)}
                 placeholder="Enter your beast's name..."
                 maxLength={20}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
               />
             </div>
 

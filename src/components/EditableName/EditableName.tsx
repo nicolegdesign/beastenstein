@@ -64,6 +64,9 @@ export const EditableName: React.FC<EditableNameProps> = ({
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         suppressContentEditableWarning={true}
+        spellCheck="false"
+        autoCorrect="off"
+        autoCapitalize="off"
       >
         {name}
       </span>
