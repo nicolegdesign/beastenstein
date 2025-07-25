@@ -41,6 +41,10 @@ export interface GameStateContextType {
   beastNames: Record<string, string>;
   updateBeastName: (beastId: string, name: string) => void;
   
+  // Custom beasts
+  customBeasts: Record<string, unknown>;
+  updateCustomBeast: (beastId: string, customBeastData: unknown) => void;
+  
   // Global flags
   hasPlayedBefore: boolean;
   markHasPlayedBefore: () => void;

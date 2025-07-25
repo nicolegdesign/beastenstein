@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { IndividualBeastData } from '../../types/game';
 import type { Personality } from '../../data/personalities';
 import { useBeastOrder, useBeastData } from '../../hooks/useLegacyState';
+import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import './SidebarBeastSelector.css';
 
 // Maximum number of beasts allowed
@@ -73,6 +74,7 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
 }) => {
   const { beastOrder, setBeastOrder } = useBeastOrder();
   const { beastData: centralBeastData } = useBeastData();
+  const { getCustomBeastData } = useCustomBeastData();
   const [customBeasts, setCustomBeasts] = useState<CustomBeast[]>([]);
   const [draggedBeastId, setDraggedBeastId] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -80,28 +82,6 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
   const saveBeastOrder = (order: string[]) => {
     setBeastOrder(order);
   };
-
-  // Sort beasts according to saved order
-  const sortBeastsByOrder = useCallback((beasts: CustomBeast[]): CustomBeast[] => {
-    const order = beastOrder;
-    const beastMap = new Map(beasts.map(beast => [beast.id, beast]));
-    const orderedBeasts: CustomBeast[] = [];
-    const unorderedBeasts: CustomBeast[] = [];
-
-    // Add beasts in saved order
-    order.forEach(id => {
-      const beast = beastMap.get(id);
-      if (beast) {
-        orderedBeasts.push(beast);
-        beastMap.delete(id);
-      }
-    });
-
-    // Add any remaining beasts that weren't in the saved order
-    beastMap.forEach(beast => unorderedBeasts.push(beast));
-
-    return [...orderedBeasts, ...unorderedBeasts];
-  }, [beastOrder]);
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, beastId: string) => {
@@ -158,12 +138,11 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
       // Use centralized beast data instead of scanning localStorage
       if (centralBeastData) {
         Object.keys(centralBeastData).forEach(beastId => {
-          // Load custom beast data from localStorage (this part still needs the custom beast structure)
-          // This is because the centralized state stores IndividualBeastData, but we need CustomBeast structure
+          // Load custom beast data from centralized state instead of localStorage
           try {
-            const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-            if (customBeastData) {
-              const parsedBeast = JSON.parse(customBeastData);
+            const customBeastData = getCustomBeastData(beastId);
+            if (customBeastData && typeof customBeastData === 'object') {
+              const parsedBeast = customBeastData as Omit<CustomBeast, 'id'>; // Type assertion since we know the structure
               customBeastsList.push({
                 id: beastId,
                 ...parsedBeast
@@ -175,13 +154,56 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
         });
       }
       
-      // Sort beasts according to saved order
-      const sortedBeasts = sortBeastsByOrder(customBeastsList);
-      setCustomBeasts(sortedBeasts);
+      // For the initial load, just set the beasts without sorting to avoid dependency issues
+      setCustomBeasts(customBeastsList);
     };
 
     loadCustomBeasts();
-  }, [refreshTrigger, sortBeastsByOrder, centralBeastData]); // Refresh when refreshTrigger changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger, centralBeastData]); // Removed getCustomBeastData from dependencies to prevent infinite loop
+
+  // Separate effect to handle sorting when beast order changes
+  useEffect(() => {
+    setCustomBeasts(prevBeasts => {
+      if (prevBeasts.length === 0) return prevBeasts;
+      
+      // Sort beasts according to saved order
+      const order = beastOrder;
+      
+      // Check if we even need to sort - if the current order matches the desired order, skip
+      const currentIds = prevBeasts.map(b => b.id);
+      const isAlreadySorted = currentIds.every((id, index) => {
+        if (index < order.length) {
+          return id === order[index];
+        }
+        // For beasts not in the order array, they should be at the end
+        return !order.includes(id);
+      });
+      
+      if (isAlreadySorted) {
+        return prevBeasts; // No change needed
+      }
+      
+      const beastMap = new Map(prevBeasts.map(beast => [beast.id, beast]));
+      const orderedBeasts: CustomBeast[] = [];
+      const unorderedBeasts: CustomBeast[] = [];
+
+      // Add beasts in saved order
+      order.forEach(id => {
+        const beast = beastMap.get(id);
+        if (beast) {
+          orderedBeasts.push(beast);
+          beastMap.delete(id);
+        }
+      });
+
+      // Add any remaining beasts that weren't in the saved order
+      beastMap.forEach(beast => unorderedBeasts.push(beast));
+
+      const sortedBeasts = [...orderedBeasts, ...unorderedBeasts];
+      return sortedBeasts;
+    });
+  }, [beastOrder]);
   return (
     <div className="sidebar-beast-selector">
       <h4 className="sidebar-title">

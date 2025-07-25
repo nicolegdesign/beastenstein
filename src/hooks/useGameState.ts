@@ -26,6 +26,7 @@ export interface GameState {
   adventureProgress: AdventureProgress;
   beastOrder: string[];
   beastNames: Record<string, string>; // beastId -> name mapping
+  customBeasts: Record<string, unknown>; // beastId -> custom beast configuration
   hasPlayedBefore: boolean;
 }
 
@@ -38,6 +39,7 @@ const STORAGE_KEYS = {
   ADVENTURE_PROGRESS: 'adventureProgress',
   BEAST_ORDER: 'beastOrder',
   BEAST_NAMES: 'beastNames',
+  CUSTOM_BEASTS: 'customBeasts',
   HAS_PLAYED_BEFORE: 'hasPlayedBefore',
   CURRENT_BEAST_ID: 'currentBeastId'
 } as const;
@@ -171,6 +173,16 @@ export function useGameState() {
     }));
   }, []);
 
+  const updateCustomBeast = useCallback((beastId: string, customBeastData: unknown) => {
+    setGameState(prev => ({
+      ...prev,
+      customBeasts: {
+        ...prev.customBeasts,
+        [beastId]: customBeastData
+      }
+    }));
+  }, []);
+
   const markHasPlayedBefore = useCallback(() => {
     setGameState(prev => ({
       ...prev,
@@ -270,6 +282,10 @@ export function useGameState() {
     beastNames: gameState.beastNames,
     updateBeastName,
     
+    // Custom beasts
+    customBeasts: gameState.customBeasts,
+    updateCustomBeast,
+    
     // Global flags
     hasPlayedBefore: gameState.hasPlayedBefore,
     markHasPlayedBefore,
@@ -286,12 +302,12 @@ function migrateBeastNames(): Record<string, string> {
   // First try to load from centralized storage
   const existingNames = loadFromStorage(STORAGE_KEYS.BEAST_NAMES, {});
   
-  // If we already have centralized names, return them
+  // If we already have centralized names AND they're not empty, return them
   if (Object.keys(existingNames).length > 0) {
     return existingNames;
   }
   
-  // Otherwise, migrate from old localStorage format
+  // Otherwise, migrate from old localStorage format (even if centralized storage exists but is empty)
   const migratedNames: Record<string, string> = {};
   const keysToRemove: string[] = [];
   
@@ -300,6 +316,7 @@ function migrateBeastNames(): Record<string, string> {
     if (key?.startsWith('beastName_')) {
       const beastId = key.replace('beastName_', '');
       const name = localStorage.getItem(key);
+      console.log(`MIGRATION: Found legacy beast name - key: ${key}, beastId: ${beastId}, name: ${name}`);
       if (name) {
         migratedNames[beastId] = name;
         keysToRemove.push(key);
@@ -307,14 +324,76 @@ function migrateBeastNames(): Record<string, string> {
     }
   }
   
+  console.log('MIGRATION: Migrated names:', migratedNames);
+  
   // Save migrated names to centralized storage
   if (Object.keys(migratedNames).length > 0) {
+    console.log('MIGRATION: Saving migrated names to centralized storage');
     saveToStorage(STORAGE_KEYS.BEAST_NAMES, migratedNames);
     // Clean up old format
     keysToRemove.forEach(key => localStorage.removeItem(key));
+    return migratedNames;
   }
   
-  return migratedNames;
+  // Return existing (even if empty) if no migration was needed
+  return existingNames;
+}
+
+/**
+ * Migrate custom beast data from individual localStorage keys to centralized state
+ */
+function migrateCustomBeasts(): Record<string, unknown> {
+  console.log('MIGRATION: Starting custom beasts migration...');
+  
+  // First try to load from centralized storage
+  const existingCustomBeasts = loadFromStorage(STORAGE_KEYS.CUSTOM_BEASTS, {});
+  console.log('MIGRATION: Existing custom beasts from centralized storage:', existingCustomBeasts);
+  
+  // If we already have centralized custom beasts AND they're not empty, return them
+  if (Object.keys(existingCustomBeasts).length > 0) {
+    console.log('MIGRATION: Found existing centralized custom beasts, returning them');
+    return existingCustomBeasts;
+  }
+  
+  // Otherwise, migrate from old localStorage format (even if centralized storage exists but is empty)
+  const migratedCustomBeasts: Record<string, unknown> = {};
+  const keysToRemove: string[] = [];
+  
+  console.log('MIGRATION: Checking localStorage for legacy custom beasts...');
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('customBeast_')) {
+      const beastId = key.replace('customBeast_', '');
+      const customBeastDataString = localStorage.getItem(key);
+      console.log(`MIGRATION: Found legacy custom beast - key: ${key}, beastId: ${beastId}, data: ${customBeastDataString?.substring(0, 100)}...`);
+      if (customBeastDataString) {
+        try {
+          const customBeastData = JSON.parse(customBeastDataString);
+          migratedCustomBeasts[beastId] = customBeastData;
+          keysToRemove.push(key);
+          console.log(`MIGRATION: Successfully parsed custom beast ${beastId}:`, customBeastData);
+        } catch (error) {
+          console.warn(`Failed to parse custom beast data for ${beastId}:`, error);
+          // Keep the corrupted key for manual cleanup
+        }
+      }
+    }
+  }
+  
+  console.log('MIGRATION: Migrated custom beasts:', migratedCustomBeasts);
+  
+  // Save migrated custom beasts to centralized storage
+  if (Object.keys(migratedCustomBeasts).length > 0) {
+    console.log('MIGRATION: Saving migrated custom beasts to centralized storage');
+    saveToStorage(STORAGE_KEYS.CUSTOM_BEASTS, migratedCustomBeasts);
+    // Clean up old format
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    return migratedCustomBeasts;
+  }
+  
+  // Return existing (even if empty) if no migration was needed
+  return existingCustomBeasts;
 }
 
 /**
@@ -361,7 +440,71 @@ function loadGameState(): GameState {
   const hasPlayedBefore = localStorage.getItem(STORAGE_KEYS.HAS_PLAYED_BEFORE) === 'true';
   
   // Load and migrate beast names
+  console.log('INITIALIZATION: Loading beast names...');
   const beastNames = migrateBeastNames();
+  console.log('INITIALIZATION: Final beast names:', beastNames);
+  
+  // Load and migrate custom beast data
+  console.log('INITIALIZATION: Loading custom beasts...');
+  const customBeasts = migrateCustomBeasts();
+  console.log('INITIALIZATION: Final custom beasts:', customBeasts);
+  
+  // Temporary debug function for forcing migration
+  (window as unknown as { forceMigration?: () => void }).forceMigration = () => {
+    console.log('FORCE MIGRATION: Clearing centralized storage...');
+    localStorage.removeItem('customBeasts');
+    localStorage.removeItem('beastNames');
+    console.log('FORCE MIGRATION: Please refresh the page to trigger migration');
+  };
+  
+  // Debug function to inspect all localStorage
+  (window as unknown as { debugStorage?: () => void }).debugStorage = () => {
+    console.log('=== STORAGE DEBUG ===');
+    console.log('All localStorage keys:');
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key);
+        console.log(`${key}:`, value?.substring(0, 200) + (value && value.length > 200 ? '...' : ''));
+      }
+    }
+    console.log('Current beast ID from BeastManager:', currentBeastId);
+    console.log('Beasts from BeastManager:', Object.keys(beasts));
+    console.log('=== END STORAGE DEBUG ===');
+  };
+  
+  // Fix function to manually migrate the existing custom beast data
+  (window as unknown as { fixCustomBeasts?: () => void }).fixCustomBeasts = () => {
+    console.log('MANUAL FIX: Finding and migrating custom beast data...');
+    const customBeastsToMigrate: Record<string, unknown> = {};
+    
+    // Find all customBeast_ keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('customBeast_')) {
+        const beastId = key.replace('customBeast_', '');
+        const customBeastDataString = localStorage.getItem(key);
+        if (customBeastDataString) {
+          try {
+            const customBeastData = JSON.parse(customBeastDataString);
+            customBeastsToMigrate[beastId] = customBeastData;
+            console.log(`MANUAL FIX: Found custom beast ${beastId}:`, customBeastData);
+          } catch (error) {
+            console.error(`MANUAL FIX: Failed to parse ${key}:`, error);
+          }
+        }
+      }
+    }
+    
+    if (Object.keys(customBeastsToMigrate).length > 0) {
+      // Save to centralized storage
+      localStorage.setItem('customBeasts', JSON.stringify(customBeastsToMigrate));
+      console.log('MANUAL FIX: Saved custom beasts to centralized storage:', customBeastsToMigrate);
+      console.log('MANUAL FIX: Please refresh the page to see the changes');
+    } else {
+      console.log('MANUAL FIX: No custom beast data found to migrate');
+    }
+  };
   
   return {
     beasts,
@@ -372,6 +515,7 @@ function loadGameState(): GameState {
     adventureProgress,
     beastOrder,
     beastNames,
+    customBeasts,
     hasPlayedBefore
   };
 }
@@ -388,6 +532,7 @@ function saveGameState(state: GameState): void {
     saveToStorage(STORAGE_KEYS.ADVENTURE_PROGRESS, state.adventureProgress);
     saveToStorage(STORAGE_KEYS.BEAST_ORDER, state.beastOrder);
     saveToStorage(STORAGE_KEYS.BEAST_NAMES, state.beastNames);
+    saveToStorage(STORAGE_KEYS.CUSTOM_BEASTS, state.customBeasts);
     
     // Save simple flags
     localStorage.setItem(STORAGE_KEYS.HAS_PLAYED_BEFORE, state.hasPlayedBefore ? 'true' : 'false');

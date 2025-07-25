@@ -15,6 +15,7 @@ import { IntroStory } from './components/IntroStory/IntroStory';
 import { BeastSelection } from './components/BeastSelection/BeastSelection';
 import { GameStateProvider } from './contexts/GameStateContext';
 import { useBeastData, useInventoryItems, useGameOptions, useBeastPartInventory } from './hooks/useLegacyState';
+import { useCustomBeastData } from './hooks/useCustomBeastData';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
@@ -38,6 +39,7 @@ function AppContent() {
   // Use centralized game state
   const { setInventory: setBeastPartInventory } = useBeastPartInventory();
   const { beastData, setBeastData, currentBeastId, setCurrentBeastId } = useBeastData();
+  const { setCustomBeastData, getCustomBeastData } = useCustomBeastData();
   
   // Game flow state
   const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
@@ -151,15 +153,17 @@ function AppContent() {
     setBeastData(prev => ({ ...prev, [customBeastId]: newBeastData }));
     setCurrentBeastId(customBeastId);
     
+    // Save custom beast data to centralized state
+    setCustomBeastData(customBeastId, customBeast);
+    
     // Save to localStorage with consolidated format
     const allBeastData = { [customBeastId]: newBeastData };
     localStorage.setItem('beastData', JSON.stringify(allBeastData));
-    localStorage.setItem(`customBeast_${customBeastId}`, JSON.stringify(customBeast));
     localStorage.setItem('hasPlayedBefore', 'true');
     
     // Transition to game
     setGameState('game');
-  }, [setBeastData, setCurrentBeastId]);
+  }, [setBeastData, setCurrentBeastId, setCustomBeastData]);
 
   const handleBeastChange = useCallback((beastId: string) => {
     // All beasts are now custom beasts
@@ -202,6 +206,9 @@ function AppContent() {
         [result.beastId!]: result.beastData!
       }));
 
+      // Save custom beast data to centralized state
+      setCustomBeastData(result.beastId, customBeast);
+
       // Trigger sidebar refresh to show the new custom beast
       setSidebarRefreshTrigger(prev => prev + 1);
       
@@ -216,7 +223,7 @@ function AppContent() {
         type: 'success'
       });
     }
-  }, [beastData, setBeastData, setCurrentBeastId]);
+  }, [beastData, setBeastData, setCurrentBeastId, setCustomBeastData]);
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
@@ -396,9 +403,9 @@ function AppContent() {
     // All beasts are now custom beasts
     if (beastId.startsWith('custom_')) {
       try {
-        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-        if (customBeastData) {
-          const customBeast = JSON.parse(customBeastData);
+        const customBeastData = getCustomBeastData(beastId);
+        if (customBeastData && typeof customBeastData === 'object') {
+          const customBeast = customBeastData as { head?: { imagePath?: string }, torso?: { imagePath?: string } };
           
           // Extract species from head part image path
           // Example: "./images/beasts/night-wolf/night-wolf-head.svg" -> "wolf"
@@ -440,19 +447,19 @@ function AppContent() {
       }
     }
     return 'Unknown Species';
-  }, []);
+  }, [getCustomBeastData]);
 
   // Function to get gender symbol for a custom beast
   const getBeastGender = useCallback((beastId: string): { symbol: string; gender: string } => {
     if (beastId.startsWith('custom_')) {
       try {
-        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-        if (customBeastData) {
-          const customBeast = JSON.parse(customBeastData);
+        const customBeastData = getCustomBeastData(beastId);
+        if (customBeastData && typeof customBeastData === 'object') {
+          const customBeast = customBeastData as { gender?: string };
           const gender = customBeast.gender;
           return {
             symbol: gender === 'male' ? '♂' : '♀',
-            gender: gender
+            gender: gender || ''
           };
         }
       } catch (error) {
@@ -460,23 +467,23 @@ function AppContent() {
       }
     }
     return { symbol: '', gender: '' };
-  }, []);
+  }, [getCustomBeastData]);
 
-  // Function to get personality name for a custom beast
+    // Function to get personality name for a custom beast
   const getBeastPersonality = useCallback((beastId: string): string => {
     if (beastId.startsWith('custom_')) {
       try {
-        const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-        if (customBeastData) {
-          const customBeast = JSON.parse(customBeastData);
+        const customBeastData = getCustomBeastData(beastId);
+        if (customBeastData && typeof customBeastData === 'object') {
+          const customBeast = customBeastData as { personality?: { name?: string } };
           return customBeast.personality?.name || 'Unknown';
         }
       } catch (error) {
         console.warn(`Failed to get personality for custom beast ${beastId}:`, error);
       }
     }
-    return '';
-  }, []);
+    return 'Unknown';
+  }, [getCustomBeastData]);
 
   // Menu handlers
   const handleOptions = useCallback(() => {
@@ -796,9 +803,16 @@ function AppContent() {
     };
 
     try {
-      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-      if (customBeastData) {
-        const customBeast = JSON.parse(customBeastData);
+      const customBeastData = getCustomBeastData(beastId);
+      if (customBeastData && typeof customBeastData === 'object') {
+        const customBeast = customBeastData as {
+          head?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+          torso?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+          armLeft?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+          armRight?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+          legLeft?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+          legRight?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
+        };
         
         // Calculate stat bonuses from all parts
         let attackBonus = 0;
@@ -835,9 +849,16 @@ function AppContent() {
     const baseHealth = currentBeastData?.health || 100;
 
     try {
-      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-      if (customBeastData) {
-        const customBeast = JSON.parse(customBeastData);
+      const customBeastData = getCustomBeastData(beastId);
+      if (customBeastData && typeof customBeastData === 'object') {
+        const customBeast = customBeastData as {
+          head?: { statBonus?: { health?: number } };
+          torso?: { statBonus?: { health?: number } };
+          armLeft?: { statBonus?: { health?: number } };
+          armRight?: { statBonus?: { health?: number } };
+          legLeft?: { statBonus?: { health?: number } };
+          legRight?: { statBonus?: { health?: number } };
+        };
         
         let healthBonus = 0;
 
@@ -1057,9 +1078,9 @@ function AppContent() {
                   let soulEssence = null;
                   
                   try {
-                    const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
-                    if (customBeastData) {
-                      const customBeast = JSON.parse(customBeastData);
+                    const customBeastData = getCustomBeastData(currentBeastId);
+                    if (customBeastData && typeof customBeastData === 'object') {
+                      const customBeast = customBeastData as { soulEssence?: { id?: string } };
                       if (customBeast.soulEssence?.id) {
                         soulEssence = findSoulEssenceById(customBeast.soulEssence.id);
                       }

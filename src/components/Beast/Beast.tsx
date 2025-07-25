@@ -61,6 +61,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = fa
     // All beasts are now custom beasts
     if (beastId.startsWith('custom_')) {
       const customBeastData = getCustomBeastData(beastId);
+      
       if (customBeastData && typeof customBeastData === 'object') {
         try {
           // Type guard to ensure we have a valid custom beast object

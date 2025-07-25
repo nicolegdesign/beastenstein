@@ -134,7 +134,7 @@ export class BeastManager {
       allBeastData[beastId] = data;
       localStorage.setItem(this.BEAST_DATA_KEY, JSON.stringify(allBeastData));
       
-      console.log(`Saved beast data for ${beastId}:`, data);
+      // Beast data saved successfully
     } catch (error) {
       console.error('Failed to save beast data:', error);
       // Fallback to old method if consolidation fails
@@ -205,7 +205,7 @@ export class BeastManager {
 
     // Save beast data and custom beast configuration
     this.saveBeastData(customBeastId, newBeastData);
-    localStorage.setItem(`customBeast_${customBeastId}`, JSON.stringify(customBeast));
+    // Note: Custom beast configuration is now saved by the calling component to centralized state
 
     return {
       success: true,
@@ -253,7 +253,7 @@ export class BeastManager {
         allBeastData[beastId].experience = newExperience;
         localStorage.setItem(this.BEAST_DATA_KEY, JSON.stringify(allBeastData));
         
-        console.log(`Updated experience for beast ${beastId} to ${newExperience}`);
+        // Experience updated successfully
         return true;
       } else {
         console.error(`Beast ${beastId} not found in beastData`);
