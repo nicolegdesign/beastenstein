@@ -17,6 +17,10 @@ export const StartScreen: React.FC<StartScreenProps> = ({ onNewGame, onLoadGame,
           className="game-logo"
         />
         
+        <div className="game-tagline">
+          "Need a friend? Just make one!"
+        </div>
+        
         <div className="start-screen-buttons">
           <button 
             className="start-button new-game-button"
