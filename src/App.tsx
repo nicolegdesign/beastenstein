@@ -13,6 +13,7 @@ import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
 import { IntroStory } from './components/IntroStory/IntroStory';
 import { BeastSelection } from './components/BeastSelection/BeastSelection';
+import { StartScreen } from './components/StartScreen/StartScreen';
 import { GameStateProvider } from './contexts/GameStateContext';
 import { useBeastData, useInventoryItems, useGameOptions, useBeastPartInventory } from './hooks/useLegacyState';
 import { useCustomBeastData } from './hooks/useCustomBeastData';
@@ -42,10 +43,9 @@ function AppContent() {
   const { setCustomBeastData, getCustomBeastData } = useCustomBeastData();
   
   // Game flow state
-  const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
-    // Check if this is a first-time user
-    const hasPlayed = localStorage.getItem('hasPlayedBefore');
-    return hasPlayed ? 'game' : 'intro';
+  const [gameState, setGameState] = useState<'startScreen' | 'intro' | 'beastSelection' | 'game'>(() => {
+    // Always start with the start screen for new sessions
+    return 'startScreen';
   });
 
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
@@ -113,6 +113,36 @@ function AppContent() {
   const { position, facing } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
+
+  // Start screen handlers
+  const handleNewGame = useCallback(() => {
+    // Clear all game data for a fresh start
+    localStorage.clear();
+    
+    // Reset all state to initial values
+    setBeastData(() => ({}));
+    setCurrentBeastId('');
+    setBeastPartInventory(() => ({
+      parts: {},
+      sets: {},
+      soulEssences: {}
+    }));
+    setGameOptions(() => ({
+      disableStatDecay: false,
+      disablePooSpawning: false,
+      disableRandomMovement: false,
+      soundEffectsEnabled: true,
+      musicEnabled: true
+    }));
+    
+    // Start with the intro story for new game
+    setGameState('intro');
+  }, [setBeastData, setCurrentBeastId, setBeastPartInventory, setGameOptions]);
+
+  const handleLoadGame = useCallback(() => {
+    // Only called when hasSavedData is true, so we can go directly to the game
+    setGameState('game');
+  }, []);
 
   // Intro flow handlers
   const handleIntroComplete = useCallback(() => {
@@ -880,6 +910,15 @@ function AppContent() {
 
   return (
       <div className="App">
+        {/* Start Screen */}
+        {gameState === 'startScreen' && (
+          <StartScreen 
+            onNewGame={handleNewGame}
+            onLoadGame={handleLoadGame}
+            hasSavedData={Object.keys(beastData || {}).length > 0}
+          />
+        )}
+
         {/* Intro Story Screen */}
         {gameState === 'intro' && (
           <IntroStory 
