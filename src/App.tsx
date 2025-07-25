@@ -24,62 +24,11 @@ import { getRandomPersonality, getDefaultPersonality } from './data/personalitie
 import type { IndividualBeastData } from './types/game';
 import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
-import type { Personality } from './data/personalities';
 import { createBeastFromTemplate } from './data/beastTemplates';
-import { getMaxLevelFromSoul, getSoulStatMultiplier, findSoulEssenceById } from './data/soulEssences';
+import { getMaxLevelFromSoul, findSoulEssenceById } from './data/soulEssences';
 import { getPartsByBeastType, findExtraLimbById } from './data/beastParts';
+import { BeastManager, type CustomBeast } from './services/BeastManager';
 import './App.css';
-
-interface BeastPart {
-  id: string;
-  name: string;
-  imagePath: string;
-  type: 'head' | 'torso' | 'armLeft' | 'armRight' | 'legLeft' | 'legRight' | 'wings' | 'tail';
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number; health?: number };
-  ability?: {
-    id: string;
-    name: string;
-    description: string;
-    type: 'attack' | 'defense' | 'magicAttack' | 'heal' | 'buff' | 'debuff';
-    damage?: number;
-    healing?: number;
-    effects?: {
-      statModifier?: {
-        attack?: number;
-        defense?: number;
-        speed?: number;
-        magic?: number;
-      };
-      duration?: number;
-    };
-    cooldown: number;
-    manaCost?: number;
-  };
-}
-
-interface SoulEssence {
-  id: string;
-  name: string;
-  description: string;
-  imagePath: string;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-}
-
-interface CustomBeastData {
-  name: string;
-  gender: 'male' | 'female';
-  personality: Personality;
-  head: BeastPart;
-  torso: BeastPart;
-  armLeft: BeastPart;
-  armRight: BeastPart;
-  legLeft: BeastPart;
-  legRight: BeastPart;
-  wings?: BeastPart;
-  tail?: BeastPart;
-  soulEssence: SoulEssence;
-}
 
 function App() {
   return (
@@ -102,92 +51,14 @@ function AppContent() {
   
   // Initialize individual beast data from localStorage (custom beasts only)
   const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
-    const customBeastData: Record<string, IndividualBeastData> = {};
+    // Load beast data using BeastManager
+    const customBeastData = BeastManager.loadBeastData();
     
-    // First try to load from consolidated beastData
-    const consolidatedData = localStorage.getItem('beastData');
-    if (consolidatedData) {
-      try {
-        const allBeastData = JSON.parse(consolidatedData);
-        // Filter for custom beasts only
-        Object.keys(allBeastData).forEach(beastId => {
-          if (beastId.startsWith('custom_')) {
-            const beastData = allBeastData[beastId];
-            // Migrate old data without createdAt timestamp
-            if (!beastData.createdAt) {
-              beastData.createdAt = Date.now();
-            }
-            customBeastData[beastId] = beastData;
-          }
-        });
-      } catch (error) {
-        console.warn('Failed to load consolidated beast data:', error);
-      }
-    } else {
-      // Fallback: Load all custom beast data from individual localStorage keys
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('beastData_custom_')) {
-          try {
-            const beastId = key.replace('beastData_', '');
-            const savedData = localStorage.getItem(key);
-            if (savedData) {
-              const parsed = JSON.parse(savedData);
-              // Migrate old data without createdAt timestamp
-              if (!parsed.createdAt) {
-                parsed.createdAt = Date.now();
-              }
-              customBeastData[beastId] = parsed;
-            }
-          } catch (error) {
-            console.warn(`Failed to load beast data for ${key}:`, error);
-          }
-        }
-      }
-    }
-    
-    // Only create default Night Wolf if user has played before and has no beasts
-    // (returning users who somehow lost their beasts)
-    const hasPlayed = localStorage.getItem('hasPlayedBefore');
-    if (Object.keys(customBeastData).length === 0 && hasPlayed) {
-      const defaultBeastId = 'custom_default_nightwolf';
-      const now = Date.now();
-      
-      customBeastData[defaultBeastId] = {
-        name: 'Night Wolf',
-        hunger: 50,
-        happiness: 50,
-        energy: 50,
-        health: 100,
-        level: 1,
-        age: 0,
-        attack: 7,  // Base 6 + 1 from Brave personality
-        defense: 6,
-        speed: 6,
-        magic: 6,
-        isResting: false,
-        createdAt: now,
-        experience: 0,
-        maxLevel: 5  // Dim soul max level
-      };
-      
-      // Save the default beast data using consolidated approach
-      try {
-        const beastDataKey = 'beastData';
-        const existingData = localStorage.getItem(beastDataKey);
-        const allBeastData = existingData ? JSON.parse(existingData) : {};
-        allBeastData[defaultBeastId] = customBeastData[defaultBeastId];
-        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
-      } catch (error) {
-        console.error('Failed to save default beast data:', error);
-        // Fallback to old method
-        localStorage.setItem(`beastData_${defaultBeastId}`, JSON.stringify(customBeastData[defaultBeastId]));
-      }
-      
-      // Create and save the default custom beast configuration
-      const defaultCustomBeast = createBeastFromTemplate('nightwolf', 'Night Wolf');
-      if (defaultCustomBeast) {
-        localStorage.setItem(`customBeast_${defaultBeastId}`, JSON.stringify(defaultCustomBeast));
+    // Create default beast if needed (returning users with no beasts)
+    if (Object.keys(customBeastData).length === 0) {
+      const defaultBeast = BeastManager.createDefaultBeast();
+      if (defaultBeast) {
+        customBeastData[defaultBeast.beastId] = defaultBeast.beastData;
       }
     }
     
@@ -196,8 +67,7 @@ function AppContent() {
 
   // Set current beast ID to first available custom beast
   const [currentBeastId, setCurrentBeastId] = useState<string>(() => {
-    const beastIds = Object.keys(beastData);
-    return beastIds.length > 0 ? beastIds[0] : ''; // Empty string if no beasts initially
+    return BeastManager.getFirstBeastId(beastData);
   });
   
   const [showInventory, setShowInventory] = useState(false);
@@ -571,136 +441,67 @@ function AppContent() {
     localStorage.setItem(`beastName_${currentBeastId}`, newName);
   }, [currentBeastId]);
 
-  const handleCreateCustomBeast = useCallback((customBeast: CustomBeastData) => {
-    // Check if we've reached the maximum beast limit (8 total)
-    const totalBeasts = Object.keys(beastData).length;
+  const handleCreateCustomBeast = useCallback((customBeast: CustomBeast) => {
+    const result = BeastManager.createCustomBeast(customBeast, Object.keys(beastData).length);
     
-    if (totalBeasts >= 8) {
+    if (!result.success) {
       setToast({
-        message: 'Maximum of 8 beasts allowed! Release a beast to the wild to make room.',
+        message: result.error || 'Failed to create beast',
         show: true,
         type: 'info'
       });
       return;
     }
-    
-    // Create a new custom beast ID
-    const customBeastId = `custom_${Date.now()}`;
-    const now = Date.now();
-    
-    // Create new beast data with base stats + personality modifiers
-    const baseStats = {
-      attack: 6,  // Balanced stats for custom beasts
-      defense: 6,
-      speed: 6,
-      magic: 6,
-    };
-    
-    // Apply personality stat modifiers
-    const modifiedStats = {
-      attack: baseStats.attack + (customBeast.personality.statModifiers.attack || 0),
-      defense: baseStats.defense + (customBeast.personality.statModifiers.defense || 0),
-      speed: baseStats.speed + (customBeast.personality.statModifiers.speed || 0),
-      magic: baseStats.magic + (customBeast.personality.statModifiers.magic || 0),
-    };
-    
-    const newBeastData: IndividualBeastData = {
-      name: customBeast.name,
-      hunger: 50,
-      happiness: 50,
-      energy: 50,
-      health: 100,
-      level: 1,
-      age: 0,
-      attack: modifiedStats.attack,
-      defense: modifiedStats.defense,
-      speed: modifiedStats.speed,
-      magic: modifiedStats.magic,
-      isResting: false,
-      createdAt: now,
-      experience: 0,
-      maxLevel: getMaxLevelFromSoul(customBeast.soulEssence.id)
-    };
 
     // Add to beast data
-    setBeastData(prev => ({
-      ...prev,
-      [customBeastId]: newBeastData
-    }));
+    if (result.beastId && result.beastData) {
+      setBeastData(prev => ({
+        ...prev,
+        [result.beastId!]: result.beastData!
+      }));
 
-    // Save custom beast configuration
-    localStorage.setItem(`customBeast_${customBeastId}`, JSON.stringify(customBeast));
-    
-    // Trigger sidebar refresh to show the new custom beast
-    setSidebarRefreshTrigger(prev => prev + 1);
-    
-    // Switch to the new beast and close mausoleum
-    setCurrentBeastId(customBeastId);
-    setShowMausoleum(false);
-    
-    // Show success message
-    setToast({
-      message: `${customBeast.name} has been created!`,
-      show: true,
-      type: 'success'
-    });
+      // Trigger sidebar refresh to show the new custom beast
+      setSidebarRefreshTrigger(prev => prev + 1);
+      
+      // Switch to the new beast and close mausoleum
+      setCurrentBeastId(result.beastId);
+      setShowMausoleum(false);
+      
+      // Show success message
+      setToast({
+        message: `${customBeast.name} has been created!`,
+        show: true,
+        type: 'success'
+      });
+    }
   }, [beastData]);
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
-    // Update the consolidated beastData object
-    try {
-      const beastDataKey = 'beastData';
-      const existingData = localStorage.getItem(beastDataKey);
-      const allBeastData = existingData ? JSON.parse(existingData) : {};
-      
-      allBeastData[beastId] = data;
-      localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
-      
-      console.log(`Saved beast data for ${beastId}:`, data);
-    } catch (error) {
-      console.error('Failed to save beast data:', error);
-      // Fallback to old method if consolidation fails
-      localStorage.setItem(`beastData_${beastId}`, JSON.stringify(data));
-    }
+    BeastManager.saveBeastData(beastId, data);
   }, []);
 
   // Function to update experience globally (both localStorage and hook state)
   const updateBeastExperience = useCallback((beastId: string, newExperience: number): boolean => {
-    try {
-      // Update consolidated localStorage
-      const beastDataKey = 'beastData';
-      const existingData = localStorage.getItem(beastDataKey);
-      const allBeastData = existingData ? JSON.parse(existingData) : {};
-      
-      if (allBeastData[beastId]) {
-        allBeastData[beastId].experience = newExperience;
-        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
-        
-        // Update the local state
-        setBeastData(prev => ({
-          ...prev,
-          [beastId]: {
-            ...prev[beastId],
-            experience: newExperience
-          }
-        }));
-        
-        // If this is the current beast, update the hook's state too
-        if (beastId === currentBeastId) {
-          setExternalExperience(newExperience);
+    const success = BeastManager.updateBeastExperience(beastId, newExperience);
+    
+    if (success) {
+      // Update the local state
+      setBeastData(prev => ({
+        ...prev,
+        [beastId]: {
+          ...prev[beastId],
+          experience: newExperience
         }
-        
-        console.log(`Updated experience for beast ${beastId} to ${newExperience}`);
-        return true;
-      } else {
-        console.error(`Beast ${beastId} not found in beastData`);
-        return false;
+      }));
+      
+      // If this is the current beast, update the hook's state too
+      if (beastId === currentBeastId) {
+        setExternalExperience(newExperience);
       }
-    } catch (error) {
-      console.error('Failed to update beast experience:', error);
-      return false;
     }
+    
+    return success;
   }, [currentBeastId, setExternalExperience]);
 
   // Update beast data when stats change (with debouncing to prevent flashing)
@@ -758,23 +559,12 @@ function AppContent() {
   useEffect(() => {
     // Don't trigger level up animation on initial load or if previous level is invalid or no beast data
     if (stats.level > previousLevel && !isInitialLoad && previousLevel > 0 && currentBeastData) {
-      // Get the soul essence multiplier for this beast
-      let soulMultiplier = 1; // Default multiplier
-      try {
-        const customBeastData = localStorage.getItem(`customBeast_${currentBeastId}`);
-        if (customBeastData) {
-          const customBeast = JSON.parse(customBeastData);
-          if (customBeast.soulEssence?.id) {
-            soulMultiplier = getSoulStatMultiplier(customBeast.soulEssence.id);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to get soul multiplier:', error);
-      }
+      const levelsGained = stats.level - previousLevel;
+      const bonuses = BeastManager.calculateLevelUpBonuses(currentBeastId, levelsGained);
       
       setShowLevelUp(true);
       setToast({
-        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}! (+${soulMultiplier} to all stats, +10 health)`,
+        message: `🎉 ${currentBeastData.name} reached Level ${stats.level}! (+${bonuses.statIncrease / levelsGained} to all stats, +${bonuses.healthIncrease} health)`,
         show: true,
         type: 'success'
       });
@@ -788,20 +578,12 @@ function AppContent() {
         });
       }
       
-      // Increase all combat stats based on soul essence rarity
-      const levelsGained = stats.level - previousLevel;
-      const statIncrease = levelsGained * soulMultiplier; // Base +1 per level, multiplied by soul rarity
-      const healthIncrease = levelsGained * 10; // +10 health per level (unchanged)
-      
       setBeastData(prev => {
-        const updatedData = {
-          ...prev[currentBeastId],
-          attack: prev[currentBeastId].attack + statIncrease,
-          defense: prev[currentBeastId].defense + statIncrease,
-          speed: prev[currentBeastId].speed + statIncrease,
-          magic: prev[currentBeastId].magic + statIncrease,
-          health: prev[currentBeastId].health + healthIncrease
-        };
+        const updatedData = BeastManager.applyLevelUpBonuses(
+          prev[currentBeastId],
+          bonuses.statIncrease,
+          bonuses.healthIncrease
+        );
         
         saveBeastData(currentBeastId, updatedData);
         
@@ -812,7 +594,7 @@ function AppContent() {
       });
 
       // Also update the current health in the stats hook to match the new max health
-      updateHealth(stats.health + healthIncrease);
+      updateHealth(stats.health + bonuses.healthIncrease);
       
       // Hide level up effect after animation
       setTimeout(() => {
@@ -1126,31 +908,13 @@ function AppContent() {
       return newData;
     });
 
-    // Remove from localStorage
-    try {
-      const beastDataKey = 'beastData';
-      const existingData = localStorage.getItem(beastDataKey);
-      if (existingData) {
-        const allBeastData = JSON.parse(existingData);
-        delete allBeastData[currentBeastId];
-        localStorage.setItem(beastDataKey, JSON.stringify(allBeastData));
-      }
-    } catch (error) {
-      console.error('Failed to remove beast from consolidated data:', error);
-      // Fallback to old method
-      localStorage.removeItem(`beastData_${currentBeastId}`);
-    }
-    localStorage.removeItem(`beastName_${currentBeastId}`);
-    
-    // If it's a custom beast, also remove the custom beast config
-    if (currentBeastId.startsWith('custom_')) {
-      localStorage.removeItem(`customBeast_${currentBeastId}`);
-    }
+    // Remove from localStorage using BeastManager
+    BeastManager.deleteBeast(currentBeastId);
 
     // Switch to the first remaining beast
-    const firstRemainingBeast = Object.keys(beastData).find(id => id !== currentBeastId);
-    if (firstRemainingBeast) {
-      setCurrentBeastId(firstRemainingBeast);
+    const nextBeastId = BeastManager.getNextBeastId(beastData, currentBeastId);
+    if (nextBeastId) {
+      setCurrentBeastId(nextBeastId);
     }
     
     // Add a Dim Soul to inventory as a reward for releasing the beast
