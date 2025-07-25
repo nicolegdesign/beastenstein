@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { getRandomPersonality } from '../../data/personalities';
 import type { Personality } from '../../data/personalities';
-import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
+import { useBeastPartInventory } from '../../hooks/useLegacyState';
 import type { EnhancedBeastPart, EnhancedBeastPartSet, StatBonus, Ability } from '../../types/abilities';
 import { BEAST_PARTS, ARM_SETS, LEG_SETS, EXTRA_LIMBS } from '../../data/beastParts';
 import { SOUL_ESSENCES, type SoulEssence } from '../../data/soulEssences';

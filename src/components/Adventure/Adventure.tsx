@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
-import { useInventoryContext } from '../../contexts/InventoryContext';
+import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
@@ -24,7 +24,8 @@ interface AdventureProps {
 }
 
 export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true, beastData }) => {
-  const { setInventory } = useInventoryContext();
+  const { setInventory } = useBeastPartInventory();
+  const { adventureProgress, setAdventureProgress } = useAdventureProgress();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
@@ -771,32 +772,29 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   // Update adventure progress when a level is completed
   const updateAdventureProgress = (completedLevel: number) => {
     try {
-      const savedProgress = localStorage.getItem('adventureProgress');
-      let progress: { maxUnlockedLevel: number; completedLevels: number[] } = { 
-        maxUnlockedLevel: 1, 
-        completedLevels: [] 
-      };
-      
-      if (savedProgress) {
-        progress = JSON.parse(savedProgress);
-        // Ensure arrays are properly initialized
-        if (!progress.completedLevels) {
-          progress.completedLevels = [];
+      setAdventureProgress(prev => {
+        const newProgress = { ...prev };
+        
+        // Mark level as completed
+        if (!newProgress.completedLevels.includes(completedLevel)) {
+          newProgress.completedLevels.push(completedLevel);
         }
-      }
-      
-      // Mark level as completed
-      if (!progress.completedLevels.includes(completedLevel)) {
-        progress.completedLevels.push(completedLevel);
-      }
-      
-      // Unlock next level
-      if (completedLevel >= progress.maxUnlockedLevel && completedLevel < 10) {
-        progress.maxUnlockedLevel = completedLevel + 1;
-      }
-      
-      localStorage.setItem('adventureProgress', JSON.stringify(progress));
-      console.log('Adventure progress updated:', progress);
+        
+        // Update unlocked levels array
+        const maxUnlockedLevel = Math.max(...newProgress.unlockedLevels, 1);
+        if (completedLevel >= maxUnlockedLevel && completedLevel < 10) {
+          const nextLevel = completedLevel + 1;
+          if (!newProgress.unlockedLevels.includes(nextLevel)) {
+            newProgress.unlockedLevels.push(nextLevel);
+          }
+        }
+        
+        // Increment victories
+        newProgress.victories = (newProgress.victories || 0) + 1;
+        
+        console.log('Adventure progress updated:', newProgress);
+        return newProgress;
+      });
     } catch (error) {
       console.error('Failed to update adventure progress:', error);
     }

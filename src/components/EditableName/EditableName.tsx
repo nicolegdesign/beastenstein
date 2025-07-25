@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useBeastName } from '../../hooks/useLegacyState';
 import './EditableName.css';
 
 interface EditableNameProps {
@@ -14,24 +15,25 @@ export const EditableName: React.FC<EditableNameProps> = ({
 }) => {
   const [name, setName] = useState(initialName);
   const spanRef = useRef<HTMLSpanElement>(null);
+  const { getBeastName, setBeastName } = useBeastName();
 
   useEffect(() => {
-    // Load saved name from localStorage if beastId is provided
+    // Load saved name from centralized state if beastId is provided
     if (beastId) {
-      const savedName = localStorage.getItem(`beastName_${beastId}`) || initialName;
+      const savedName = getBeastName(beastId) || initialName;
       setName(savedName);
     } else {
       setName(initialName);
     }
-  }, [initialName, beastId]);
+  }, [initialName, beastId, getBeastName]);
 
   const handleBlur = () => {
     const newName = spanRef.current?.textContent?.trim() || initialName;
     setName(newName);
     
-    // Save to localStorage with beastId-specific key
+    // Save to centralized state with beastId-specific key
     if (beastId) {
-      localStorage.setItem(`beastName_${beastId}`, newName);
+      setBeastName(beastId, newName);
     }
     
     onNameChange?.(newName);

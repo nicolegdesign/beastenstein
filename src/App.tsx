@@ -13,33 +13,32 @@ import { Adventure } from './components/Adventure/Adventure';
 import { Debug } from './components/Debug/Debug';
 import { IntroStory } from './components/IntroStory/IntroStory';
 import { BeastSelection } from './components/BeastSelection/BeastSelection';
-import { InventoryProvider, useInventoryContext } from './contexts/InventoryContext';
+import { GameStateProvider } from './contexts/GameStateContext';
+import { useBeastData, useInventoryItems, useGameOptions, useBeastPartInventory } from './hooks/useLegacyState';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
-import { DEFAULT_ITEMS } from './types/inventory';
-import { DEFAULT_OPTIONS } from './types/options';
 import type { BeastCombatStats } from './types/game';
-import { getRandomPersonality, getDefaultPersonality } from './data/personalities';
 import type { IndividualBeastData } from './types/game';
-import type { InventoryItem } from './types/inventory';
 import type { GameOptions } from './types/options';
 import { createBeastFromTemplate } from './data/beastTemplates';
-import { getMaxLevelFromSoul, findSoulEssenceById } from './data/soulEssences';
-import { getPartsByBeastType, findExtraLimbById } from './data/beastParts';
+import { findSoulEssenceById } from './data/soulEssences';
 import { BeastManager, type CustomBeast } from './services/BeastManager';
 import './App.css';
 
 function App() {
   return (
-    <InventoryProvider>
+    <GameStateProvider>
       <AppContent />
-    </InventoryProvider>
+    </GameStateProvider>
   );
 }
 
 function AppContent() {
-  const { setInventory: setBeastPartInventory } = useInventoryContext();
+  // Use centralized game state
+  const { setInventory: setBeastPartInventory } = useBeastPartInventory();
+  const { beastData, setBeastData, currentBeastId, setCurrentBeastId } = useBeastData();
+  
   // Game flow state
   const [gameState, setGameState] = useState<'intro' | 'beastSelection' | 'game'>(() => {
     // Check if this is a first-time user
@@ -48,27 +47,6 @@ function AppContent() {
   });
 
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
-  
-  // Initialize individual beast data from localStorage (custom beasts only)
-  const [beastData, setBeastData] = useState<Record<string, IndividualBeastData>>(() => {
-    // Load beast data using BeastManager
-    const customBeastData = BeastManager.loadBeastData();
-    
-    // Create default beast if needed (returning users with no beasts)
-    if (Object.keys(customBeastData).length === 0) {
-      const defaultBeast = BeastManager.createDefaultBeast();
-      if (defaultBeast) {
-        customBeastData[defaultBeast.beastId] = defaultBeast.beastData;
-      }
-    }
-    
-    return customBeastData;
-  });
-
-  // Set current beast ID to first available custom beast
-  const [currentBeastId, setCurrentBeastId] = useState<string>(() => {
-    return BeastManager.getFirstBeastId(beastData);
-  });
   
   const [showInventory, setShowInventory] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
@@ -79,44 +57,9 @@ function AppContent() {
   const [showSteakAnimation, setShowSteakAnimation] = useState(false);
   const [isLayingDown, setIsLayingDown] = useState(false);
   
-  // Initialize game options from localStorage or defaults
-  const [gameOptions, setGameOptions] = useState<GameOptions>(() => {
-    const savedOptions = localStorage.getItem('gameOptions');
-    if (savedOptions) {
-      try {
-        return { ...DEFAULT_OPTIONS, ...JSON.parse(savedOptions) };
-      } catch (error) {
-        console.warn('Failed to parse saved options:', error);
-      }
-    }
-    return DEFAULT_OPTIONS;
-  });
-  
-  // Initialize inventory from localStorage or defaults
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>(() => {
-    const savedInventory = localStorage.getItem('inventoryItems');
-    
-    if (savedInventory) {
-      try {
-        const savedItems = JSON.parse(savedInventory);
-        
-        // Merge saved data with default items to ensure we have the latest properties
-        const mergedItems = DEFAULT_ITEMS.map(defaultItem => {
-          const savedItem = savedItems.find((item: { id: string; quantity: number }) => item.id === defaultItem.id);
-          return {
-            ...defaultItem, // Start with default (includes effect property)
-            quantity: savedItem?.quantity ?? defaultItem.quantity // Preserve saved quantity
-          };
-        });
-        
-        return mergedItems;
-      } catch (error) {
-        console.warn('Failed to parse saved inventory:', error);
-      }
-    }
-    
-    return DEFAULT_ITEMS;
-  });
+  // Use centralized game state for options and inventory
+  const { gameOptions, setGameOptions } = useGameOptions();
+  const { inventoryItems, setInventoryItems } = useInventoryItems();
   
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const levelUpSoundRef = useRef<HTMLAudioElement>(null);
@@ -125,207 +68,6 @@ function AppContent() {
   
   // Get current beast's data
   const currentBeastData = beastData[currentBeastId];
-
-  // Load custom beast data from localStorage on app initialization
-  useEffect(() => {
-    const loadCustomBeastData = () => {
-      const customBeastData: Record<string, IndividualBeastData> = {};
-      
-      // Scan localStorage for custom beast data entries
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('beastData_custom_')) {
-          try {
-            const data = localStorage.getItem(key);
-            if (data) {
-              const parsedData = JSON.parse(data);
-              const beastId = key.replace('beastData_', '');
-              customBeastData[beastId] = parsedData;
-            }
-          } catch (error) {
-            console.warn(`Failed to parse custom beast data for key ${key}:`, error);
-          }
-        }
-      }
-      
-      // Add custom beast data to beastData state if any found
-      if (Object.keys(customBeastData).length > 0) {
-        setBeastData(prev => ({
-          ...prev,
-          ...customBeastData
-        }));
-      }
-    };
-
-    loadCustomBeastData();
-  }, []); // Run only once on component mount
-  
-  // Migration function to add gender, personality, and maxLevel to existing custom beasts
-  useEffect(() => {
-    const migrateExistingBeasts = () => {
-      // Get all custom beast keys from localStorage
-      const keys = Object.keys(localStorage).filter(key => key.startsWith('customBeast_'));
-      
-      for (const key of keys) {
-        try {
-          const customBeastData = localStorage.getItem(key);
-          if (customBeastData) {
-            const customBeast = JSON.parse(customBeastData);
-            let shouldSave = false;
-            
-            // If the beast doesn't have a gender, assign one based on name
-            if (!customBeast.gender) {
-              // Default Night Wolf is male, others are random
-              customBeast.gender = customBeast.name === 'Night Wolf' ? 'male' : 
-                                   (Math.random() < 0.5 ? 'male' : 'female');
-              shouldSave = true;
-            }
-            
-            // If the beast doesn't have a personality, assign one based on name
-            if (!customBeast.personality) {
-              // Default Night Wolf gets Brave personality, others get random
-              customBeast.personality = customBeast.name === 'Night Wolf' ? 
-                                        getDefaultPersonality() : getRandomPersonality();
-              shouldSave = true;
-            }
-            
-            // Migrate Night Wolf parts to include stat bonuses and abilities
-            if (customBeast.name === 'Night Wolf' || 
-                (customBeast.head?.id === 'nightwolf-head' && customBeast.torso?.id === 'nightwolf-torso')) {
-              
-              // Get the centralized Night Wolf parts data
-              const nightWolfParts = getPartsByBeastType('nightwolf');
-              
-              // Update head with stat bonus and ability from centralized data
-              if (customBeast.head?.id === 'nightwolf-head' && !customBeast.head.statBonus && nightWolfParts.head) {
-                customBeast.head.statBonus = nightWolfParts.head.statBonus;
-                customBeast.head.ability = nightWolfParts.head.ability;
-                shouldSave = true;
-              }
-              
-              // Update torso with stat bonus from centralized data
-              if (customBeast.torso?.id === 'nightwolf-torso' && !customBeast.torso.statBonus && nightWolfParts.torso) {
-                customBeast.torso.statBonus = nightWolfParts.torso.statBonus;
-                shouldSave = true;
-              }
-              
-              // Update arms with stat bonuses and abilities from centralized data
-              if (customBeast.armLeft?.id?.includes('nightwolf') && !customBeast.armLeft.statBonus && nightWolfParts.armSet) {
-                customBeast.armLeft.statBonus = nightWolfParts.armSet.statBonus;
-                customBeast.armLeft.ability = nightWolfParts.armSet.ability;
-                shouldSave = true;
-              }
-              
-              if (customBeast.armRight?.id?.includes('nightwolf') && !customBeast.armRight.statBonus && nightWolfParts.armSet) {
-                customBeast.armRight.statBonus = nightWolfParts.armSet.statBonus;
-                customBeast.armRight.ability = nightWolfParts.armSet.ability;
-                shouldSave = true;
-              }
-              
-              // Update legs with stat bonuses and abilities from centralized data
-              if (customBeast.legLeft?.id?.includes('nightwolf') && !customBeast.legLeft.statBonus && nightWolfParts.legSet) {
-                customBeast.legLeft.statBonus = nightWolfParts.legSet.statBonus;
-                customBeast.legLeft.ability = nightWolfParts.legSet.ability;
-                shouldSave = true;
-              }
-              
-              if (customBeast.legRight?.id?.includes('nightwolf') && !customBeast.legRight.statBonus && nightWolfParts.legSet) {
-                customBeast.legRight.statBonus = nightWolfParts.legSet.statBonus;
-                customBeast.legRight.ability = nightWolfParts.legSet.ability;
-                shouldSave = true;
-              }
-              
-              // Add tail to Night Wolf if it doesn't have one
-              if (!customBeast.tail) {
-                const nightWolfTail = findExtraLimbById('nightwolf-extra-tail');
-                if (nightWolfTail) {
-                  customBeast.tail = nightWolfTail;
-                  shouldSave = true;
-                }
-              }
-            }
-            
-            // Save the updated beast data if changes were made
-            if (shouldSave) {
-              localStorage.setItem(key, JSON.stringify(customBeast));
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to migrate beast ${key}:`, error);
-        }
-      }
-      
-      // Also migrate beast data to add maxLevel
-      const beastDataKeys = Object.keys(localStorage).filter(key => key.startsWith('beastData_'));
-      
-      for (const key of beastDataKeys) {
-        try {
-          const beastDataString = localStorage.getItem(key);
-          if (beastDataString) {
-            const beastData = JSON.parse(beastDataString);
-            
-            // If the beast doesn't have maxLevel, determine it from soul essence
-            if (typeof beastData.maxLevel === 'undefined') {
-              const beastId = key.replace('beastData_', '');
-              const customBeastKey = `customBeast_${beastId}`;
-              const customBeastString = localStorage.getItem(customBeastKey);
-              
-              let maxLevel = 5; // Default to dim soul level
-              if (customBeastString) {
-                try {
-                  const customBeast = JSON.parse(customBeastString);
-                  if (customBeast.soulEssence?.id) {
-                    maxLevel = getMaxLevelFromSoul(customBeast.soulEssence.id);
-                  }
-                } catch (e) {
-                  console.warn(`Failed to parse custom beast for maxLevel migration: ${customBeastKey}`, e);
-                }
-              }
-              
-              beastData.maxLevel = maxLevel;
-              localStorage.setItem(key, JSON.stringify(beastData));
-              
-              // Update the state as well
-              setBeastData(prev => ({
-                ...prev,
-                [beastId]: { ...prev[beastId], maxLevel }
-              }));
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to migrate beast data ${key}:`, error);
-        }
-      }
-      
-      // Consolidate all individual beastData_${id} keys into a single beastData object
-      const consolidatedBeastData: Record<string, IndividualBeastData> = {};
-      for (const key of beastDataKeys) {
-        try {
-          const beastDataString = localStorage.getItem(key);
-          if (beastDataString) {
-            const beastData = JSON.parse(beastDataString);
-            const beastId = key.replace('beastData_', '');
-            consolidatedBeastData[beastId] = beastData;
-          }
-        } catch (error) {
-          console.warn(`Failed to consolidate beast data ${key}:`, error);
-        }
-      }
-      
-      // Store the consolidated data and remove individual keys
-      if (Object.keys(consolidatedBeastData).length > 0) {
-        localStorage.setItem('beastData', JSON.stringify(consolidatedBeastData));
-        console.log('Consolidated beast data:', consolidatedBeastData);
-        
-        // Remove individual keys after successful consolidation
-        for (const key of beastDataKeys) {
-          localStorage.removeItem(key);
-        }
-      }
-    };
-
-    migrateExistingBeasts();
-  }, []); // Run only once on component mount
 
   const [toast, setToast] = useState<{ message: string; show: boolean; type: 'success' | 'info' }>({ 
     message: '', 
@@ -406,7 +148,7 @@ function AppContent() {
     }
     
     // Save to state and localStorage
-    setBeastData({ [customBeastId]: newBeastData });
+    setBeastData(prev => ({ ...prev, [customBeastId]: newBeastData }));
     setCurrentBeastId(customBeastId);
     
     // Save to localStorage with consolidated format
@@ -417,7 +159,7 @@ function AppContent() {
     
     // Transition to game
     setGameState('game');
-  }, []);
+  }, [setBeastData, setCurrentBeastId]);
 
   const handleBeastChange = useCallback((beastId: string) => {
     // All beasts are now custom beasts
@@ -426,7 +168,7 @@ function AppContent() {
     if (hasCustomBeastData) {
       setCurrentBeastId(beastId);
     }
-  }, [beastData]);
+  }, [beastData, setCurrentBeastId]);
 
   const handleNameChange = useCallback((newName: string) => {
     setBeastData(prev => ({
@@ -439,7 +181,7 @@ function AppContent() {
     
     // Also save to localStorage for the EditableName component
     localStorage.setItem(`beastName_${currentBeastId}`, newName);
-  }, [currentBeastId]);
+  }, [currentBeastId, setBeastData]);
 
   const handleCreateCustomBeast = useCallback((customBeast: CustomBeast) => {
     const result = BeastManager.createCustomBeast(customBeast, Object.keys(beastData).length);
@@ -474,7 +216,7 @@ function AppContent() {
         type: 'success'
       });
     }
-  }, [beastData]);
+  }, [beastData, setBeastData, setCurrentBeastId]);
 
   // Save beast data to localStorage whenever it changes
   const saveBeastData = useCallback((beastId: string, data: IndividualBeastData) => {
@@ -502,7 +244,7 @@ function AppContent() {
     }
     
     return success;
-  }, [currentBeastId, setExternalExperience]);
+  }, [currentBeastId, setExternalExperience, setBeastData]);
 
   // Update beast data when stats change (with debouncing to prevent flashing)
   useEffect(() => {
@@ -553,7 +295,7 @@ function AppContent() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience, setBeastData]);
 
   // Level up detection and celebration
   useEffect(() => {
@@ -607,7 +349,7 @@ function AppContent() {
     if (isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [stats.level, stats.health, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData, gameOptions.soundEffectsEnabled, updateHealth]);
+  }, [stats.level, stats.health, previousLevel, currentBeastData, isInitialLoad, currentBeastId, saveBeastData, gameOptions.soundEffectsEnabled, updateHealth, setBeastData]);
 
   // Beast den music management
   useEffect(() => {
@@ -742,7 +484,7 @@ function AppContent() {
   }, []);
 
   const handleOptionsChange = useCallback((newOptions: GameOptions) => {
-    setGameOptions(newOptions);
+    setGameOptions(() => newOptions);
     localStorage.setItem('gameOptions', JSON.stringify(newOptions));
     
     setToast({
@@ -750,7 +492,7 @@ function AppContent() {
       show: true,
       type: 'success'
     });
-  }, []);
+  }, [setGameOptions]);
 
   const handleSave = useCallback(() => {
     // TODO: Implement save functionality  
@@ -844,7 +586,7 @@ function AppContent() {
       localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
       return updatedItems;
     });
-  }, [inventoryItems, fillHappiness, fillHunger, cleanup, poos, cleanupPoo, setToast]);
+  }, [inventoryItems, fillHappiness, fillHunger, cleanup, poos, cleanupPoo, setToast, setInventoryItems]);
 
   const handlePooCleanup = useCallback((pooId: string) => {
     cleanupPoo(pooId);
@@ -952,7 +694,7 @@ function AppContent() {
       show: true,
       type: 'info'
     });
-  }, [currentBeastId, currentBeastData, beastData, setBeastData, setSidebarRefreshTrigger, setToast, setBeastPartInventory]);
+  }, [currentBeastId, currentBeastData, beastData, setBeastData, setSidebarRefreshTrigger, setToast, setBeastPartInventory, setCurrentBeastId, setInventoryItems]);
 
   const handlePlay = useCallback(() => {
     play();
@@ -1042,7 +784,7 @@ function AppContent() {
     
     // Close debug panel
     setShowDebug(false);
-  }, [resetToBaseStats, setToast, setShowDebug]);
+  }, [resetToBaseStats, setToast, setShowDebug, setBeastData]);
 
   // Calculate enhanced combat stats including stat bonuses from beast parts
   const getEnhancedCombatStats = (beastId: string): BeastCombatStats => {

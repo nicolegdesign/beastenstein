@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { IndividualBeastData } from '../../types/game';
 import type { Personality } from '../../data/personalities';
+import { useBeastOrder, useBeastData } from '../../hooks/useLegacyState';
 import './SidebarBeastSelector.css';
 
 // Maximum number of beasts allowed
@@ -70,23 +71,19 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
   onCreateBeast,
   refreshTrigger
 }) => {
+  const { beastOrder, setBeastOrder } = useBeastOrder();
+  const { beastData: centralBeastData } = useBeastData();
   const [customBeasts, setCustomBeasts] = useState<CustomBeast[]>([]);
   const [draggedBeastId, setDraggedBeastId] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load and save beast order from localStorage
-  const getBeastOrder = (): string[] => {
-    const stored = localStorage.getItem('beastOrder');
-    return stored ? JSON.parse(stored) : [];
-  };
-
   const saveBeastOrder = (order: string[]) => {
-    localStorage.setItem('beastOrder', JSON.stringify(order));
+    setBeastOrder(order);
   };
 
   // Sort beasts according to saved order
   const sortBeastsByOrder = useCallback((beasts: CustomBeast[]): CustomBeast[] => {
-    const order = getBeastOrder();
+    const order = beastOrder;
     const beastMap = new Map(beasts.map(beast => [beast.id, beast]));
     const orderedBeasts: CustomBeast[] = [];
     const unorderedBeasts: CustomBeast[] = [];
@@ -104,7 +101,7 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
     beastMap.forEach(beast => unorderedBeasts.push(beast));
 
     return [...orderedBeasts, ...unorderedBeasts];
-  }, []);
+  }, [beastOrder]);
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, beastId: string) => {
@@ -153,29 +150,29 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
     setDragOverIndex(null);
   };
 
-  // Load custom beasts from localStorage
+  // Load custom beasts from centralized state
   useEffect(() => {
     const loadCustomBeasts = () => {
       const customBeastsList: CustomBeast[] = [];
       
-      // Scan localStorage for custom beast entries
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('customBeast_')) {
+      // Use centralized beast data instead of scanning localStorage
+      if (centralBeastData) {
+        Object.keys(centralBeastData).forEach(beastId => {
+          // Load custom beast data from localStorage (this part still needs the custom beast structure)
+          // This is because the centralized state stores IndividualBeastData, but we need CustomBeast structure
           try {
-            const customBeastData = localStorage.getItem(key);
+            const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
             if (customBeastData) {
               const parsedBeast = JSON.parse(customBeastData);
-              const beastId = key.replace('customBeast_', '');
               customBeastsList.push({
                 id: beastId,
                 ...parsedBeast
               });
             }
           } catch (error) {
-            console.warn(`Failed to parse custom beast data for key ${key}:`, error);
+            console.warn(`Failed to parse custom beast data for beast ${beastId}:`, error);
           }
-        }
+        });
       }
       
       // Sort beasts according to saved order
@@ -184,7 +181,7 @@ export const SidebarBeastSelector: React.FC<SidebarBeastSelectorProps> = ({
     };
 
     loadCustomBeasts();
-  }, [refreshTrigger, sortBeastsByOrder]); // Refresh when refreshTrigger changes
+  }, [refreshTrigger, sortBeastsByOrder, centralBeastData]); // Refresh when refreshTrigger changes
   return (
     <div className="sidebar-beast-selector">
       <h4 className="sidebar-title">

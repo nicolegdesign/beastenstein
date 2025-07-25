@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAdventureProgress } from '../../hooks/useLegacyState';
 import './AdventureMap.css';
 
 interface MapLevel {
@@ -16,23 +17,13 @@ interface AdventureMapProps {
 }
 
 export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClose }) => {
+  const { adventureProgress } = useAdventureProgress();
   const [levels, setLevels] = useState<MapLevel[]>([]);
 
   useEffect(() => {
-    // Load adventure progress from localStorage
-    const savedProgress = localStorage.getItem('adventureProgress');
-    let maxUnlockedLevel = 1;
-    let completedLevels: number[] = [];
-
-    if (savedProgress) {
-      try {
-        const progress = JSON.parse(savedProgress);
-        maxUnlockedLevel = progress.maxUnlockedLevel || 1;
-        completedLevels = progress.completedLevels || [];
-      } catch (error) {
-        console.warn('Failed to load adventure progress:', error);
-      }
-    }
+    // Use centralized adventure progress instead of localStorage
+    const maxUnlockedLevel = adventureProgress.unlockedLevels?.length > 0 ? Math.max(...adventureProgress.unlockedLevels) : 1;
+    const completedLevels = adventureProgress.completedLevels || [];
 
     // Create 10 levels with winding path positions
     const levelData: MapLevel[] = [
@@ -49,7 +40,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
     ];
 
     setLevels(levelData);
-  }, []);
+  }, [adventureProgress.unlockedLevels, adventureProgress.completedLevels]);
 
   const handleLevelClick = (level: MapLevel) => {
     if (level.unlocked) {

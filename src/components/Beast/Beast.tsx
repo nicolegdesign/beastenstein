@@ -1,7 +1,20 @@
 import React from 'react';
 import type { BeastMood } from '../../types/game';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
+import { useCustomBeastData } from '../../hooks/useLegacyState';
 import './Beast.css';
+
+interface CustomBeastData {
+  name: string;
+  head: { imagePath: string };
+  torso: { imagePath: string };
+  armLeft: { imagePath: string };
+  armRight: { imagePath: string };
+  legLeft: { imagePath: string };
+  legRight: { imagePath: string };
+  wings?: { imagePath: string };
+  tail?: { imagePath: string };
+}
 
 interface BeastProps {
   mood: BeastMood;
@@ -15,6 +28,8 @@ interface BeastProps {
 }
 
 export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = false, position, facing = 'right', beastId, disablePositioning = false, soundEffectsEnabled = true }) => {
+  const { getCustomBeastData } = useCustomBeastData();
+  
   const getBeastImage = (): string => {
     // Fallback static image (not used for custom beasts but kept for compatibility)
     if (isResting) return './images/pet-rest.png';
@@ -45,29 +60,32 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = fa
   const renderBeastContent = () => {
     // All beasts are now custom beasts
     if (beastId.startsWith('custom_')) {
-      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-      if (customBeastData) {
+      const customBeastData = getCustomBeastData(beastId);
+      if (customBeastData && typeof customBeastData === 'object') {
         try {
-          const customBeast = JSON.parse(customBeastData);
-          let animatedMood: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
-          if (isLayingDown) {
-            animatedMood = 'laying';
-          } else if (isResting) {
-            animatedMood = 'rest';
-          } else {
-            animatedMood = mood;
+          // Type guard to ensure we have a valid custom beast object
+          const customBeast = customBeastData as CustomBeastData;
+          if (customBeast && customBeast.name && customBeast.head && customBeast.torso) {
+            let animatedMood: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
+            if (isLayingDown) {
+              animatedMood = 'laying';
+            } else if (isResting) {
+              animatedMood = 'rest';
+            } else {
+              animatedMood = mood;
+            }
+            return (
+              <AnimatedCustomBeast 
+                mood={animatedMood} 
+                size={500}
+                facing={facing}
+                soundEffectsEnabled={soundEffectsEnabled}
+                customBeast={customBeast}
+              />
+            );
           }
-          return (
-            <AnimatedCustomBeast 
-              mood={animatedMood} 
-              size={500}
-              facing={facing}
-              soundEffectsEnabled={soundEffectsEnabled}
-              customBeast={customBeast}
-            />
-          );
         } catch (e) {
-          console.error('Failed to parse custom beast data:', e);
+          console.error('Failed to use custom beast data:', e);
         }
       }
     }
