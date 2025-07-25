@@ -61,6 +61,8 @@ export class AIEngine {
    */
   static shouldUseAbility(_attacker: BattleBeast): boolean {
     // TODO: Implement ability usage logic based on attacker stats, mana, etc.
+    // For now, always return false until ability system is implemented
+    void _attacker; // Explicitly mark parameter as intentionally unused
     return false;
   }
 }

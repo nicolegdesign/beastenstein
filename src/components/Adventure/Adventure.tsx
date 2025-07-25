@@ -25,7 +25,7 @@ interface AdventureProps {
 
 export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true, beastData }) => {
   const { setInventory } = useBeastPartInventory();
-  const { adventureProgress, setAdventureProgress } = useAdventureProgress();
+  const { setAdventureProgress } = useAdventureProgress();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
