@@ -1,20 +1,20 @@
 import { useCallback } from 'react';
-import { useInventoryContext } from '../contexts/InventoryContext';
+import { useGameStateContext } from './useGameStateContext';
 
 export const useBeastPartInventory = () => {
-  const { inventory, setInventory } = useInventoryContext();
+  const { beastPartInventory, updateBeastPartInventory } = useGameStateContext();
 
   const getPartQuantity = useCallback((partId: string): number => {
-    return inventory.parts?.[partId] || 0;
-  }, [inventory.parts]);
+    return beastPartInventory.parts?.[partId] || 0;
+  }, [beastPartInventory.parts]);
 
   const getSetQuantity = useCallback((setId: string): number => {
-    return inventory.sets?.[setId] || 0;
-  }, [inventory.sets]);
+    return beastPartInventory.sets?.[setId] || 0;
+  }, [beastPartInventory.sets]);
 
   const getSoulEssenceQuantity = useCallback((soulId: string): number => {
-    return inventory.soulEssences?.[soulId] || 0;
-  }, [inventory.soulEssences]);
+    return beastPartInventory.soulEssences?.[soulId] || 0;
+  }, [beastPartInventory.soulEssences]);
 
   // Helper functions to work with sets
   const getSetIdFromArmParts = useCallback((leftArmId: string, rightArmId: string): string | null => {
@@ -100,7 +100,7 @@ export const useBeastPartInventory = () => {
     }
 
     // Consume individual parts and sets in a single state update
-    setInventory(prev => {
+    updateBeastPartInventory(prev => {
       const newParts = {
         ...prev.parts,
         [headId]: Math.max(0, (prev.parts[headId] || 0) - 1),
@@ -131,10 +131,10 @@ export const useBeastPartInventory = () => {
     });
     
     return true;
-  }, [canCreateBeast, getSetIdFromArmParts, getSetIdFromLegParts, setInventory]);
+  }, [canCreateBeast, getSetIdFromArmParts, getSetIdFromLegParts, updateBeastPartInventory]);
 
   return {
-    inventory,
+    inventory: beastPartInventory,
     getPartQuantity,
     getSetQuantity,
     getSoulEssenceQuantity,

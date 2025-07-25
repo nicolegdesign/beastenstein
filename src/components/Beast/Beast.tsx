@@ -1,7 +1,7 @@
 import React from 'react';
 import type { BeastMood } from '../../types/game';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
-import { useCustomBeastData } from '../../hooks/useLegacyState';
+import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import './Beast.css';
 
 interface CustomBeastData {

@@ -37,6 +37,10 @@ export interface GameStateContextType {
   beastOrder: string[];
   updateBeastOrder: (order: string[]) => void;
   
+  // Beast names
+  beastNames: Record<string, string>;
+  updateBeastName: (beastId: string, name: string) => void;
+  
   // Global flags
   hasPlayedBefore: boolean;
   markHasPlayedBefore: () => void;

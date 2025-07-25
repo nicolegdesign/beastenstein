@@ -25,6 +25,7 @@ export interface GameState {
   gameOptions: GameOptions;
   adventureProgress: AdventureProgress;
   beastOrder: string[];
+  beastNames: Record<string, string>; // beastId -> name mapping
   hasPlayedBefore: boolean;
 }
 
@@ -36,6 +37,7 @@ const STORAGE_KEYS = {
   GAME_OPTIONS: 'gameOptions',
   ADVENTURE_PROGRESS: 'adventureProgress',
   BEAST_ORDER: 'beastOrder',
+  BEAST_NAMES: 'beastNames',
   HAS_PLAYED_BEFORE: 'hasPlayedBefore',
   CURRENT_BEAST_ID: 'currentBeastId'
 } as const;
@@ -159,6 +161,16 @@ export function useGameState() {
     }));
   }, []);
 
+  const updateBeastName = useCallback((beastId: string, name: string) => {
+    setGameState(prev => ({
+      ...prev,
+      beastNames: {
+        ...prev.beastNames,
+        [beastId]: name
+      }
+    }));
+  }, []);
+
   const markHasPlayedBefore = useCallback(() => {
     setGameState(prev => ({
       ...prev,
@@ -254,6 +266,10 @@ export function useGameState() {
     beastOrder: gameState.beastOrder,
     updateBeastOrder,
     
+    // Beast names
+    beastNames: gameState.beastNames,
+    updateBeastName,
+    
     // Global flags
     hasPlayedBefore: gameState.hasPlayedBefore,
     markHasPlayedBefore,
@@ -261,6 +277,44 @@ export function useGameState() {
     // Utilities
     resetGameState
   };
+}
+
+/**
+ * Migrate beast names from individual localStorage keys to centralized state
+ */
+function migrateBeastNames(): Record<string, string> {
+  // First try to load from centralized storage
+  const existingNames = loadFromStorage(STORAGE_KEYS.BEAST_NAMES, {});
+  
+  // If we already have centralized names, return them
+  if (Object.keys(existingNames).length > 0) {
+    return existingNames;
+  }
+  
+  // Otherwise, migrate from old localStorage format
+  const migratedNames: Record<string, string> = {};
+  const keysToRemove: string[] = [];
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('beastName_')) {
+      const beastId = key.replace('beastName_', '');
+      const name = localStorage.getItem(key);
+      if (name) {
+        migratedNames[beastId] = name;
+        keysToRemove.push(key);
+      }
+    }
+  }
+  
+  // Save migrated names to centralized storage
+  if (Object.keys(migratedNames).length > 0) {
+    saveToStorage(STORAGE_KEYS.BEAST_NAMES, migratedNames);
+    // Clean up old format
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  }
+  
+  return migratedNames;
 }
 
 /**
@@ -306,6 +360,9 @@ function loadGameState(): GameState {
   // Load has played before flag
   const hasPlayedBefore = localStorage.getItem(STORAGE_KEYS.HAS_PLAYED_BEFORE) === 'true';
   
+  // Load and migrate beast names
+  const beastNames = migrateBeastNames();
+  
   return {
     beasts,
     currentBeastId,
@@ -314,6 +371,7 @@ function loadGameState(): GameState {
     gameOptions,
     adventureProgress,
     beastOrder,
+    beastNames,
     hasPlayedBefore
   };
 }
@@ -329,6 +387,7 @@ function saveGameState(state: GameState): void {
     saveToStorage(STORAGE_KEYS.GAME_OPTIONS, state.gameOptions);
     saveToStorage(STORAGE_KEYS.ADVENTURE_PROGRESS, state.adventureProgress);
     saveToStorage(STORAGE_KEYS.BEAST_ORDER, state.beastOrder);
+    saveToStorage(STORAGE_KEYS.BEAST_NAMES, state.beastNames);
     
     // Save simple flags
     localStorage.setItem(STORAGE_KEYS.HAS_PLAYED_BEFORE, state.hasPlayedBefore ? 'true' : 'false');

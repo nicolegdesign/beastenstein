@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useBeastName } from '../../hooks/useLegacyState';
+import { useBeastName } from '../../hooks/useBeastName';
 import './EditableName.css';
 
 interface EditableNameProps {
