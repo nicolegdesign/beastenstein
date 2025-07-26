@@ -21,8 +21,9 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
   const [levels, setLevels] = useState<MapLevel[]>([]);
 
   useEffect(() => {
-    // Use centralized adventure progress instead of localStorage
-    const maxUnlockedLevel = adventureProgress.unlockedLevels?.length > 0 ? Math.max(...adventureProgress.unlockedLevels) : 1;
+    // Use centralized adventure progress instead of localStorage - with safety checks
+    const unlockedLevels = adventureProgress.unlockedLevels || [1];
+    const maxUnlockedLevel = unlockedLevels.length > 0 ? Math.max(...unlockedLevels) : 1;
     const completedLevels = adventureProgress.completedLevels || [];
 
     // Create 10 levels with winding path positions

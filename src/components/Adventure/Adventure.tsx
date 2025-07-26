@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
+import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
@@ -26,6 +27,7 @@ interface AdventureProps {
 export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true, beastData }) => {
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
+  const { getCustomBeastData } = useCustomBeastData();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
@@ -775,12 +777,20 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       setAdventureProgress(prev => {
         const newProgress = { ...prev };
         
+        // Ensure arrays exist (safety check)
+        if (!newProgress.completedLevels) {
+          newProgress.completedLevels = [];
+        }
+        if (!newProgress.unlockedLevels) {
+          newProgress.unlockedLevels = [1];
+        }
+        
         // Mark level as completed
         if (!newProgress.completedLevels.includes(completedLevel)) {
           newProgress.completedLevels.push(completedLevel);
         }
         
-        // Update unlocked levels array
+        // Update unlocked levels array - safely handle unlockedLevels
         const maxUnlockedLevel = Math.max(...newProgress.unlockedLevels, 1);
         if (completedLevel >= maxUnlockedLevel && completedLevel < 10) {
           const nextLevel = completedLevel + 1;
@@ -1162,9 +1172,9 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   // Get a specific player beast by ID
   const getPlayerBeastById = (beastId: string): CustomBeast | null => {
     try {
-      const customBeastData = localStorage.getItem(`customBeast_${beastId}`);
-      if (customBeastData) {
-        const beast = JSON.parse(customBeastData);
+      const customBeastData = getCustomBeastData(beastId);
+      if (customBeastData && typeof customBeastData === 'object') {
+        const beast = customBeastData as CustomBeast;
         
         // Ensure beast has enhanced properties for combat
         if (!beast.totalStatBonus) {
