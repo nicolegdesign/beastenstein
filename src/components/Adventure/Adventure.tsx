@@ -611,18 +611,21 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     let casterHealthAfterHealing = 0;
     let casterManaAfterUse = 0;
     
+    // Store damage result for reuse (to avoid double random calculations)
+    let abilityDamageResult: { isMiss: boolean; isCriticalHit: boolean; finalDamage: number; battleMessage: string } | null = null;
+    
     // Pre-calculate all values based on current state
     if (ability.type === 'attack' || ability.type === 'magicAttack') {
       const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
       if (targetBeast) {
-        const damageResult = calculateAbilityDamage(
+        abilityDamageResult = calculateAbilityDamage(
           ability,
           activeBeast,
           targetBeast
         );
         
-        targetHealthAfterDamage = Math.max(0, targetBeast.currentHealth - damageResult.finalDamage);
-        battleMessage = damageResult.battleMessage;
+        targetHealthAfterDamage = Math.max(0, targetBeast.currentHealth - abilityDamageResult.finalDamage);
+        battleMessage = abilityDamageResult.battleMessage;
       }
     } else if (ability.type === 'heal') {
       const healing = ability.healing || 0;
@@ -735,45 +738,15 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     // Create floating damage/heal effects based on ability type
     if (ability.type === 'attack' || ability.type === 'magicAttack') {
       const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
-      if (targetBeast) {
-        const attackerEffectiveStats = getEffectiveStats(activeBeast);
-        const targetEffectiveStats = getEffectiveStats(targetBeast);
-        
-        // Check for ability-specific miss chance
-        let isMiss = false;
-        if (ability.missChance !== undefined) {
-          const missRoll = Math.random();
-          isMiss = missRoll < ability.missChance;
-        }
-        
+      if (targetBeast && abilityDamageResult) {
         const targetElement = getBeastVisualElement(targetBeast.id, true);
         
-        if (isMiss) {
-          // Create miss floating effect
+        // Use the stored damage result to ensure consistency
+        if (abilityDamageResult.isMiss) {
           createFloatingDamage(0, 'miss', targetElement);
         } else {
-          // Check for ability-specific crit chance
-          let isCriticalHit = false;
-          if (ability.critChance !== undefined) {
-            const critRoll = Math.random();
-            isCriticalHit = critRoll < ability.critChance;
-          }
-          
-          const baseDamage = ability.damage || 0;
-          const statBonus = ability.type === 'magicAttack' 
-            ? Math.floor(attackerEffectiveStats.magic / 2)
-            : Math.floor(attackerEffectiveStats.attack / 2);
-          const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
-          let totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
-          
-          // Apply critical hit multiplier for abilities
-          if (isCriticalHit) {
-            totalDamage = Math.floor(totalDamage * 1.5);
-          }
-          
-          // Create appropriate floating damage effect
-          const damageType = isCriticalHit ? 'crit' : 'damage';
-          createFloatingDamage(totalDamage, damageType, targetElement);
+          const damageType = abilityDamageResult.isCriticalHit ? 'crit' : 'damage';
+          createFloatingDamage(abilityDamageResult.finalDamage, damageType, targetElement);
         }
       }
     } else if (ability.type === 'heal') {
