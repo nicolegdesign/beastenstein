@@ -49,15 +49,7 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     type: 'head',
     rarity: 'uncommon',
     statBonus: { defense: 2, health: 5 },
-    ability: {
-      id: 'splinter',
-      name: 'Splinter',
-      description: 'Wooden fragments pierce the enemy',
-      type: 'attack',
-      damage: 8,
-      cooldown: 1,
-      manaCost: 3
-    }
+    ability: ABILITIES.splinter
   },
   {
     id: 'woodenpuppet-torso',
@@ -65,7 +57,8 @@ export const BEAST_PARTS: EnhancedBeastPart[] = [
     imagePath: './images/beasts/wooden-puppet/wooden-puppet-torso.svg',
     type: 'torso',
     rarity: 'epic',
-    statBonus: { defense: 5, health: 20 }
+    statBonus: { defense: 5, health: 20 },
+    ability: ABILITIES.heal
   }
 ];
 

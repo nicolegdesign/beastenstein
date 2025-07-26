@@ -1,0 +1,64 @@
+.floating-damage {
+  font-weight: bold;
+  font-size: 1.8rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  font-family: 'Arial Black', Arial, sans-serif;
+  letter-spacing: 1px;
+}
+
+.floating-damage.damage {
+  color: #ef4444;
+  font-size: 2rem;
+}
+
+.floating-damage.heal {
+  color: #4ade80;
+  font-size: 1.8rem;
+}
+
+.floating-damage.crit {
+  color: #f59e0b;
+  font-size: 2.5rem;
+  text-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(245, 158, 11, 0.6),
+    0 0 40px rgba(245, 158, 11, 0.4);
+  animation: critPulse 0.3s ease-in-out;
+}
+
+.floating-damage.miss {
+  color: #6b7280;
+  font-size: 1.5rem;
+  font-style: italic;
+}
+
+.floating-damage.mana {
+  color: #3b82f6;
+  font-size: 1.6rem;
+}
+
+@keyframes critPulse {
+  0% { transform: scale(1.2); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1.2); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .floating-damage {
+    font-size: 1.4rem;
+  }
+  
+  .floating-damage.damage {
+    font-size: 1.6rem;
+  }
+  
+  .floating-damage.crit {
+    font-size: 2rem;
+  }
+  
+  .floating-damage.heal {
+    font-size: 1.4rem;
+  }
+}

@@ -9,7 +9,8 @@ export const ABILITIES: Record<string, Ability> = {
     type: 'attack',
     damage: 15,
     cooldown: 1,
-    manaCost: 5
+    manaCost: 5,
+    critChance: 0.8 // 80% critical hit chance
   },
   
   dragonClaw: {
@@ -20,6 +21,17 @@ export const ABILITIES: Record<string, Ability> = {
     damage: 20,
     cooldown: 2,
     manaCost: 8
+  },
+
+  splinter: {
+    id: 'splinter',
+    name: 'Splinter',
+    description: 'Wooden fragments pierce the enemy',
+    type: 'attack',
+    damage: 8,
+    cooldown: 1,
+    manaCost: 3,
+    missChance: 0.8 // 80% miss chance (very unreliable but low cost)
   },
 
   // Head abilities  

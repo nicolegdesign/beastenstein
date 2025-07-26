@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
+import { FloatingDamage } from '../FloatingDamage/FloatingDamage';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
+import { useCombatDamage } from '../../hooks/useCombatDamage';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
@@ -68,6 +70,88 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const [playerAttacking, setPlayerAttacking] = useState<boolean>(false);
   const [opponentAttacking, setOpponentAttacking] = useState<boolean>(false);
   
+  // Floating damage interface and state
+  interface FloatingDamageInstance {
+    id: string;
+    damage: number;
+    type: 'damage' | 'heal' | 'crit' | 'miss' | 'mana';
+    position: { x: number; y: number };
+  }
+  const [floatingDamages, setFloatingDamages] = useState<FloatingDamageInstance[]>([]);
+  
+  // Helper function to create floating damage
+  const createFloatingDamage = (
+    damage: number, 
+    type: 'damage' | 'heal' | 'crit' | 'miss' | 'mana',
+    targetElement?: HTMLElement | null
+  ) => {
+    let position = { x: 400, y: 300 }; // Default center position
+    
+    if (targetElement) {
+      const rect = targetElement.getBoundingClientRect();
+      // Position relative to the entire viewport instead of battle-content
+      const adventureRect = document.querySelector('.adventure')?.getBoundingClientRect();
+      
+      if (adventureRect) {
+        position = {
+          x: rect.left + rect.width / 2 - adventureRect.left,
+          y: rect.top + rect.height / 2 - adventureRect.top
+        };
+        console.log('✅ Calculated position (relative to adventure):', position);
+      } else {
+        // Fallback to viewport coordinates
+        position = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
+      }
+    }
+
+    const id = `floating-${Date.now()}-${Math.random()}`;
+    const newFloatingDamage: FloatingDamageInstance = {
+      id,
+      damage,
+      type,
+      position
+    };
+
+    setFloatingDamages(prev => [...prev, newFloatingDamage]);
+
+    // Remove floating damage after animation completes
+    setTimeout(() => {
+      setFloatingDamages(prev => prev.filter(fd => fd.id !== id));
+    }, type === 'crit' ? 2000 : 1500);
+  };
+
+  // Helper function to get beast visual element for positioning
+  const getBeastVisualElement = (beastId: string, isOpponent: boolean = false): HTMLElement | null => {
+    // Find the beast in combat state to get its position and name
+    const beasts = isOpponent ? combatState.opponentBeasts : combatState.playerBeasts;
+    const beast = beasts.find(b => b.id === beastId);
+    
+    if (!beast) return null;
+    
+    // Look for the beast-visual-slot with the correct position in the correct grid
+    const gridSelector = isOpponent ? '.opponent-grid' : '.beast-visual-grid:not(.opponent-grid)';
+    const grid = document.querySelector(gridSelector);
+    
+    if (!grid) return null;
+    
+    // Find the slot with the matching position
+    const slot = grid.querySelector(`.beast-visual-slot.${beast.position}`) as HTMLElement;
+    
+    if (slot) {
+      // Double-check by verifying the beast name matches
+      const nameElement = slot.querySelector('.beast-visual-label');
+      if (nameElement && nameElement.textContent === beast.customBeast.name) {
+        return slot;
+      }
+    }
+    
+    // Fallback: return any slot with the position if name check fails
+    return slot;
+  };
+  
   // Play victory sound when entering victory state
   useEffect(() => {
     if (gameState === 'victory' && victorySoundRef.current && soundEffectsEnabled) {
@@ -117,6 +201,8 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   }, [gameState, soundEffectsEnabled]);
   
   // Enhanced combat state
+  const { calculateAbilityDamage, calculateBasicAttackDamage } = useCombatDamage();
+
   const [combatState, setCombatState] = useState<CombatState>({
     playerBeasts: [],
     opponentBeasts: [],
@@ -529,19 +615,14 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     if (ability.type === 'attack' || ability.type === 'magicAttack') {
       const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
       if (targetBeast) {
-        const attackerEffectiveStats = getEffectiveStats(activeBeast);
-        const targetEffectiveStats = getEffectiveStats(targetBeast);
+        const damageResult = calculateAbilityDamage(
+          ability,
+          activeBeast,
+          targetBeast
+        );
         
-        const baseDamage = ability.damage || 0;
-        const statBonus = ability.type === 'magicAttack' 
-          ? Math.floor(attackerEffectiveStats.magic / 2)
-          : Math.floor(attackerEffectiveStats.attack / 2);
-        const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
-        const totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
-        
-        targetHealthAfterDamage = Math.max(0, targetBeast.currentHealth - totalDamage);
-        
-        battleMessage = `${activeBeast.customBeast.name} uses ${ability.name} on ${targetBeast.customBeast.name} for ${totalDamage} damage!`;
+        targetHealthAfterDamage = Math.max(0, targetBeast.currentHealth - damageResult.finalDamage);
+        battleMessage = damageResult.battleMessage;
       }
     } else if (ability.type === 'heal') {
       const healing = ability.healing || 0;
@@ -649,6 +730,65 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     // Add battle log message outside of setState to prevent double execution (same pattern as basicAttack)
     if (battleMessage) {
       setBattleLog(prev => [...prev, battleMessage]);
+    }
+
+    // Create floating damage/heal effects based on ability type
+    if (ability.type === 'attack' || ability.type === 'magicAttack') {
+      const targetBeast = combatState.opponentBeasts.find(b => b.id === targetId);
+      if (targetBeast) {
+        const attackerEffectiveStats = getEffectiveStats(activeBeast);
+        const targetEffectiveStats = getEffectiveStats(targetBeast);
+        
+        // Check for ability-specific miss chance
+        let isMiss = false;
+        if (ability.missChance !== undefined) {
+          const missRoll = Math.random();
+          isMiss = missRoll < ability.missChance;
+        }
+        
+        const targetElement = getBeastVisualElement(targetBeast.id, true);
+        
+        if (isMiss) {
+          // Create miss floating effect
+          createFloatingDamage(0, 'miss', targetElement);
+        } else {
+          // Check for ability-specific crit chance
+          let isCriticalHit = false;
+          if (ability.critChance !== undefined) {
+            const critRoll = Math.random();
+            isCriticalHit = critRoll < ability.critChance;
+          }
+          
+          const baseDamage = ability.damage || 0;
+          const statBonus = ability.type === 'magicAttack' 
+            ? Math.floor(attackerEffectiveStats.magic / 2)
+            : Math.floor(attackerEffectiveStats.attack / 2);
+          const defenseReduction = Math.floor(targetEffectiveStats.defense / 3);
+          let totalDamage = Math.max(1, baseDamage + statBonus - defenseReduction);
+          
+          // Apply critical hit multiplier for abilities
+          if (isCriticalHit) {
+            totalDamage = Math.floor(totalDamage * 1.5);
+          }
+          
+          // Create appropriate floating damage effect
+          const damageType = isCriticalHit ? 'crit' : 'damage';
+          createFloatingDamage(totalDamage, damageType, targetElement);
+        }
+      }
+    } else if (ability.type === 'heal') {
+      const healing = ability.healing || 0;
+      const casterElement = getBeastVisualElement(activeBeast.id, false);
+      createFloatingDamage(healing, 'heal', casterElement);
+    }
+
+    // Create mana cost floating effect
+    if (ability.manaCost && ability.manaCost > 0) {
+      const casterElement = getBeastVisualElement(activeBeast.id, false);
+      // Slight delay so it doesn't overlap with other effects
+      setTimeout(() => {
+        createFloatingDamage(ability.manaCost!, 'mana', casterElement);
+      }, 300);
     }
 
     // Trigger player attack animation
@@ -834,10 +974,47 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     // Auto-select first targetable beast for basic attack
     const target = targetableBeasts[0];
 
-    // Calculate damage outside of setState so we can use it for the battle log
-    const attackerEffectiveStats = getEffectiveStats(activeBeast);
-    const targetEffectiveStats = getEffectiveStats(target);
-    const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
+    // Calculate damage with critical hit and miss chance
+    const damageResult = calculateBasicAttackDamage(activeBeast, target);
+    
+    // If attack misses, handle it separately
+    if (damageResult.isMiss) {
+      // Apply damage to target (none for miss)
+      setCombatState(prev => {
+        // Early exit if not player's turn (double-click protection)
+        if (!TurnManager.isPlayerTurn(prev)) return prev;
+        
+        return prev; // No state change for miss
+      });
+
+      // Create floating miss effect
+      const targetElement = getBeastVisualElement(target.id, true);
+      createFloatingDamage(0, 'miss', targetElement);
+
+      // Add battle log message outside of setState to prevent double execution
+      setBattleLog(prev => [...prev, damageResult.battleMessage]);
+
+      setPlayerAttacking(true);
+      setTimeout(() => setPlayerAttacking(false), 1200);
+
+      // Check for victory and advance turn after a delay
+      setTimeout(() => {
+        const battleResult = checkBattleEnd();
+        if (battleResult === 'playerWin') {
+          handleVictory();
+        } else if (battleResult === 'opponentWin') {
+          setGameState('defeat');
+          setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+        } else {
+          // Battle continues, advance to next turn
+          advanceTurn();
+        }
+      }, 1500);
+      
+      return; // Exit early for miss
+    }
+    
+    const finalDamage = damageResult.finalDamage;
 
     // Apply damage to target
     setCombatState(prev => {
@@ -849,7 +1026,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       
       newState.opponentBeasts[targetIndex] = {
         ...newState.opponentBeasts[targetIndex],
-        currentHealth: Math.max(0, target.currentHealth - damage)
+        currentHealth: Math.max(0, target.currentHealth - finalDamage)
       };
       
       if (newState.opponentBeasts[targetIndex].currentHealth <= 0) {
@@ -859,8 +1036,16 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       return newState;
     });
 
+    // Create floating damage effect
+    const targetElement = getBeastVisualElement(target.id, true);
+    createFloatingDamage(
+      finalDamage,
+      damageResult.isCriticalHit ? 'crit' : 'damage',
+      targetElement
+    );
+
     // Add battle log message outside of setState to prevent double execution
-    setBattleLog(prev => [...prev, `${activeBeast.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+    setBattleLog(prev => [...prev, damageResult.battleMessage]);
 
     setPlayerAttacking(true);
     setTimeout(() => setPlayerAttacking(false), 1200);
@@ -950,7 +1135,52 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
 
       const attackerEffectiveStats = getEffectiveStats(attacker);
       const targetEffectiveStats = getEffectiveStats(target);
-      const damage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
+      
+      // Miss chance for AI (similar to player, but slightly higher)
+      const baseMissChance = 0.12; // 12% base miss chance for AI (slightly higher than players)
+      const speedDifference = targetEffectiveStats.speed - attackerEffectiveStats.speed;
+      const missChance = Math.max(0.06, Math.min(0.3, baseMissChance + speedDifference / 200)); // 6% to 30% miss chance
+      const isMiss = Math.random() < missChance;
+      
+      // If attack misses, handle it separately
+      if (isMiss) {
+        // Create floating miss effect for AI attack
+        const targetElement = getBeastVisualElement(target.id, false);
+        createFloatingDamage(0, 'miss', targetElement);
+
+        // Add battle log messages outside of setState to prevent double execution
+        setBattleLog(prev => [...prev, `${attacker.customBeast.name} attacks ${target.customBeast.name} but misses!`]);
+        
+        // Check for battle end and advance turn after state update (no damage done)
+        setTimeout(() => {
+          const battleResult = checkBattleEnd();
+          if (battleResult === 'opponentWin') {
+            setGameState('defeat');
+            setBattleLog(prev => [...prev, 'Defeat! All your beasts have fallen...']);
+          } else if (battleResult === 'playerWin') {
+            handleVictory();
+          } else {
+            // Battle continues, advance to next turn
+            advanceTurn();
+          }
+        }, 1500);
+
+        updateCooldowns();
+        return; // Exit early for miss
+      }
+      
+      // Critical hit chance for AI (slightly lower than players)
+      const critChance = Math.min(0.1, attackerEffectiveStats.speed / 1200); // Max 10% crit chance for AI
+      const isCriticalHit = Math.random() < critChance;
+      
+      let baseDamage = Math.max(1, attackerEffectiveStats.attack - Math.floor(targetEffectiveStats.defense / 2) + Math.floor(Math.random() * 3) - 1);
+      
+      // Apply critical hit multiplier
+      if (isCriticalHit) {
+        baseDamage = Math.floor(baseDamage * 1.5);
+      }
+      
+      const finalDamage = baseDamage;
       
       setCombatState(prev => {
         const newState = { ...prev };
@@ -958,7 +1188,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         
         newState.playerBeasts[targetIndex] = {
           ...newState.playerBeasts[targetIndex],
-          currentHealth: Math.max(0, target.currentHealth - damage)
+          currentHealth: Math.max(0, target.currentHealth - finalDamage)
         };
         
         if (newState.playerBeasts[targetIndex].currentHealth <= 0) {
@@ -968,8 +1198,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         return newState;
       });
 
+      // Create floating damage effect for AI attack
+      const targetElement = getBeastVisualElement(target.id, false);
+      createFloatingDamage(
+        finalDamage,
+        isCriticalHit ? 'crit' : 'damage',
+        targetElement
+      );
+
       // Add battle log messages outside of setState to prevent double execution
-      setBattleLog(prev => [...prev, `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${damage} damage!`]);
+      const attackMessage = isCriticalHit 
+        ? `${attacker.customBeast.name} lands a CRITICAL HIT on ${target.customBeast.name} for ${finalDamage} damage!`
+        : `${attacker.customBeast.name} attacks ${target.customBeast.name} for ${finalDamage} damage!`;
+      setBattleLog(prev => [...prev, attackMessage]);
       
       // Check for battle end and advance turn after state update
       setTimeout(() => {
@@ -1189,7 +1430,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         
         // Ensure beast has abilities
         if (!beast.availableAbilities) {
-          console.log('Beast has no abilities, creating default ones for:', beast.name);
           const abilities: Ability[] = [];
           
           // Add abilities from parts
@@ -1213,9 +1453,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           }
           
           beast.availableAbilities = abilities;
-          console.log('Added abilities to beast:', beast.name, abilities);
-        } else {
-          console.log('Beast already has abilities:', beast.name, beast.availableAbilities);
         }
         
         return beast;
@@ -1669,6 +1906,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           </div>
         </div>
       )}
+
+      {/* Floating Damage Effects - Positioned at adventure level */}
+      {floatingDamages.map(floatingDamage => (
+        <FloatingDamage
+          key={floatingDamage.id}
+          damage={floatingDamage.damage}
+          type={floatingDamage.type}
+          position={floatingDamage.position}
+          onComplete={() => {
+            setFloatingDamages(prev => prev.filter(fd => fd.id !== floatingDamage.id));
+          }}
+        />
+      ))}
 
       {/* Victory/Defeat Screen */}
       {(gameState === 'victory' || gameState === 'defeat') && (

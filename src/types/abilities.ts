@@ -16,6 +16,8 @@ export interface Ability {
   };
   cooldown: number; // turns
   manaCost?: number;
+  critChance?: number; // Override crit chance (0.0 to 1.0)
+  missChance?: number; // Override miss chance (0.0 to 1.0)
 }
 
 export interface StatBonus {
