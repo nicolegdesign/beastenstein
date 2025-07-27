@@ -7,7 +7,7 @@ export const ABILITIES: Record<string, Ability> = {
     name: 'Slash',
     description: 'A quick slashing attack that deals damage',
     type: 'attack',
-    damage: 15,
+    damage: 100,
     cooldown: 1,
     manaCost: 5,
     critChance: 0.8 // 80% critical hit chance
