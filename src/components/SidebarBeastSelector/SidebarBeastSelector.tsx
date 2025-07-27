@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import type { IndividualBeastData } from '../../types/game';
 import type { Personality } from '../../data/personalities';
-import { useBeastOrder, useBeastData } from '../../hooks/useLegacyState';
+import { useBeastOrder } from '../../hooks/useLegacyState';
+import { useBeastData } from '../../hooks/useBeastData';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import './SidebarBeastSelector.css';
 
