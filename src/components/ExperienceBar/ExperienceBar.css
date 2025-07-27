@@ -1,0 +1,180 @@
+.exp-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exp-bar {
+  position: relative;
+  background: linear-gradient(to right, #1a1a1a, #2d2d2d);
+  border-radius: 12px;
+  border: 2px solid rgba(100, 255, 150, 0.3);
+  overflow: hidden;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(100, 255, 150, 0.1);
+}
+
+.exp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    #4ade80 0%, 
+    #22c55e 50%, 
+    #16a34a 100%
+  );
+  transition: width 0.8s ease-out;
+  border-radius: 12px 0 0 12px; /* Round left side only */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.exp-bar-gained {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg,
+    rgba(251, 191, 36, 0.8) 0%,
+    rgba(245, 158, 11, 0.8) 50%,
+    rgba(217, 119, 6, 0.8) 100%
+  );
+  border-radius: 0 12px 12px 0; /* Round right side only */
+  animation: expGainPulse 1.5s ease-out infinite;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+}
+
+.exp-bar-text {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  min-height: 16px;
+}
+
+.level-up-indicator {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(45deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  animation: levelUpBounce 2s ease-out;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  z-index: 10;
+}
+
+/* Size variants */
+.exp-bar--small {
+  font-size: 10px;
+}
+
+.exp-bar--small .exp-bar {
+  height: 8px;
+}
+
+.exp-bar--small .exp-bar-text {
+  font-size: 10px;
+}
+
+.exp-bar--small .level-up-indicator {
+  font-size: 8px;
+  padding: 2px 8px;
+  top: -20px;
+}
+
+.exp-bar--medium {
+  font-size: 12px;
+}
+
+.exp-bar--medium .exp-bar {
+  height: 12px;
+}
+
+.exp-bar--medium .exp-bar-text {
+  font-size: 12px;
+}
+
+.exp-bar--medium .level-up-indicator {
+  font-size: 10px;
+  padding: 4px 12px;
+  top: -25px;
+}
+
+.exp-bar--large {
+  font-size: 14px;
+}
+
+.exp-bar--large .exp-bar {
+  height: 16px;
+}
+
+.exp-bar--large .exp-bar-text {
+  font-size: 14px;
+}
+
+.exp-bar--large .level-up-indicator {
+  font-size: 12px;
+  padding: 6px 16px;
+  top: -30px;
+}
+
+/* Animations */
+@keyframes expGainPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.1);
+  }
+}
+
+@keyframes levelUpBounce {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px) scale(1.1);
+  }
+  40% {
+    transform: translateX(-50%) translateY(0px) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.9);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .exp-bar-container {
+    gap: 2px;
+  }
+  
+  .exp-bar--medium .exp-bar {
+    height: 10px;
+  }
+  
+  .exp-bar--large .exp-bar {
+    height: 14px;
+  }
+  
+  .exp-bar-text {
+    font-size: 11px;
+  }
+  
+  .level-up-indicator {
+    font-size: 9px;
+    padding: 3px 10px;
+  }
+}

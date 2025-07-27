@@ -1262,6 +1262,11 @@
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
 }
 
+/* Victory screen experience bar integration */
+.victory-exp-bar {
+  margin-top: 12px;
+}
+
 @keyframes levelUpPulse {
   0%, 100% { 
     transform: scale(1);
