@@ -1132,7 +1132,7 @@ function AppContent() {
               title="Enter the Adventure Mode"
             >
               <div className="adventure-button-icon">🗺️</div>
-              <div className="adventure-button-text">VIEW YOUR MAP</div>
+              <div className="adventure-button-text">START YOUR ADVENTURE</div>
             </button>
           </div>
 

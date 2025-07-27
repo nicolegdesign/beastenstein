@@ -813,6 +813,7 @@
 
 .setup-btn.back-to-map {
   background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  display: none;
 }
 
 .setup-btn.start-battle {

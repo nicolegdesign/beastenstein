@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAdventureProgress } from '../../hooks/useLegacyState';
+import { LEVEL_DATA } from '../../data/levelData';
 import './AdventureMap.css';
 
 interface MapLevel {
@@ -26,19 +27,12 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
     const maxUnlockedLevel = unlockedLevels.length > 0 ? Math.max(...unlockedLevels) : 1;
     const completedLevels = adventureProgress.completedLevels || [];
 
-    // Create 10 levels with winding path positions
-    const levelData: MapLevel[] = [
-      { id: 1, name: 'Shadow Grove', x: 15, y: 85, unlocked: true, completed: completedLevels.includes(1) },
-      { id: 2, name: 'Misty Hollow', x: 25, y: 70, unlocked: maxUnlockedLevel >= 2, completed: completedLevels.includes(2) },
-      { id: 3, name: 'Thornwood Path', x: 40, y: 60, unlocked: maxUnlockedLevel >= 3, completed: completedLevels.includes(3) },
-      { id: 4, name: 'Whispering Vale', x: 55, y: 45, unlocked: maxUnlockedLevel >= 4, completed: completedLevels.includes(4) },
-      { id: 5, name: 'Moonlit Clearing', x: 70, y: 35, unlocked: maxUnlockedLevel >= 5, completed: completedLevels.includes(5) },
-      { id: 6, name: 'Ancient Ruins', x: 80, y: 50, unlocked: maxUnlockedLevel >= 6, completed: completedLevels.includes(6) },
-      { id: 7, name: 'Cursed Marshland', x: 75, y: 65, unlocked: maxUnlockedLevel >= 7, completed: completedLevels.includes(7) },
-      { id: 8, name: 'Shadowbark Forest', x: 60, y: 75, unlocked: maxUnlockedLevel >= 8, completed: completedLevels.includes(8) },
-      { id: 9, name: 'Nightmare Woods', x: 45, y: 85, unlocked: maxUnlockedLevel >= 9, completed: completedLevels.includes(9) },
-      { id: 10, name: 'Castle Beastenstein', x: 85, y: 15, unlocked: maxUnlockedLevel >= 10, completed: completedLevels.includes(10) }
-    ];
+    // Create levels from shared level data
+    const levelData: MapLevel[] = LEVEL_DATA.map(level => ({
+      ...level,
+      unlocked: level.id === 1 || maxUnlockedLevel >= level.id,
+      completed: completedLevels.includes(level.id)
+    }));
 
     setLevels(levelData);
   }, [adventureProgress.unlockedLevels, adventureProgress.completedLevels]);
@@ -100,7 +94,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
         <h1 className="map-title">Adventure Map</h1>
         <p className="map-subtitle">Choose your path through the Forbidden Lands</p>
         <button className="close-map-button" onClick={onClose}>
-          ✕ Close Map
+          Quit Adventure
         </button>
       </div>
 
@@ -120,7 +114,7 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
             onClick={() => handleLevelClick(level)}
           >
             <div className="level-marker">
-              <span className="level-number">{level.id}</span>
+              <span className="level-icon">{level.id}</span>
               {level.completed && <div className="completion-check">✓</div>}
             </div>
             <div className="level-tooltip">

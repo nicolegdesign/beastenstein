@@ -13,6 +13,7 @@ import type { BeastCombatStats } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
 import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
+import { getLevelName } from '../../data/levelData';
 import './Adventure.css';
 
 // Import combat services
@@ -1429,7 +1430,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Level {selectedLevel} Challenge
+              {getLevelName(selectedLevel)}
             </motion.h2>
             
             <div className="opponent-preview">
@@ -1439,7 +1440,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
-                <h3>{opponent?.name || 'Wild Beast'} (Level {opponentLevel})</h3>
+                <h3>You have encountered a {opponent?.name || 'Wild Beast'} (Lvl {opponentLevel})!</h3>
                 <div className="opponent-stats-preview">
                   <div className="stat-preview">
                     <span className="stat-icon">⚔️</span>
