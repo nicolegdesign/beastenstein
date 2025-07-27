@@ -27,6 +27,7 @@ import type { GameOptions } from './types/options';
 import { createBeastFromTemplate } from './data/beastTemplates';
 import { findSoulEssenceById } from './data/soulEssences';
 import { BeastManager, type CustomBeast } from './services/BeastManager';
+import { ExperienceManager } from './services/ExperienceManager';
 import './App.css';
 
 function App() {
@@ -991,7 +992,16 @@ function AppContent() {
             </span>
             <span>LEVEL {stats.level}/{currentBeastData.maxLevel || 5}</span>
             <span>AGE {stats.age}</span>
-            <span>EXP {getExperience()}/{stats.level * 100}</span>
+            <span>EXP {getExperience()}/{(() => {
+              // Calculate total experience needed for next level
+              const currentExp = getExperience();
+              const maxLevel = currentBeastData.maxLevel || 5;
+              const experienceData = ExperienceManager.getExperienceData(currentExp, maxLevel);
+              if (experienceData.isAtMaxLevel) {
+                return 'MAX';
+              }
+              return ExperienceManager.getTotalExperienceForLevel(experienceData.currentLevel + 1);
+            })()}</span>
           </div>
         </div>
       </div>

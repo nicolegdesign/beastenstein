@@ -34,7 +34,11 @@ export class ExperienceManager {
    * Level 1: 0-99 XP (100 XP to complete level 1)
    * Level 2: 100-299 XP (200 XP to complete level 2)  
    * Level 3: 300-599 XP (300 XP to complete level 3)
-   * etc.
+   * 
+   * Display shows total cumulative experience:
+   * - Level 1 beast with 50 XP: "50/100 EXP"
+   * - Level 2 beast with 150 XP: "150/300 EXP" (to reach level 3)
+   * - Level 3 beast with 400 XP: "400/600 EXP" (to reach level 4)
    */
   private static readonly XP_PER_LEVEL_MULTIPLIER = 100;
 
@@ -99,9 +103,14 @@ export class ExperienceManager {
       ? 0 
       : experienceNeededForCurrentLevel - experienceInCurrentLevel;
     
-    const progressPercent = isAtMaxLevel 
-      ? 100 
-      : (experienceInCurrentLevel / experienceNeededForCurrentLevel) * 100;
+    // Calculate progress percentage based on total experience vs total needed for next level
+    let progressPercent: number;
+    if (isAtMaxLevel) {
+      progressPercent = 100;
+    } else {
+      const totalExpForNextLevel = this.getTotalExperienceForLevel(currentLevel + 1);
+      progressPercent = (currentExperience / totalExpForNextLevel) * 100;
+    }
 
     return {
       currentExperience,
@@ -208,7 +217,7 @@ export class ExperienceManager {
   }
 
   /**
-   * Format experience for display
+   * Format experience for display - shows total experience vs total needed for next level
    */
   static formatExperienceDisplay(experienceData: ExperienceData): {
     current: string;
@@ -223,8 +232,11 @@ export class ExperienceManager {
       };
     }
 
+    // Calculate total experience needed to reach the next level
+    const totalExpForNextLevel = this.getTotalExperienceForLevel(experienceData.currentLevel + 1);
+
     return {
-      current: `${experienceData.experienceInCurrentLevel}/${experienceData.experienceNeededForCurrentLevel} EXP`,
+      current: `${experienceData.currentExperience}/${totalExpForNextLevel} EXP`,
       progress: `${Math.round(experienceData.progressPercent)}%`,
       toNext: `${experienceData.experienceToNextLevel} to next level`
     };
@@ -232,6 +244,7 @@ export class ExperienceManager {
 
   /**
    * Create an experience bar data object for UI components
+   * Uses total experience for display consistency
    */
   static createExperienceBarData(
     currentExperience: number,
@@ -249,11 +262,13 @@ export class ExperienceManager {
     const baseData = this.getExperienceData(currentExperience, maxLevel);
     const gainResult = this.addExperience(currentExperience, experienceGained, maxLevel);
     
+    // Calculate gained percentage based on total experience needed for next level
+    const totalExpForNextLevel = this.getTotalExperienceForLevel(baseData.currentLevel + 1);
     const gainedPercent = baseData.isAtMaxLevel 
       ? 0 
       : Math.min(
           100 - baseData.progressPercent,
-          (experienceGained / baseData.experienceNeededForCurrentLevel) * 100
+          (experienceGained / totalExpForNextLevel) * 100
         );
 
     return {
