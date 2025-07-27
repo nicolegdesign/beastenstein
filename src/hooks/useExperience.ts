@@ -34,25 +34,6 @@ export function useExperience(currentExperience: number, maxLevel: number = 50) 
 }
 
 /**
- * Hook for battle experience calculations
- */
-export function useBattleExperience() {
-  return {
-    calculateBattleExp: (opponentLevel: number) => {
-      return ExperienceManager.calculateBattleExperience(opponentLevel);
-    },
-    
-    distributeExp: (totalExp: number, teamSize: number) => {
-      return ExperienceManager.distributeBattleExperience(totalExp, teamSize);
-    },
-    
-    getActivityExp: (activity: 'feeding' | 'playing' | 'traveling' | 'battle') => {
-      return ExperienceManager.calculateActivityExperience(activity);
-    }
-  };
-}
-
-/**
  * Hook for experience bar UI data
  */
 export function useExperienceBar(

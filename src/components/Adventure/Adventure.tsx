@@ -7,7 +7,6 @@ import { ExperienceBar } from '../ExperienceBar/ExperienceBar';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import { useCombatDamage } from '../../hooks/useCombatDamage';
-import { useBattleExperience } from '../../hooks/useExperience';
 import { ExperienceManager } from '../../services/ExperienceManager';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { Ability } from '../../types/abilities';
@@ -33,7 +32,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
   const { getCustomBeastData } = useCustomBeastData();
-  const { calculateBattleExp, distributeExp } = useBattleExperience();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
@@ -804,8 +802,8 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     }
     
     // Calculate and distribute experience among all participating beasts
-    const totalExpGained = calculateBattleExp(opponentLevel);
-    const expPerBeast = distributeExp(totalExpGained, combatState.playerBeasts.length);
+    const totalExpGained = ExperienceManager.calculateBattleExperience(opponentLevel);
+    const expPerBeast = ExperienceManager.distributeBattleExperience(totalExpGained, combatState.playerBeasts.length);
     const orderedBeastIds = getOrderedBeastIds();
     
     console.log('Victory! Distributing experience:', totalExpGained, 'total,', expPerBeast, 'per beast');
