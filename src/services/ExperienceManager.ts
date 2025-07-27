@@ -30,10 +30,10 @@ export interface ExperienceGainResult extends LevelUpResult {
 
 export class ExperienceManager {
   /**
-   * Experience formula: Each level requires level * 100 XP
-   * Level 1: 100 XP
-   * Level 2: 200 XP  
-   * Level 3: 300 XP
+   * Experience formula: Each level requires level * 100 XP to complete
+   * Level 1: 0-99 XP (100 XP to complete level 1)
+   * Level 2: 100-299 XP (200 XP to complete level 2)  
+   * Level 3: 300-599 XP (300 XP to complete level 3)
    * etc.
    */
   private static readonly XP_PER_LEVEL_MULTIPLIER = 100;
@@ -61,10 +61,14 @@ export class ExperienceManager {
    */
   static getLevelFromExperience(experience: number): number {
     let level = 1;
-    let expRemaining = experience;
+    let totalExpUsed = 0;
     
-    while (expRemaining >= this.getExperienceNeededForLevel(level)) {
-      expRemaining -= this.getExperienceNeededForLevel(level);
+    while (true) {
+      const expNeededForCurrentLevel = this.getExperienceNeededForLevel(level);
+      if (experience < totalExpUsed + expNeededForCurrentLevel) {
+        break; // Current experience falls within this level
+      }
+      totalExpUsed += expNeededForCurrentLevel;
       level++;
     }
     
@@ -82,8 +86,8 @@ export class ExperienceManager {
     const isAtMaxLevel = currentLevel >= maxLevel;
     
     // Calculate experience within current level
-    const totalExpForCurrentLevel = this.getTotalExperienceForLevel(currentLevel);
-    const experienceInCurrentLevel = currentExperience - totalExpForCurrentLevel;
+    const totalExpForPreviousLevels = this.getTotalExperienceForLevel(currentLevel);
+    const experienceInCurrentLevel = currentExperience - totalExpForPreviousLevels;
     
     // Experience requirements
     const experienceNeededForCurrentLevel = this.getExperienceNeededForLevel(currentLevel);

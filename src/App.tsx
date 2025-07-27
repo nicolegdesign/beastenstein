@@ -1059,7 +1059,6 @@ function AppContent() {
           onClose={() => setInAdventure(false)}
           onUpdateExperience={updateBeastExperience}
           soundEffectsEnabled={gameOptions.soundEffectsEnabled}
-          beastData={beastData}
         />
       ) : (
         <>

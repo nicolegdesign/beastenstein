@@ -5,10 +5,11 @@ import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { FloatingDamage } from '../FloatingDamage/FloatingDamage';
 import { ExperienceBar } from '../ExperienceBar/ExperienceBar';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
+import { useBeastData } from '../../hooks/useBeastData';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import { useCombatDamage } from '../../hooks/useCombatDamage';
 import { ExperienceManager } from '../../services/ExperienceManager';
-import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
+import type { BeastCombatStats } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
 import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
@@ -25,12 +26,12 @@ interface AdventureProps {
   onClose: () => void;
   onUpdateExperience: (beastId: string, newExperience: number) => boolean;
   soundEffectsEnabled?: boolean;
-  beastData?: Record<string, IndividualBeastData>; // Add beast data for accessing all beasts
 }
 
-export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true, beastData }) => {
+export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true }) => {
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
+  const { beasts } = useBeastData(); // Use centralized beast data
   const { getCustomBeastData } = useCustomBeastData();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
@@ -523,25 +524,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   // Helper functions using services
   const createBattleBeast = BeastFactory.createBattleBeast;
 
-  // Get current experience from main beastData storage for a specific beast
-  const getCurrentExperienceForBeast = (beastId: string): number => {
-    try {
-      const beastDataKey = `beastData`;
-      const mainBeastData = localStorage.getItem(beastDataKey);
-      
-      if (mainBeastData) {
-        const allBeastData = JSON.parse(mainBeastData);
-        if (allBeastData[beastId]) {
-          return allBeastData[beastId].experience || 0;
-        }
-      }
-      return 0;
-    } catch (error) {
-      console.error('Failed to get current experience for beast:', beastId, error);
-      return 0;
-    }
-  };
-
   // Helper functions that now use our services
   const getEffectiveStats = CombatEngine.getEffectiveStats;
   const getTargetableBeasts = CombatEngine.getTargetableBeasts;
@@ -827,11 +809,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       const battleBeast = combatState.playerBeasts[i];
       
       if (beastId && battleBeast) {
-        // Get current level and experience from beastData
-        const currentBeastData = beastData ? beastData[beastId] : null;
-        const oldLevel = currentBeastData ? currentBeastData.level : 1;
-        const currentExp = getCurrentExperienceForBeast(beastId);
-        const maxLevel = currentBeastData ? currentBeastData.maxLevel : 5; // Default to 5 if not found
+        // Get current beast data from centralized state
+        const currentBeastData = beasts[beastId];
+        const currentExp = currentBeastData?.experience || 0;
+        const oldLevel = currentBeastData ? ExperienceManager.getLevelFromExperience(currentExp) : 1;
+        const maxLevel = currentBeastData?.maxLevel || 5;
         
         // Use ExperienceManager to calculate level progression
         const levelResult = ExperienceManager.addExperience(currentExp, expPerBeast, maxLevel);
@@ -1244,16 +1226,16 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       
       // Find the corresponding beast ID for this beast
       let beastId = '';
-      if (beastData) {
+      if (beasts) {
         // Look for the beast ID that matches this beast data
         const matchingBeastId = orderedBeastIds[i];
-        if (matchingBeastId && beastData[matchingBeastId]) {
+        if (matchingBeastId && beasts[matchingBeastId]) {
           beastId = matchingBeastId;
         }
       }
       
       // Get the beast's individual data (stats, level, etc.)
-      const beastIndividualData = beastId && beastData ? beastData[beastId] : null;
+      const beastIndividualData = beastId && beasts ? beasts[beastId] : null;
       
       const beastStats = beastIndividualData ? {
         attack: beastIndividualData.attack + (beast.totalStatBonus.attack || 0),
@@ -1320,8 +1302,8 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     const stored = localStorage.getItem('beastOrder');
     const order = stored ? JSON.parse(stored) : [];
     
-    // Get all available beast IDs from beastData
-    const allBeastIds = beastData ? Object.keys(beastData) : [];
+    // Get all available beast IDs from beasts
+    const allBeastIds = beasts ? Object.keys(beasts) : [];
     
     // Return ordered beasts, plus any that weren't in the saved order
     const orderedIds: string[] = [];
@@ -1555,7 +1537,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                           const orderedBeastIds = getOrderedBeastIds();
                           const beastIndex = combatState.playerBeasts.findIndex(b => b.id === beast.id);
                           const beastId = orderedBeastIds[beastIndex];
-                          return beastData && beastId && beastData[beastId] ? beastData[beastId].level : 1;
+                          return beasts && beastId && beasts[beastId] ? beasts[beastId].level : 1;
                         })()}</span>
                       </div>
                       <div className="health-bar">
@@ -1935,7 +1917,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         
                         {/* Experience Bar */}
                         <ExperienceBar
-                          currentExperience={getCurrentExperienceForBeast(beastData.beastId)}
+                          currentExperience={beasts[beastData.beastId]?.experience || 0}
                           experienceGained={beastData.expGained}
                           maxLevel={beastData.maxLevel}
                           size="medium"

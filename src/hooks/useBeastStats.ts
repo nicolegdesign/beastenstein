@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { BeastStats, BeastMood } from '../types/game';
 import type { GameOptions } from '../types/options';
+import { ExperienceManager } from '../services/ExperienceManager';
 
 export const useBeastStats = (
   initialStats: BeastStats = { hunger: 50, happiness: 50, energy: 50, health: 100, level: 1, age: 0 }, 
@@ -93,15 +94,17 @@ export const useBeastStats = (
   //   };
   // }, [options?.disableStatDecay]);
 
-  // Leveling system - level up based on experience points
+  // Leveling system - use ExperienceManager for consistent experience handling
   useEffect(() => {
-    const expNeeded = stats.level * 100; // 100 exp per level
-    if (experience >= expNeeded && stats.level < maxLevel) { // Use maxLevel parameter
+    const experienceData = ExperienceManager.getExperienceData(experience, maxLevel);
+    const currentLevel = experienceData.currentLevel;
+    
+    // Update level if it changed based on current experience
+    if (stats.level !== currentLevel) {
       setStats(prev => ({
         ...prev,
-        level: prev.level + 1
+        level: currentLevel
       }));
-      setExperience(0); // Reset experience after leveling
     }
   }, [experience, stats.level, maxLevel]);
 
@@ -256,9 +259,14 @@ export const useBeastStats = (
     setExperience(newExperience);
   }, []);
 
+  const getExperienceData = useCallback(() => {
+    return ExperienceManager.getExperienceData(experience, maxLevel);
+  }, [experience, maxLevel]);
+
   const getExpToNextLevel = useCallback(() => {
-    return stats.level * 100 - experience;
-  }, [stats.level, experience]);
+    const experienceData = ExperienceManager.getExperienceData(experience, maxLevel);
+    return experienceData.experienceToNextLevel;
+  }, [experience, maxLevel]);
 
   const resetToBaseStats = useCallback(() => {
     setStats({
@@ -294,6 +302,7 @@ export const useBeastStats = (
     getBeastMood,
     getExperience,
     setExternalExperience,
+    getExperienceData,
     getExpToNextLevel,
     resetToBaseStats,
     updateHealth
