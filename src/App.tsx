@@ -21,6 +21,7 @@ import { useCustomBeastData } from './hooks/useCustomBeastData';
 import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
+import { useLevelUp } from './hooks/useLevelUp';
 import type { BeastCombatStats } from './types/game';
 import type { IndividualBeastData } from './types/game';
 import type { GameOptions } from './types/options';
@@ -115,6 +116,15 @@ function AppContent() {
   const { position, facing } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
+
+  const { checkForLevelUp } = useLevelUp({
+    gameOptions,
+    setShowLevelUp,
+    setToast,
+    setBeastData,
+    levelUpSoundRef,
+    updateHealth
+  });
 
   // Start screen handlers
   const handleNewGame = useCallback(() => {
@@ -296,10 +306,13 @@ function AppContent() {
       if (beastId === currentBeastId) {
         setExternalExperience(newExperience);
       }
+      
+      // Check for level up and apply bonuses if needed
+      checkForLevelUp(beastId, beastData[beastId], newExperience);
     }
     
     return success;
-  }, [currentBeastId, setExternalExperience, setBeastData]);
+  }, [currentBeastId, setExternalExperience, setBeastData, beastData, checkForLevelUp]);
 
   // Update beast data when stats change (with debouncing to prevent flashing)
   useEffect(() => {
@@ -317,10 +330,10 @@ function AppContent() {
           health: stats.health,
           level: stats.level,
           age: stats.age,
-          attack: currentBeastData.attack,
-          defense: currentBeastData.defense,
-          speed: currentBeastData.speed,
-          magic: currentBeastData.magic,
+          attack: currentStats.attack,
+          defense: currentStats.defense,
+          speed: currentStats.speed,
+          magic: currentStats.magic,
           isResting: isResting,
           createdAt: currentBeastData.createdAt,
           experience: getExperience(),
@@ -368,8 +381,8 @@ function AppContent() {
 
       // Play level up sound
       if (levelUpSoundRef.current && gameOptions.soundEffectsEnabled) {
-        levelUpSoundRef.current.currentTime = 0; // Reset to beginning
-        levelUpSoundRef.current.volume = 0.7; // Set volume to 70%
+        levelUpSoundRef.current.currentTime = 0;
+        levelUpSoundRef.current.volume = 0.7;
         levelUpSoundRef.current.play().catch(error => {
           console.log('Could not play level up sound:', error);
         });
@@ -841,13 +854,31 @@ function AppContent() {
     setShowDebug(false);
   }, [resetToBaseStats, setToast, setShowDebug, setBeastData]);
 
+  const handleTestLevelUp = useCallback(() => {
+    if (!currentBeastData) return;
+    
+    // Give the beast 100 experience points to trigger a level up
+    const currentExp = getExperience();
+    const newExp = currentExp + 100;
+    
+    updateBeastExperience(currentBeastId, newExp);
+    setExternalExperience(newExp);
+    
+    setToast({
+      message: '🧪 Added 100 experience points for testing!',
+      show: true,
+      type: 'info'
+    });
+  }, [currentBeastData, currentBeastId, getExperience, updateBeastExperience, setExternalExperience, setToast]);
+
   // Calculate enhanced combat stats including stat bonuses from beast parts
   const getEnhancedCombatStats = (beastId: string): BeastCombatStats => {
+    const currentBeast = beastData[beastId];
     const baseStats = {
-      attack: currentBeastData?.attack || 0,
-      defense: currentBeastData?.defense || 0,
-      speed: currentBeastData?.speed || 0,
-      magic: currentBeastData?.magic || 0
+      attack: currentBeast?.attack || 0,
+      defense: currentBeast?.defense || 0,
+      speed: currentBeast?.speed || 0,
+      magic: currentBeast?.magic || 0
     };
 
     try {
@@ -894,7 +925,8 @@ function AppContent() {
 
   // Calculate enhanced health including health bonuses from beast parts
   const getEnhancedHealth = (beastId: string): number => {
-    const baseHealth = currentBeastData?.health || 100;
+    const currentBeast = beastData[beastId];
+    const baseHealth = currentBeast?.health || 100;
 
     try {
       const customBeastData = getCustomBeastData(beastId);
@@ -1050,6 +1082,7 @@ function AppContent() {
           onClose={() => setShowDebug(false)}
           isModal={true}
           onResetAllBeasts={handleResetAllBeasts}
+          onTestLevelUp={handleTestLevelUp}
         />
       )}
       
