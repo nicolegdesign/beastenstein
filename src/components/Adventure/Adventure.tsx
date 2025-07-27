@@ -7,8 +7,8 @@ import { ExperienceBar } from '../ExperienceBar/ExperienceBar';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import { useCombatDamage } from '../../hooks/useCombatDamage';
-import { useBattleExperience } from '../../hooks/useExperience';
 import { ExperienceManager } from '../../services/ExperienceManager';
+import { BeastDataManager } from '../../services/BeastDataManager';
 import type { BeastCombatStats, IndividualBeastData } from '../../types/game';
 import type { Ability } from '../../types/abilities';
 import { EXTRA_LIMBS } from '../../data/beastParts';
@@ -33,7 +33,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
   const { getCustomBeastData } = useCustomBeastData();
-  const { calculateBattleExp, distributeExp } = useBattleExperience();
+  const { calculateAbilityDamage, calculateBasicAttackDamage } = useCombatDamage();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
@@ -66,6 +66,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       maxLevel: number;
       leveledUp: boolean;
       isAtMaxLevel: boolean;
+      finalExperience: number;  // Add final experience field
     }>;
     totalExpGained: number;
   } | null>(null);
@@ -204,9 +205,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     };
   }, [gameState, soundEffectsEnabled]);
   
-  // Enhanced combat state
-  const { calculateAbilityDamage, calculateBasicAttackDamage } = useCombatDamage();
-
   const [combatState, setCombatState] = useState<CombatState>({
     playerBeasts: [],
     opponentBeasts: [],
@@ -525,23 +523,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   // Helper functions using services
   const createBattleBeast = BeastFactory.createBattleBeast;
 
-  // Get current experience from main beastData storage for a specific beast
+  // Get current experience from the centralized manager
   const getCurrentExperienceForBeast = (beastId: string): number => {
-    try {
-      const beastDataKey = `beastData`;
-      const mainBeastData = localStorage.getItem(beastDataKey);
-      
-      if (mainBeastData) {
-        const allBeastData = JSON.parse(mainBeastData);
-        if (allBeastData[beastId]) {
-          return allBeastData[beastId].experience || 0;
-        }
-      }
-      return 0;
-    } catch (error) {
-      console.error('Failed to get current experience for beast:', beastId, error);
-      return 0;
-    }
+    return BeastDataManager.getBeastExperience(beastId);
+  };
+
+  // Force fresh read from localStorage (centralized through BeastDataManager)
+  const getFreshExperienceFromStorage = (beastId: string): number => {
+    return BeastDataManager.getBeastExperience(beastId);
+  };
+
+  // Get current level from the centralized manager
+  const getCurrentLevelForBeast = (beastId: string): number => {
+    return BeastDataManager.getBeastLevel(beastId);
   };
 
   // Helper functions that now use our services
@@ -803,12 +797,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       }));
     }
     
-    // Calculate and distribute experience among all participating beasts
-    const totalExpGained = calculateBattleExp(opponentLevel);
-    const expPerBeast = distributeExp(totalExpGained, combatState.playerBeasts.length);
+    // Calculate and distribute experience among all participating beasts using ExperienceManager
+    const totalExpGained = ExperienceManager.calculateBattleExperience(opponentLevel);
+    const expPerBeast = Math.floor(totalExpGained / combatState.playerBeasts.length);
     const orderedBeastIds = getOrderedBeastIds();
     
-    console.log('Victory! Distributing experience:', totalExpGained, 'total,', expPerBeast, 'per beast');
+    console.log('🏆 Victory! Distributing experience:', totalExpGained, 'total,', expPerBeast, 'per beast');
     
     // Collect detailed experience information for victory screen
     const teamVictoryData: Array<{
@@ -820,6 +814,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       maxLevel: number;
       leveledUp: boolean;
       isAtMaxLevel: boolean;
+      finalExperience: number;  // Add final experience field
     }> = [];
     
     // Give experience to all participating beasts and track level changes
@@ -828,30 +823,58 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
       const beastId = orderedBeastIds[i];
       const battleBeast = combatState.playerBeasts[i];
       
+      console.log(`🔍 Debug: Trying to match battleBeast[${i}] with beastId[${i}]`);
+      console.log(`🔍 BattleBeast: ${battleBeast?.customBeast?.name}, BeastId: ${beastId}`);
+      console.log(`🔍 orderedBeastIds:`, orderedBeastIds);
+      console.log(`🔍 combatState.playerBeasts:`, combatState.playerBeasts.map(b => b.customBeast.name));
+      
       if (beastId && battleBeast) {
-        // Get current level and experience from beastData
-        const currentBeastData = beastData ? beastData[beastId] : null;
-        const oldLevel = currentBeastData ? currentBeastData.level : 1;
-        const currentExp = getCurrentExperienceForBeast(beastId);
-        const maxLevel = currentBeastData ? currentBeastData.maxLevel : 5; // Default to 5 if not found
+        // Use centralized experience/level management
+        const currentExp = BeastDataManager.getBeastExperience(beastId);
+        const oldLevel = BeastDataManager.getBeastLevel(beastId);
+        const maxLevel = BeastDataManager.getBeastMaxLevel(beastId);
         
-        // Use ExperienceManager to calculate level progression
-        const levelResult = ExperienceManager.addExperience(currentExp, expPerBeast, maxLevel);
+        console.log(`🎯 Processing ${battleBeast.customBeast.name} (${beastId}): currentExp=${currentExp}, oldLevel=${oldLevel}, maxLevel=${maxLevel}`);
         
-        const success = onUpdateExperience(beastId, currentExp + expPerBeast);
-        if (success) {
-          totalDistributedExp += expPerBeast;
-          
-          teamVictoryData.push({
-            beastId,
-            beast: battleBeast.customBeast,
-            expGained: expPerBeast,
-            oldLevel,
-            newLevel: levelResult.newLevel,
-            maxLevel,
-            leveledUp: levelResult.leveledUp,
-            isAtMaxLevel: levelResult.newLevel >= maxLevel
-          });
+        // Check if BeastDataManager found the beast
+        if (currentExp === 0 && oldLevel === 1 && maxLevel === 5) {
+          console.warn(`⚠️ BeastDataManager may not have found beast ${beastId} - using default values`);
+        }
+        
+        // Use the centralized add experience method
+        const expResult = BeastDataManager.addExperience(beastId, expPerBeast);
+        
+        console.log(`📈 ${battleBeast.customBeast.name}: ${currentExp} + ${expPerBeast} = ${expResult.finalExperience} XP → Level ${expResult.oldLevel} to ${expResult.newLevel} (leveledUp: ${expResult.leveledUp})`);
+        
+        // Verify the update worked
+        setTimeout(() => {
+          const verifyExp = BeastDataManager.getBeastExperience(beastId);
+          const verifyLevel = BeastDataManager.getBeastLevel(beastId);
+          console.log(`🔍 Verification: BeastDataManager shows ${verifyExp} XP, level ${verifyLevel} for ${beastId}`);
+        }, 100);
+        
+        totalDistributedExp += expPerBeast;
+        
+        teamVictoryData.push({
+          beastId,
+          beast: battleBeast.customBeast,
+          expGained: expPerBeast,
+          oldLevel: expResult.oldLevel,
+          newLevel: expResult.newLevel,
+          maxLevel,
+          leveledUp: expResult.leveledUp,
+          isAtMaxLevel: expResult.newLevel >= maxLevel,
+          finalExperience: expResult.finalExperience  // Add final experience for UI display
+        });
+        
+        console.log(`✅ ${battleBeast.customBeast.name}: ${expResult.oldLevel} → ${expResult.newLevel} (${currentExp} + ${expPerBeast} = ${expResult.finalExperience} XP)`);
+      } else {
+        console.error(`❌ Failed to match beast: beastId=${beastId}, battleBeast=${battleBeast?.customBeast?.name}`);
+        if (!beastId) {
+          console.error(`❌ No beastId found at index ${i} in orderedBeastIds`);
+        }
+        if (!battleBeast) {
+          console.error(`❌ No battleBeast found at index ${i} in combatState.playerBeasts`);
         }
       }
     }
@@ -1218,10 +1241,30 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   };
 
   const returnToMap = () => {
-    setGameState('map');
+    // Debug: Check what's in localStorage before returning to map
+    console.log('🗺️ Returning to map - checking localStorage before leaving battle...');
+    const beastIds = getOrderedBeastIds();
+    beastIds.slice(0, 1).forEach(beastId => {
+      const exp = getFreshExperienceFromStorage(beastId);
+      console.log(`🗺️ Beast ${beastId} has ${exp} XP before returning to map`);
+    });
+    
+    // Add a small delay to ensure localStorage operations complete before triggering reload
+    setTimeout(() => {
+      console.log('🗺️ Delayed map transition - ensuring localStorage is fully committed...');
+      setGameState('map');
+    }, 100);
   };
 
   const startBattle = () => {
+    // Debug: Check what's in localStorage when starting a new battle
+    console.log('⚔️ Starting new battle - checking localStorage...');
+    const debugBeastIds = getOrderedBeastIds();
+    debugBeastIds.slice(0, 1).forEach(beastId => {
+      const exp = getFreshExperienceFromStorage(beastId);
+      console.log(`⚔️ Beast ${beastId} has ${exp} XP when starting battle`);
+    });
+    
     // Initialize beasts for battle - get first 4 beasts from user's collection
     const playerBeasts = getPlayerBeasts();
     const orderedBeastIds = getOrderedBeastIds();
@@ -1271,8 +1314,8 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         health: playerStats.health + (beast.totalStatBonus.health || 0)
       };
       
-      console.log(`Beast ${i + 1}: ${beast.name} at position ${positions[i]} with stats:`, beastStats);
-      console.log(`Beast ${i + 1} abilities:`, beast.availableAbilities);
+      // console.log(`Beast ${i + 1}: ${beast.name} at position ${positions[i]} with stats:`, beastStats);
+      // console.log(`Beast ${i + 1} abilities:`, beast.availableAbilities);
       
       const battleBeast = createBattleBeast(beast, beastStats, positions[i]);
       playerBattleBeasts.push(battleBeast);
@@ -1553,11 +1596,11 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         {beast.customBeast.name}
                         {isThisBeastsTurn && isPlayersTurn && <span className="turn-indicator-badge">🎯</span>}
                         <span className="beast-level" style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '8px' }}>Lvl {(() => {
-                          // Get the beast's level from beastData using the ordered beast IDs
+                          // Get the beast's level from centralized BeastDataManager
                           const orderedBeastIds = getOrderedBeastIds();
                           const beastIndex = combatState.playerBeasts.findIndex(b => b.id === beast.id);
                           const beastId = orderedBeastIds[beastIndex];
-                          return beastData && beastId && beastData[beastId] ? beastData[beastId].level : 1;
+                          return beastId ? BeastDataManager.getBeastLevel(beastId) : 1;
                         })()}</span>
                       </div>
                       <div className="health-bar">
@@ -1937,7 +1980,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                         
                         {/* Experience Bar */}
                         <ExperienceBar
-                          currentExperience={getCurrentExperienceForBeast(beastData.beastId)}
+                          currentExperience={beastData.finalExperience}
                           experienceGained={beastData.expGained}
                           maxLevel={beastData.maxLevel}
                           size="medium"

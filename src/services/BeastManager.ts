@@ -4,6 +4,7 @@ import type { SoulEssence } from '../data/soulEssences';
 import type { Personality } from '../data/personalities';
 import { createBeastFromTemplate } from '../data/beastTemplates';
 import { getSoulStatMultiplier } from '../data/soulEssences';
+import { BeastDataManager } from './BeastDataManager';
 
 // Use the same interface as Mausoleum component
 export interface CustomBeast {
@@ -36,17 +37,22 @@ export class BeastManager {
    * Load all beast data from localStorage
    */
   static loadBeastData(): Record<string, IndividualBeastData> {
+    console.log(`🔄 BeastManager.loadBeastData() called - reloading from localStorage`);
+    console.trace(`🔄 Call stack for BeastManager.loadBeastData()`); // This will show us WHO is calling this method
     const customBeastData: Record<string, IndividualBeastData> = {};
     
     // First try to load from consolidated beastData
     const consolidatedData = localStorage.getItem(this.BEAST_DATA_KEY);
+    console.log(`🔄 Consolidated data exists:`, !!consolidatedData);
     if (consolidatedData) {
       try {
         const allBeastData = JSON.parse(consolidatedData);
+        console.log(`🔄 Raw consolidated data:`, allBeastData);
         // Filter for custom beasts only
         Object.keys(allBeastData).forEach(beastId => {
           if (beastId.startsWith('custom_')) {
             const beastData = allBeastData[beastId];
+            console.log(`🔄 Loading beast ${beastId}:`, beastData);
             // Migrate old data without createdAt timestamp
             if (!beastData.createdAt) {
               beastData.createdAt = Date.now();
@@ -54,6 +60,7 @@ export class BeastManager {
             customBeastData[beastId] = beastData;
           }
         });
+        console.log(`🔄 Final loaded beast data:`, customBeastData);
       } catch (error) {
         console.warn('Failed to load consolidated beast data:', error);
       }
@@ -124,22 +131,10 @@ export class BeastManager {
   }
 
   /**
-   * Save beast data to localStorage
+   * Save beast data (delegates to BeastDataManager)
    */
   static saveBeastData(beastId: string, data: IndividualBeastData): void {
-    try {
-      const existingData = localStorage.getItem(this.BEAST_DATA_KEY);
-      const allBeastData = existingData ? JSON.parse(existingData) : {};
-      
-      allBeastData[beastId] = data;
-      localStorage.setItem(this.BEAST_DATA_KEY, JSON.stringify(allBeastData));
-      
-      // Beast data saved successfully
-    } catch (error) {
-      console.error('Failed to save beast data:', error);
-      // Fallback to old method if consolidation fails
-      localStorage.setItem(`beastData_${beastId}`, JSON.stringify(data));
-    }
+    BeastDataManager.saveBeastData(beastId, data);
   }
 
   /**
@@ -242,27 +237,10 @@ export class BeastManager {
   }
 
   /**
-   * Update beast experience in localStorage
+   * Update beast experience in localStorage (delegates to BeastDataManager)
    */
   static updateBeastExperience(beastId: string, newExperience: number): boolean {
-    try {
-      const existingData = localStorage.getItem(this.BEAST_DATA_KEY);
-      const allBeastData = existingData ? JSON.parse(existingData) : {};
-      
-      if (allBeastData[beastId]) {
-        allBeastData[beastId].experience = newExperience;
-        localStorage.setItem(this.BEAST_DATA_KEY, JSON.stringify(allBeastData));
-        
-        // Experience updated successfully
-        return true;
-      } else {
-        console.error(`Beast ${beastId} not found in beastData`);
-        return false;
-      }
-    } catch (error) {
-      console.error('Failed to update beast experience:', error);
-      return false;
-    }
+    return BeastDataManager.updateBeastExperience(beastId, newExperience);
   }
 
   /**

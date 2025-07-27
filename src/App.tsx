@@ -26,6 +26,7 @@ import type { GameOptions } from './types/options';
 import { createBeastFromTemplate } from './data/beastTemplates';
 import { findSoulEssenceById } from './data/soulEssences';
 import { BeastManager, type CustomBeast } from './services/BeastManager';
+import { BeastDataManager } from './services/BeastDataManager';
 import './App.css';
 
 function App() {
@@ -92,7 +93,6 @@ function AppContent() {
     fillHappiness,
     fillHunger,
     getBeastMood,
-    getExperience,
     setExternalExperience,
     resetToBaseStats,
     updateHealth
@@ -202,8 +202,10 @@ function AppContent() {
     // Save custom beast data to centralized state
     setCustomBeastData(customBeastId, customBeast);
     
-    // Save to localStorage with consolidated format
-    const allBeastData = { [customBeastId]: newBeastData };
+    // Save to localStorage with consolidated format - preserve existing beast data
+    const existingBeastData = localStorage.getItem('beastData');
+    const allBeastData = existingBeastData ? JSON.parse(existingBeastData) : {};
+    allBeastData[customBeastId] = newBeastData;
     localStorage.setItem('beastData', JSON.stringify(allBeastData));
     localStorage.setItem('hasPlayedBefore', 'true');
     
@@ -278,15 +280,19 @@ function AppContent() {
 
   // Function to update experience globally (both localStorage and hook state)
   const updateBeastExperience = useCallback((beastId: string, newExperience: number): boolean => {
-    const success = BeastManager.updateBeastExperience(beastId, newExperience);
+    const success = BeastDataManager.updateBeastExperience(beastId, newExperience);
     
     if (success) {
-      // Update the local state
+      // Get the updated level from the centralized manager
+      const newLevel = BeastDataManager.getBeastLevel(beastId);
+      
+      // Update the local state with both experience and level
       setBeastData(prev => ({
         ...prev,
         [beastId]: {
           ...prev[beastId],
-          experience: newExperience
+          experience: newExperience,
+          level: newLevel
         }
       }));
       
@@ -294,6 +300,8 @@ function AppContent() {
       if (beastId === currentBeastId) {
         setExternalExperience(newExperience);
       }
+      
+      console.log(`📱 App.tsx: Updated beast ${beastId} React state to ${newExperience} XP, level ${newLevel}`);
     }
     
     return success;
@@ -321,7 +329,7 @@ function AppContent() {
           magic: currentBeastData.magic,
           isResting: isResting,
           createdAt: currentBeastData.createdAt,
-          experience: getExperience(),
+          experience: currentBeastData.experience, // Preserve existing experience instead of overwriting
           maxLevel: currentBeastData.maxLevel || 5  // Preserve existing maxLevel or default to 5
         };
         
@@ -333,8 +341,7 @@ function AppContent() {
           currentStats.health !== stats.health ||
           currentStats.level !== stats.level ||
           currentStats.age !== stats.age ||
-          currentStats.isResting !== isResting ||
-          currentStats.experience !== getExperience()
+          currentStats.isResting !== isResting
         ) {
           saveBeastData(currentBeastId, newData);
           return {
@@ -348,7 +355,7 @@ function AppContent() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience, setBeastData]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, setBeastData]);
 
   // Level up detection and celebration
   useEffect(() => {
@@ -990,7 +997,7 @@ function AppContent() {
             </span>
             <span>LEVEL {stats.level}/{currentBeastData.maxLevel || 5}</span>
             <span>AGE {stats.age}</span>
-            <span>EXP {getExperience()}/{stats.level * 100}</span>
+            <span>EXP {currentBeastData?.experience || 0}/{stats.level * 100}</span>
           </div>
         </div>
       </div>
