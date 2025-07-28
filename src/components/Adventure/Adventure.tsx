@@ -4,10 +4,12 @@ import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast'
 import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { FloatingDamage } from '../FloatingDamage/FloatingDamage';
 import { ExperienceBar } from '../ExperienceBar/ExperienceBar';
+import { Gold } from '../Gold/Gold';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import { useBeastData } from '../../hooks/useBeastData';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
 import { useCombatDamage } from '../../hooks/useCombatDamage';
+import { useGold } from '../../hooks/useGold';
 import { ExperienceManager } from '../../services/ExperienceManager';
 import type { BeastCombatStats } from '../../types/game';
 import type { Ability } from '../../types/abilities';
@@ -34,6 +36,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const { setAdventureProgress } = useAdventureProgress();
   const { beasts } = useBeastData(); // Use centralized beast data
   const { getCustomBeastData } = useCustomBeastData();
+  const { gold, addGold } = useGold();
   const victorySoundRef = useRef<HTMLAudioElement>(null);
   const lootSoundRef = useRef<HTMLAudioElement>(null);
   const magicAttackSoundRef = useRef<HTMLAudioElement>(null);
@@ -54,6 +57,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [droppedLoot, setDroppedLoot] = useState<LootItem | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
+  const [goldEarned, setGoldEarned] = useState<number>(0);
   
   // Enhanced experience tracking for victory screen
   const [victoryData, setVictoryData] = useState<{
@@ -522,6 +526,14 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     return selectedLoot;
   };
 
+  // Generate gold reward based on opponent level
+  const generateGold = (level: number): number => {
+    // Base gold: 10-20 for level 1, scaling up with level
+    const baseGold = 10 + (level - 1) * 5; // 10, 15, 20, 25, 30...
+    const randomVariation = Math.floor(Math.random() * (baseGold * 0.5)); // ±25% variation
+    return baseGold + randomVariation;
+  };
+
   // Helper functions using services
   const createBattleBeast = BeastFactory.createBattleBeast;
 
@@ -764,6 +776,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
     const loot = generateLoot();
     setDroppedLoot(loot);
     setBattleLog(prev => [...prev, `The opponent dropped: ${loot.name}!`]);
+    
+    // Generate and award gold
+    const goldReward = generateGold(opponentLevel);
+    setGoldEarned(goldReward);
+    addGold(goldReward);
+    setBattleLog(prev => [...prev, `You earned ${goldReward} gold!`]);
     
     // Add loot to inventory
     if (loot.type === 'part') {
@@ -1413,6 +1431,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
         <AdventureMap 
           onLevelSelect={handleLevelSelect}
           onClose={handleMapClose}
+          gold={gold}
         />
       )}
 
@@ -1716,7 +1735,19 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           </div>
 
           {/* Battle Controls */}
-          <div className="battle-controls">
+          <div className={`battle-controls ${!TurnManager.isPlayerTurn(combatState) ? 'ai-turn' : ''}`}>
+            {!TurnManager.isPlayerTurn(combatState) && (
+              <div className="ai-turn-overlay">
+                <div className="ai-turn-message">
+                  <div className="ai-turn-icon">
+                    <img src="./images/icons/beast-icon.svg" alt="Beast Icon" />
+                  </div>
+                  <div className="ai-turn-text">Enemy Turn</div>
+                  {/* <div className="ai-turn-subtext">Please wait...</div> */}
+                </div>
+              </div>
+            )}
+            
             <div className="turn-indicator">
               {(() => {
                 const currentBeast = TurnManager.getCurrentTurnBeast(combatState);
@@ -1786,7 +1817,7 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                   return (
                     <motion.button
                       key={ability.id}
-                      className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type} ${isDisabledDueToTurn ? 'not-turn' : ''}`}
+                      className={`action-btn ability-btn ${!canUse ? 'disabled' : ''} ${ability.type}`}
                       onClick={() => canUse ? castAbility(ability, combatState.selectedTarget || undefined) : undefined}
                       disabled={!canUse}
                       whileHover={canUse ? { scale: 1.05 } : {}}
@@ -1802,11 +1833,6 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
                       {isOnCooldown && (
                         <div className="cooldown-overlay">
                           {cooldown?.turnsLeft}
-                        </div>
-                      )}
-                      {isDisabledDueToTurn && (
-                        <div className="turn-overlay">
-                          Not your turn
                         </div>
                       )}
                     </motion.button>
@@ -1995,6 +2021,14 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
             transition={{ duration: 0.6, type: "spring" }}
           >
             <h2 className="loot-title">🎁 Loot Acquired!</h2>
+            
+            {/* Gold Reward */}
+            <div className="loot-gold">
+              <Gold amount={goldEarned} size="large" />
+              <span className="gold-earned-text">Gold Earned!</span>
+            </div>
+            
+            {/* Item Loot */}
             <div className="loot-item">
               <div className={`loot-icon rarity-${droppedLoot.rarity}`}>
                 <img 

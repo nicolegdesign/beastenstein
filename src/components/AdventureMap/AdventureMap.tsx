@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdventureProgress } from '../../hooks/useLegacyState';
 import { LEVEL_DATA } from '../../data/levelData';
+import { Gold } from '../Gold/Gold';
 import './AdventureMap.css';
 
 interface MapLevel {
@@ -15,9 +16,10 @@ interface MapLevel {
 interface AdventureMapProps {
   onLevelSelect: (level: number) => void;
   onClose: () => void;
+  gold: number;
 }
 
-export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClose }) => {
+export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClose, gold }) => {
   const { adventureProgress } = useAdventureProgress();
   const [levels, setLevels] = useState<MapLevel[]>([]);
 
@@ -93,9 +95,12 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
       <div className="map-header">
         <h1 className="map-title">Adventure Map</h1>
         <p className="map-subtitle">Choose your path through the Forbidden Lands</p>
-        <button className="close-map-button" onClick={onClose}>
-          Quit Adventure
-        </button>
+        <div className="map-header-content">
+          <Gold amount={gold} size="large" />
+          <button className="close-map-button" onClick={onClose}>
+            Quit Adventure
+          </button>
+        </div>
       </div>
 
       <div className="map-container">

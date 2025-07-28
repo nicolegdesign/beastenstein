@@ -15,6 +15,7 @@ import { IntroStory } from './components/IntroStory/IntroStory';
 import { BeastSelection } from './components/BeastSelection/BeastSelection';
 import { StartScreen } from './components/StartScreen/StartScreen';
 import { GameStateProvider } from './contexts/GameStateContext';
+import { GoldProvider } from './contexts/GoldContext';
 import { useBeastData } from './hooks/useBeastData';
 import { useInventoryItems, useGameOptions, useBeastPartInventory } from './hooks/useLegacyState';
 import { useCustomBeastData } from './hooks/useCustomBeastData';
@@ -22,6 +23,8 @@ import { useBeastStats } from './hooks/useBeastStats';
 import { useBeastMovement } from './hooks/useBeastMovement';
 import { usePooManager } from './hooks/usePooManager';
 import { useLevelUp } from './hooks/useLevelUp';
+import { useGold } from './hooks/useGold';
+import { Gold } from './components/Gold/Gold';
 import type { BeastCombatStats } from './types/game';
 import type { IndividualBeastData } from './types/game';
 import type { GameOptions } from './types/options';
@@ -33,9 +36,11 @@ import './App.css';
 
 function App() {
   return (
-    <GameStateProvider>
-      <AppContent />
-    </GameStateProvider>
+    <GoldProvider>
+      <GameStateProvider>
+        <AppContent />
+      </GameStateProvider>
+    </GoldProvider>
   );
 }
 
@@ -44,6 +49,7 @@ function AppContent() {
   const { setInventory: setBeastPartInventory } = useBeastPartInventory();
   const { beastData, setBeastData, currentBeastId, setCurrentBeastId } = useBeastData();
   const { setCustomBeastData, getCustomBeastData } = useCustomBeastData();
+  const { gold } = useGold();
   
   // Game flow state
   const [gameState, setGameState] = useState<'startScreen' | 'intro' | 'beastSelection' | 'game'>(() => {
@@ -1035,6 +1041,11 @@ function AppContent() {
               return ExperienceManager.getTotalExperienceForLevel(experienceData.currentLevel + 1);
             })()}</span>
           </div>
+        </div>
+        
+        {/* Gold Display */}
+        <div className="gold-display-container">
+          <Gold amount={gold} size="medium" />
         </div>
       </div>
 
