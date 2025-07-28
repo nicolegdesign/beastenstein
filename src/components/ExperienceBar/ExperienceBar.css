@@ -50,22 +50,6 @@
   min-height: 16px;
 }
 
-.level-up-indicator {
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(45deg, #fbbf24, #f59e0b);
-  color: #1f2937;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: bold;
-  animation: levelUpBounce 2s ease-out;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-  z-index: 10;
-}
-
 /* Size variants */
 .exp-bar--small {
   font-size: 10px;
@@ -171,10 +155,5 @@
   
   .exp-bar-text {
     font-size: 11px;
-  }
-  
-  .level-up-indicator {
-    font-size: 9px;
-    padding: 3px 10px;
   }
 }

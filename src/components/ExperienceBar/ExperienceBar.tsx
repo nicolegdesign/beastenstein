@@ -57,12 +57,7 @@ export const ExperienceBar: React.FC<ExperienceBarProps> = ({
           )}
         </div>
       )}
-      
-      {gainData.willLevelUp && (
-        <div className="level-up-indicator">
-          LEVEL UP! +{gainData.levelsGained}
-        </div>
-      )}
+    
     </div>
   );
 };
