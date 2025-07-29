@@ -17,6 +17,7 @@ import type { Ability } from '../../types/abilities';
 import type { InventoryItem } from '../../types/inventory';
 import { EXTRA_LIMBS } from '../../data/beastParts';
 import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
+import { generateItemDrop } from '../../data/battleRewards';
 import { getLevelName } from '../../data/levelData';
 import './Adventure.css';
 
@@ -33,6 +34,7 @@ interface AdventureProps {
   soundEffectsEnabled?: boolean;
   inventoryItems: InventoryItem[];
   onItemClick: (itemId: string) => void;
+  onAddInventoryItem: (item: InventoryItem) => void;
 }
 
 export const Adventure: React.FC<AdventureProps> = ({ 
@@ -41,7 +43,8 @@ export const Adventure: React.FC<AdventureProps> = ({
   onUpdateExperience, 
   soundEffectsEnabled = true,
   inventoryItems,
-  onItemClick
+  onItemClick,
+  onAddInventoryItem
 }) => {
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
@@ -67,6 +70,7 @@ export const Adventure: React.FC<AdventureProps> = ({
   const [opponentMaxHealth, setOpponentMaxHealth] = useState<number>(100);
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [droppedLoot, setDroppedLoot] = useState<LootItem | null>(null);
+  const [droppedItem, setDroppedItem] = useState<InventoryItem | null>(null);
   const [experienceGained, setExperienceGained] = useState<number>(0);
   const [goldEarned, setGoldEarned] = useState<number>(0);
   
@@ -794,6 +798,16 @@ export const Adventure: React.FC<AdventureProps> = ({
     addGold(goldReward);
     setBattleLog(prev => [...prev, `You earned ${goldReward} gold!`]);
     
+    // Generate and award item drop
+    const itemDrop = generateItemDrop(opponentLevel);
+    if (itemDrop) {
+      onAddInventoryItem(itemDrop);
+      setDroppedItem(itemDrop);
+      setBattleLog(prev => [...prev, `You found a ${itemDrop.name}!`]);
+    } else {
+      setDroppedItem(null);
+    }
+    
     // Add loot to inventory
     if (loot.type === 'part') {
       setInventory(prev => ({
@@ -1246,6 +1260,7 @@ export const Adventure: React.FC<AdventureProps> = ({
 
     // Reset victory data for new battle
     setVictoryData(null);
+    setDroppedItem(null);
 
     // Create battle beasts for each player beast
     const playerBattleBeasts: BattleBeast[] = [];
@@ -2044,24 +2059,47 @@ export const Adventure: React.FC<AdventureProps> = ({
               <span className="gold-earned-text">Gold Earned!</span>
             </div>
             
-            {/* Item Loot */}
-            <div className="loot-item">
-              <div className={`loot-icon rarity-${droppedLoot.rarity}`}>
-                <img 
-                  src={droppedLoot.imagePath} 
-                  alt={droppedLoot.name}
-                  className="loot-image"
-                />
+            {/* Loot Items Container */}
+            <div className="loot-items-grid">
+              {/* Beast Part Loot (always present) */}
+              <div className="loot-item beast-part-loot">
+                <div className={`loot-icon rarity-${droppedLoot.rarity}`}>
+                  <img 
+                    src={droppedLoot.imagePath} 
+                    alt={droppedLoot.name}
+                    className="loot-image"
+                  />
+                </div>
+                <div className="loot-details">
+                  <h3 className="loot-name">{droppedLoot.name}</h3>
+                  <span className={`loot-rarity rarity-${droppedLoot.rarity}`}>
+                    {droppedLoot.rarity.charAt(0).toUpperCase() + droppedLoot.rarity.slice(1)}
+                  </span>
+                  <p className="loot-type">
+                    {droppedLoot.type === 'part' ? 'Beast Part' : 'Part Set'}
+                  </p>
+                </div>
               </div>
-              <div className="loot-details">
-                <h3 className="loot-name">{droppedLoot.name}</h3>
-                <span className={`loot-rarity rarity-${droppedLoot.rarity}`}>
-                  {droppedLoot.rarity.charAt(0).toUpperCase() + droppedLoot.rarity.slice(1)}
-                </span>
-                <p className="loot-type">
-                  {droppedLoot.type === 'part' ? 'Beast Part' : 'Part Set'}
-                </p>
-              </div>
+
+              {/* Inventory Item Drop (if present) */}
+              {droppedItem && (
+                <div className="loot-item inventory-item-loot">
+                  <div className={`loot-icon rarity-${droppedItem.rarity}`}>
+                    <img 
+                      src={droppedItem.image} 
+                      alt={droppedItem.name}
+                      className="loot-image"
+                    />
+                  </div>
+                  <div className="loot-details">
+                    <h3 className="loot-name">{droppedItem.name}</h3>
+                    <span className={`loot-rarity rarity-${droppedItem.rarity}`}>
+                      {droppedItem.rarity.charAt(0).toUpperCase() + droppedItem.rarity.slice(1)}
+                    </span>
+                    <p className="loot-type">Battle Item</p>
+                  </div>
+                </div>
+              )}
             </div>
             <motion.button
               className="loot-continue-btn"

@@ -26,7 +26,7 @@ export const AnimatedSteak: React.FC<AnimatedSteakProps> = ({ isVisible, onAnima
 
   return (
     <div className="animated-steak">
-      <img src="./images/steak.svg" alt="Steak" className="steak-image" />
+      <img src="./images/items/steak.svg" alt="Steak" className="steak-image" />
     </div>
   );
 };

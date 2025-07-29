@@ -28,6 +28,7 @@ import { CompactInventory } from './components/CompactInventory/CompactInventory
 import type { BeastCombatStats } from './types/game';
 import type { IndividualBeastData } from './types/game';
 import type { GameOptions } from './types/options';
+import type { InventoryItem } from './types/inventory';
 import { createBeastFromTemplate } from './data/beastTemplates';
 import { findSoulEssenceById } from './data/soulEssences';
 import { BeastManager, type CustomBeast } from './services/BeastManager';
@@ -589,6 +590,31 @@ function AppContent() {
     setShowDebug(true);
   }, []);
 
+  const createTennisBall = useCallback(() => {
+    if (!gameAreaRef.current || isResting) return;
+
+    const gameArea = gameAreaRef.current;
+    const tennisBall = document.createElement('div');
+    tennisBall.className = 'tennis-ball';
+    
+    const ballImg = document.createElement('img');
+    ballImg.src = './images/items/tennisBall.svg';
+    ballImg.alt = 'Tennis Ball';
+    tennisBall.appendChild(ballImg);
+    
+    gameArea.appendChild(tennisBall);
+    
+    requestAnimationFrame(() => {
+      tennisBall.classList.add('bounce-animation');
+    });
+    
+    setTimeout(() => {
+      if (tennisBall.parentNode) {
+        tennisBall.remove();
+      }
+    }, 2500);
+  }, [isResting]);
+
   const handleItemClick = useCallback((itemId: string) => {
     // Find the item to check its effect
     const item = inventoryItems.find(item => item.id === itemId);
@@ -597,23 +623,47 @@ function AppContent() {
     // Apply item effect based on type
     switch (item.effect) {
       case 'happiness':
-        // Stuffed Lion - fill happiness to 100
-        fillHappiness();
-        setToast({ 
-          message: `🦁 ${item.name} used! Happiness is now full!`, 
-          show: true, 
-          type: 'success' 
-        });
+        // Handle different happiness items
+        if (item.id === 'fuzzyBall') {
+          // Fuzzy Ball - same effect as PLAY button
+          play();
+          createTennisBall(); // Add the tennis ball animation
+          setToast({ 
+            message: `🎾 ${item.name} used! Same effect as playing!`, 
+            show: true, 
+            type: 'success' 
+          });
+        } else {
+          // Stuffed Lion - fill happiness to 100
+          fillHappiness();
+          setToast({ 
+            message: `🦁 ${item.name} used! Happiness is now full!`, 
+            show: true, 
+            type: 'success' 
+          });
+        }
         break;
         
       case 'hunger':
-        // Beast Biscuit - fill hunger to 100
-        fillHunger();
-        setToast({ 
-          message: `🍪 ${item.name} used! Hunger is now full!`, 
-          show: true, 
-          type: 'success' 
-        });
+        // Handle different hunger items
+        if (item.id === 'mysteryMeat') {
+          // Mystery Meat - same effect as FEED button
+          feed();
+          setShowSteakAnimation(true); // Add the steak animation
+          setToast({ 
+            message: `🥩 ${item.name} used! Same effect as feeding!`, 
+            show: true, 
+            type: 'success' 
+          });
+        } else {
+          // Beast Biscuit - fill hunger to 100
+          fillHunger();
+          setToast({ 
+            message: `🍪 ${item.name} used! Hunger is now full!`, 
+            show: true, 
+            type: 'success' 
+          });
+        }
         break;
         
       case 'cleanup': {
@@ -631,6 +681,32 @@ function AppContent() {
         });
         break;
       }
+      
+      case 'health':
+        // Health Potion - heal 25% of current beast's health
+        {
+          const currentHealth = stats.health;
+          const maxHealth = 100; // TODO: Get actual max health including bonuses
+          const healAmount = Math.floor(maxHealth * 0.25);
+          const newHealth = Math.min(maxHealth, currentHealth + healAmount);
+          updateHealth(newHealth);
+          setToast({ 
+            message: `💚 ${item.name} used! Healed ${newHealth - currentHealth} health!`, 
+            show: true, 
+            type: 'success' 
+          });
+        }
+        break;
+        
+      case 'mana':
+        // Mana Potion - can only be used during battle
+        setToast({ 
+          message: `💙 ${item.name} can only be used during battle!`, 
+          show: true, 
+          type: 'info' 
+        });
+        // Don't consume the item if it can't be used
+        return;
         
       default:
         // No effect for unknown items
@@ -655,7 +731,32 @@ function AppContent() {
       localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
       return updatedItems;
     });
-  }, [inventoryItems, fillHappiness, fillHunger, cleanup, poos, cleanupPoo, setToast, setInventoryItems]);
+  }, [inventoryItems, fillHappiness, fillHunger, feed, play, createTennisBall, cleanup, poos, cleanupPoo, setToast, setInventoryItems, stats.health, updateHealth, setShowSteakAnimation]);
+
+  const handleAddInventoryItem = useCallback((item: InventoryItem) => {
+    setInventoryItems(prevItems => {
+      // Check if item already exists in inventory
+      const existingItemIndex = prevItems.findIndex(existingItem => existingItem.id === item.id);
+      
+      let updatedItems;
+      if (existingItemIndex >= 0) {
+        // Item exists, increase quantity
+        updatedItems = prevItems.map((existingItem, index) => {
+          if (index === existingItemIndex) {
+            return { ...existingItem, quantity: existingItem.quantity + item.quantity };
+          }
+          return existingItem;
+        });
+      } else {
+        // New item, add to inventory
+        updatedItems = [...prevItems, item];
+      }
+      
+      // Save to localStorage
+      localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+  }, [setInventoryItems]);
 
   const handlePooCleanup = useCallback((pooId: string) => {
     cleanupPoo(pooId);
@@ -666,31 +767,6 @@ function AppContent() {
     travel();
     setCurrentBackgroundIndex((prev) => (prev + 1) % 4);
   }, [travel]);
-
-  const createTennisBall = useCallback(() => {
-    if (!gameAreaRef.current || isResting) return;
-
-    const gameArea = gameAreaRef.current;
-    const tennisBall = document.createElement('div');
-    tennisBall.className = 'tennis-ball';
-    
-    const ballImg = document.createElement('img');
-    ballImg.src = './images/tennisBall.svg';
-    ballImg.alt = 'Tennis Ball';
-    tennisBall.appendChild(ballImg);
-    
-    gameArea.appendChild(tennisBall);
-    
-    requestAnimationFrame(() => {
-      tennisBall.classList.add('bounce-animation');
-    });
-    
-    setTimeout(() => {
-      if (tennisBall.parentNode) {
-        tennisBall.remove();
-      }
-    }, 2500);
-  }, [isResting]);
 
   const handleReleaseToWild = useCallback(() => {
     const beastName = currentBeastData?.name || 'Beast';
@@ -871,6 +947,52 @@ function AppContent() {
       type: 'info'
     });
   }, [currentBeastData, currentBeastId, getExperience, updateBeastExperience, setExternalExperience, setToast]);
+
+  const handleAddTestItems = useCallback(() => {
+    // Import the battle rewards to get all available items
+    import('./data/battleRewards').then(({ BATTLE_ITEM_DROPS }) => {
+      setInventoryItems(prevItems => {
+        // Create a copy of existing items
+        const updatedItems = [...prevItems];
+        
+        // Add one of each item from BATTLE_ITEM_DROPS
+        BATTLE_ITEM_DROPS.forEach((item: InventoryItem) => {
+          const existingItemIndex = updatedItems.findIndex(existingItem => existingItem.id === item.id);
+          
+          if (existingItemIndex >= 0) {
+            // Item exists, increase quantity by 1
+            updatedItems[existingItemIndex] = {
+              ...updatedItems[existingItemIndex],
+              quantity: updatedItems[existingItemIndex].quantity + 1
+            };
+          } else {
+            // New item, add to inventory with quantity 1
+            updatedItems.push({
+              ...item,
+              quantity: 1
+            });
+          }
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+        return updatedItems;
+      });
+      
+      setToast({
+        message: '🎒 Added one of every item to inventory for testing!',
+        show: true,
+        type: 'success'
+      });
+    }).catch(error => {
+      console.error('Failed to load battle rewards:', error);
+      setToast({
+        message: '❌ Failed to add test items',
+        show: true,
+        type: 'info'
+      });
+    });
+  }, [setInventoryItems, setToast]);
 
   // Calculate enhanced combat stats including stat bonuses from beast parts
   const getEnhancedCombatStats = (beastId: string): BeastCombatStats => {
@@ -1079,6 +1201,7 @@ function AppContent() {
           isModal={true}
           onResetAllBeasts={handleResetAllBeasts}
           onTestLevelUp={handleTestLevelUp}
+          onAddTestItems={handleAddTestItems}
         />
       )}
       
@@ -1100,6 +1223,7 @@ function AppContent() {
           soundEffectsEnabled={gameOptions.soundEffectsEnabled}
           inventoryItems={inventoryItems}
           onItemClick={handleItemClick}
+          onAddInventoryItem={handleAddInventoryItem}
         />
       ) : (
         <>

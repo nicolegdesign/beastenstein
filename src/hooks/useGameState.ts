@@ -5,7 +5,6 @@ import type { InventoryItem } from '../types/inventory';
 import type { GameOptions } from '../types/options';
 import { BeastManager } from '../services/BeastManager';
 import { DEFAULT_OPTIONS } from '../types/options';
-import { DEFAULT_ITEMS } from '../types/inventory';
 
 // Adventure progress interface
 export interface AdventureProgress {
@@ -415,7 +414,7 @@ function loadGameState(): GameState {
   // Load inventory items
   const inventoryItems = loadFromStorage(
     STORAGE_KEYS.INVENTORY_ITEMS,
-    DEFAULT_ITEMS
+    [] // Start with empty inventory
   );
   
   // Load game options

@@ -9,9 +9,10 @@ interface DebugProps {
   isModal?: boolean;
   onResetAllBeasts?: () => void;
   onTestLevelUp?: () => void;
+  onAddTestItems?: () => void;
 }
 
-export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false, onResetAllBeasts, onTestLevelUp }) => {
+export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose, isModal = false, onResetAllBeasts, onTestLevelUp, onAddTestItems }) => {
   const handleToggle = (key: keyof GameOptions) => {
     const newOptions = {
       ...options,
@@ -74,6 +75,19 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
               disabled={!onTestLevelUp}
             >
               ⬆️ Test Level Up
+            </button>
+          </div>
+          
+          <div className="debug-reset-section">
+            <p className="debug-description">
+              Add one of every item to inventory for testing item effects
+            </p>
+            <button 
+              onClick={onAddTestItems} 
+              className="debug-reset-btn"
+              disabled={!onAddTestItems}
+            >
+              🎒 Add Test Items
             </button>
           </div>
         </div>

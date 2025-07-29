@@ -48,6 +48,7 @@ export const CompactInventory: React.FC<CompactInventoryProps> = ({
               <div className="item-info">
                 <span className="item-name">{item.name}</span>
                 <span className="item-quantity">x{item.quantity}</span>
+                <span className={`item-rarity ${item.rarity}`}>{item.rarity}</span>
               </div>
             </div>
           ))}

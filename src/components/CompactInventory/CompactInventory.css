@@ -6,7 +6,7 @@
   margin: 10px 0;
   transition: all 0.3s ease;
   min-width: 60px;
-  max-width: 400px;
+  max-width: 700px;
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: row;
@@ -18,7 +18,8 @@
 }
 
 .compact-inventory.expanded {
-  width: 350px;
+  /* Width is now set dynamically via inline style */
+  min-width: 260px; /* Ensure minimum width for readability */
 }
 
 .inventory-header {
@@ -75,7 +76,7 @@
   flex: 1;
   max-height: 80px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto; /* Allow horizontal scrolling if needed */
   padding: 8px;
   background: #1a1a1a;
   border-radius: 0 10px 10px 0;
@@ -83,6 +84,8 @@
   flex-direction: row;
   gap: 8px;
   align-items: center;
+  /* Ensure items don't wrap to new lines */
+  flex-wrap: nowrap;
 }
 
 .inventory-item {
@@ -149,6 +152,40 @@
 .item-quantity {
   color: #aaa;
   font-size: 9px;
+}
+
+.item-rarity {
+  font-size: 8px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+.item-rarity.common {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.2);
+}
+
+.item-rarity.uncommon {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.2);
+}
+
+.item-rarity.rare {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.item-rarity.epic {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.2);
+}
+
+.item-rarity.legendary {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.2);
 }
 
 .inventory-empty {

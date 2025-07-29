@@ -387,6 +387,28 @@
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
+.loot-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* When there are multiple items, display them side by side on larger screens */
+@media (min-width: 768px) {
+  .loot-items-grid {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .loot-items-grid .loot-item {
+    flex: 1;
+    max-width: 400px;
+    margin-bottom: 0;
+  }
+}
+
 .loot-item {
   display: flex;
   align-items: center;
