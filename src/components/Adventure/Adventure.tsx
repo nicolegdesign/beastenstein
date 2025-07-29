@@ -5,6 +5,7 @@ import { AdventureMap } from '../AdventureMap/AdventureMap';
 import { FloatingDamage } from '../FloatingDamage/FloatingDamage';
 import { ExperienceBar } from '../ExperienceBar/ExperienceBar';
 import { Gold } from '../Gold/Gold';
+import { CompactInventory } from '../CompactInventory/CompactInventory';
 import { useBeastPartInventory, useAdventureProgress } from '../../hooks/useLegacyState';
 import { useBeastData } from '../../hooks/useBeastData';
 import { useCustomBeastData } from '../../hooks/useCustomBeastData';
@@ -13,6 +14,7 @@ import { useGold } from '../../hooks/useGold';
 import { ExperienceManager } from '../../services/ExperienceManager';
 import type { BeastCombatStats } from '../../types/game';
 import type { Ability } from '../../types/abilities';
+import type { InventoryItem } from '../../types/inventory';
 import { EXTRA_LIMBS } from '../../data/beastParts';
 import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
 import { getLevelName } from '../../data/levelData';
@@ -29,9 +31,18 @@ interface AdventureProps {
   onClose: () => void;
   onUpdateExperience: (beastId: string, newExperience: number) => boolean;
   soundEffectsEnabled?: boolean;
+  inventoryItems: InventoryItem[];
+  onItemClick: (itemId: string) => void;
 }
 
-export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUpdateExperience, soundEffectsEnabled = true }) => {
+export const Adventure: React.FC<AdventureProps> = ({ 
+  playerStats, 
+  onClose, 
+  onUpdateExperience, 
+  soundEffectsEnabled = true,
+  inventoryItems,
+  onItemClick
+}) => {
   const { setInventory } = useBeastPartInventory();
   const { setAdventureProgress } = useAdventureProgress();
   const { beasts } = useBeastData(); // Use centralized beast data
@@ -1432,7 +1443,12 @@ export const Adventure: React.FC<AdventureProps> = ({ playerStats, onClose, onUp
           onLevelSelect={handleLevelSelect}
           onClose={handleMapClose}
           gold={gold}
-        />
+        >
+          <CompactInventory 
+            items={inventoryItems}
+            onItemClick={onItemClick}
+          />
+        </AdventureMap>
       )}
 
       {/* Setup Screen */}

@@ -17,9 +17,10 @@ interface AdventureMapProps {
   onLevelSelect: (level: number) => void;
   onClose: () => void;
   gold: number;
+  children?: React.ReactNode;
 }
 
-export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClose, gold }) => {
+export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClose, gold, children }) => {
   const { adventureProgress } = useAdventureProgress();
   const [levels, setLevels] = useState<MapLevel[]>([]);
 
@@ -97,6 +98,11 @@ export const AdventureMap: React.FC<AdventureMapProps> = ({ onLevelSelect, onClo
         <p className="map-subtitle">Choose your path through the Forbidden Lands</p>
         <div className="map-header-content">
           <Gold amount={gold} size="large" />
+          {children && (
+            <div className="map-header-inventory">
+              {children}
+            </div>
+          )}
           <button className="close-map-button" onClick={onClose}>
             Quit Adventure
           </button>

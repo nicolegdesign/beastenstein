@@ -54,6 +54,28 @@
   position: relative;
 }
 
+.map-header-inventory {
+  /* Position inventory in the header nicely */
+  max-width: 350px;
+}
+
+/* Adjust layout for smaller screens */
+@media (max-width: 1200px) {
+  .map-header-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .map-header-inventory {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .map-header-inventory .compact-inventory.expanded {
+    width: 100% !important;
+  }
+}
+
 .close-map-button {
   background: rgba(139, 92, 246, 0.2);
   border: 2px solid rgba(139, 92, 246, 0.5);

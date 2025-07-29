@@ -4,11 +4,10 @@ import './Menu.css';
 interface MenuProps {
   onOptions: () => void;
   onSave: () => void;
-  onInventory: () => void;
   onDebug: () => void;
 }
 
-export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onDebug }) => {
+export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onDebug }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -34,13 +33,6 @@ export const Menu: React.FC<MenuProps> = ({ onOptions, onSave, onInventory, onDe
       
       {isOpen && (
         <div className="menu-dropdown">
-          <button 
-            className="menu-item"
-            onClick={() => handleMenuItemClick(onInventory)}
-          >
-            🎒 Inventory
-          </button>
-         
           <button 
             className="menu-item" 
             onClick={() => handleMenuItemClick(onOptions)}

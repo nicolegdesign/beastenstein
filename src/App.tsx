@@ -6,7 +6,6 @@ import { ActionButtons } from './components/ActionButtons/ActionButtons';
 import { SidebarBeastSelector } from './components/SidebarBeastSelector/SidebarBeastSelector';
 import { Mausoleum } from './components/Mausoleum/Mausoleum';
 import { Menu } from './components/Menu/Menu';
-import { Inventory } from './components/Inventory/Inventory';
 import { Options } from './components/Options/Options';
 import { Toast } from './components/Toast/Toast';
 import { Adventure } from './components/Adventure/Adventure';
@@ -25,6 +24,7 @@ import { usePooManager } from './hooks/usePooManager';
 import { useLevelUp } from './hooks/useLevelUp';
 import { useGold } from './hooks/useGold';
 import { Gold } from './components/Gold/Gold';
+import { CompactInventory } from './components/CompactInventory/CompactInventory';
 import type { BeastCombatStats } from './types/game';
 import type { IndividualBeastData } from './types/game';
 import type { GameOptions } from './types/options';
@@ -59,7 +59,6 @@ function AppContent() {
 
   const [currentBackgroundIndex, setCurrentBackgroundIndex] = useState(0);
   
-  const [showInventory, setShowInventory] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [inAdventure, setInAdventure] = useState(false);
@@ -573,10 +572,6 @@ function AppContent() {
     console.log('Save clicked - functionality to be implemented');
   }, []);
 
-  const handleInventory = useCallback(() => {
-    setShowInventory(true);
-  }, []);
-
   const handleAdventure = useCallback(() => {
     // Play adventure sound effect
     if (adventureSoundRef.current && gameOptions.soundEffectsEnabled) {
@@ -994,7 +989,6 @@ function AppContent() {
             <Menu 
               onOptions={handleOptions}
               onSave={handleSave}
-              onInventory={handleInventory}
               onDebug={handleDebug}
             />
 
@@ -1068,15 +1062,6 @@ function AppContent() {
         refreshTrigger={sidebarRefreshTrigger}
       />
       
-      {showInventory && (
-        <Inventory 
-          items={inventoryItems}
-          onItemClick={handleItemClick}
-          onClose={() => setShowInventory(false)}
-          isModal={true}
-        />
-      )}
-      
       {showOptions && (
         <Options 
           options={gameOptions}
@@ -1113,6 +1098,8 @@ function AppContent() {
           onClose={() => setInAdventure(false)}
           onUpdateExperience={updateBeastExperience}
           soundEffectsEnabled={gameOptions.soundEffectsEnabled}
+          inventoryItems={inventoryItems}
+          onItemClick={handleItemClick}
         />
       ) : (
         <>
@@ -1221,6 +1208,14 @@ function AppContent() {
                 })()}
               </div>
             </div>
+          </div>
+
+          {/* Compact Inventory for Beast Den - Outside of combat stats */}
+          <div className="beast-den-inventory">
+            <CompactInventory 
+              items={inventoryItems}
+              onItemClick={handleItemClick}
+            />
           </div>
 
           <ActionButtons

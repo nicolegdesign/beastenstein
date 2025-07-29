@@ -463,3 +463,63 @@ body {
     font-size: 10px;
   }
 }
+
+/* Beast Den Inventory Positioning */
+.beast-den-inventory {
+  position: fixed;
+  top: 120px;
+  right: 20px;
+  z-index: 100;
+  width: auto;
+}
+
+/* Adventure Map Inventory Positioning */
+.adventure-map-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.adventure-inventory {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 200;
+  width: 320px;
+}
+
+/* Make sure inventories don't overlap with other UI elements */
+@media (max-width: 1200px) {
+  .beast-den-inventory,
+  .adventure-inventory {
+    right: 10px;
+  }
+}
+
+@media (max-width: 900px) {
+  .beast-den-inventory {
+    position: static;
+    width: 100%;
+    margin: 20px auto;
+    max-width: 100%;
+  }
+  
+  .adventure-inventory {
+    position: static;
+    width: 100%;
+    margin: 20px auto;
+    max-width: 100%;
+  }
+  
+  .adventure-map-container {
+    height: auto;
+  }
+  
+  .compact-inventory.expanded {
+    width: 100% !important;
+  }
+  
+  .compact-inventory.collapsed {
+    width: 60px !important;
+  }
+}
