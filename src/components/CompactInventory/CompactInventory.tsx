@@ -13,6 +13,9 @@ export const CompactInventory: React.FC<CompactInventoryProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Filter out items with zero quantity
+  const availableItems = items.filter(item => item.quantity > 0);
+
   const handleItemClick = (itemId: string) => {
     onItemClick(itemId);
   };
@@ -35,7 +38,7 @@ export const CompactInventory: React.FC<CompactInventoryProps> = ({
       
       {isExpanded && (
         <div className="inventory-items">
-          {items.map((item) => (
+          {availableItems.map((item) => (
             <div 
               key={item.id}
               className="inventory-item"
@@ -52,7 +55,7 @@ export const CompactInventory: React.FC<CompactInventoryProps> = ({
               </div>
             </div>
           ))}
-          {items.length === 0 && (
+          {availableItems.length === 0 && (
             <div className="inventory-empty">
               <span>No items in inventory</span>
             </div>

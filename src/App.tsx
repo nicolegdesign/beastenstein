@@ -33,7 +33,10 @@ import { createBeastFromTemplate } from './data/beastTemplates';
 import { findSoulEssenceById } from './data/soulEssences';
 import { BeastManager, type CustomBeast } from './services/BeastManager';
 import { ExperienceManager } from './services/ExperienceManager';
+import { ItemEffectsManager } from './services/ItemEffectsManager';
+import { ItemAnimationManager } from './services/ItemAnimationManager';
 import './App.css';
+import './services/ItemAnimationManager.css';
 
 function App() {
   return (
@@ -65,7 +68,6 @@ function AppContent() {
   const [inAdventure, setInAdventure] = useState(false);
   const [showMausoleum, setShowMausoleum] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
-  const [showSteakAnimation, setShowSteakAnimation] = useState(false);
   const [isLayingDown, setIsLayingDown] = useState(false);
   
   // Use centralized game state for options and inventory
@@ -590,148 +592,53 @@ function AppContent() {
     setShowDebug(true);
   }, []);
 
-  const createTennisBall = useCallback(() => {
-    if (!gameAreaRef.current || isResting) return;
-
-    const gameArea = gameAreaRef.current;
-    const tennisBall = document.createElement('div');
-    tennisBall.className = 'tennis-ball';
-    
-    const ballImg = document.createElement('img');
-    ballImg.src = './images/items/tennisBall.svg';
-    ballImg.alt = 'Tennis Ball';
-    tennisBall.appendChild(ballImg);
-    
-    gameArea.appendChild(tennisBall);
-    
-    requestAnimationFrame(() => {
-      tennisBall.classList.add('bounce-animation');
-    });
-    
-    setTimeout(() => {
-      if (tennisBall.parentNode) {
-        tennisBall.remove();
-      }
-    }, 2500);
-  }, [isResting]);
-
   const handleItemClick = useCallback((itemId: string) => {
     // Find the item to check its effect
     const item = inventoryItems.find(item => item.id === itemId);
     if (!item || item.quantity <= 0) return;
 
-    // Apply item effect based on type
-    switch (item.effect) {
-      case 'happiness':
-        // Handle different happiness items
-        if (item.id === 'fuzzyBall') {
-          // Fuzzy Ball - same effect as PLAY button
-          play();
-          createTennisBall(); // Add the tennis ball animation
-          setToast({ 
-            message: `🎾 ${item.name} used! Same effect as playing!`, 
-            show: true, 
-            type: 'success' 
-          });
-        } else {
-          // Stuffed Lion - fill happiness to 100
-          fillHappiness();
-          setToast({ 
-            message: `🦁 ${item.name} used! Happiness is now full!`, 
-            show: true, 
-            type: 'success' 
-          });
-        }
-        break;
-        
-      case 'hunger':
-        // Handle different hunger items
-        if (item.id === 'mysteryMeat') {
-          // Mystery Meat - same effect as FEED button
-          feed();
-          setShowSteakAnimation(true); // Add the steak animation
-          setToast({ 
-            message: `🥩 ${item.name} used! Same effect as feeding!`, 
-            show: true, 
-            type: 'success' 
-          });
-        } else {
-          // Beast Biscuit - fill hunger to 100
-          fillHunger();
-          setToast({ 
-            message: `🍪 ${item.name} used! Hunger is now full!`, 
-            show: true, 
-            type: 'success' 
-          });
-        }
-        break;
-        
-      case 'cleanup': {
-        // Shovel - clean up all poos
-        const pooCount = poos.length;
-        poos.forEach(poo => {
-          cleanupPoo(poo.id);
-        });
-        // Also give happiness boost for cleaning
-        cleanup();
-        setToast({ 
-          message: `🔧 ${item.name} used! Cleaned up ${pooCount} poo${pooCount !== 1 ? 's' : ''}!`, 
-          show: true, 
-          type: 'success' 
-        });
-        break;
-      }
+    // Create context for item effects
+    const effectContext = {
+      // Beast actions
+      play,
+      feed,
+      cleanup,
+      fillHappiness,
+      fillHunger,
+      updateHealth,
       
-      case 'health':
-        // Health Potion - heal 25% of current beast's health
-        {
-          const currentHealth = stats.health;
-          const maxHealth = 100; // TODO: Get actual max health including bonuses
-          const healAmount = Math.floor(maxHealth * 0.25);
-          const newHealth = Math.min(maxHealth, currentHealth + healAmount);
-          updateHealth(newHealth);
-          setToast({ 
-            message: `💚 ${item.name} used! Healed ${newHealth - currentHealth} health!`, 
-            show: true, 
-            type: 'success' 
-          });
-        }
-        break;
-        
-      case 'mana':
-        // Mana Potion - can only be used during battle
-        setToast({ 
-          message: `💙 ${item.name} can only be used during battle!`, 
-          show: true, 
-          type: 'info' 
-        });
-        // Don't consume the item if it can't be used
-        return;
-        
-      default:
-        // No effect for unknown items
-        setToast({ 
-          message: `${item.name} used but had no effect.`, 
-          show: true, 
-          type: 'info' 
-        });
-        break;
-    }
+      // Animation container
+      gameAreaRef,
+      isResting,
+      
+      // Toast notifications
+      setToast,
+      
+      // Game state
+      stats,
+      poos,
+      cleanupPoo
+    };
 
-    // Reduce item quantity
-    setInventoryItems(prevItems => {
-      const updatedItems = prevItems.map(item => {
-        if (item.id === itemId && item.quantity > 0) {
-          return { ...item, quantity: item.quantity - 1 };
-        }
-        return item;
+    // Apply the item effect using the manager
+    const result = ItemEffectsManager.applyItemEffect(item, effectContext);
+
+    // Only reduce item quantity if the item should be consumed
+    if (result.consumeItem) {
+      setInventoryItems(prevItems => {
+        const updatedItems = prevItems.map(item => {
+          if (item.id === itemId && item.quantity > 0) {
+            return { ...item, quantity: item.quantity - 1 };
+          }
+          return item;
+        });
+        
+        // Save to localStorage
+        localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
+        return updatedItems;
       });
-      
-      // Save to localStorage
-      localStorage.setItem('inventoryItems', JSON.stringify(updatedItems));
-      return updatedItems;
-    });
-  }, [inventoryItems, fillHappiness, fillHunger, feed, play, createTennisBall, cleanup, poos, cleanupPoo, setToast, setInventoryItems, stats.health, updateHealth, setShowSteakAnimation]);
+    }
+  }, [inventoryItems, play, feed, cleanup, fillHappiness, fillHunger, updateHealth, gameAreaRef, isResting, setToast, stats, poos, cleanupPoo, setInventoryItems]);
 
   const handleAddInventoryItem = useCallback((item: InventoryItem) => {
     setInventoryItems(prevItems => {
@@ -843,17 +750,19 @@ function AppContent() {
 
   const handlePlay = useCallback(() => {
     play();
-    createTennisBall();
-  }, [play, createTennisBall]);
+    // Use the new animation manager instead of the old createTennisBall function
+    if (gameAreaRef.current && !isResting) {
+      ItemAnimationManager.createTennisBallAnimation(gameAreaRef.current);
+    }
+  }, [play, isResting]);
 
   const handleFeed = useCallback(() => {
     feed();
-    setShowSteakAnimation(true);
-  }, [feed]);
-
-  const handleSteakAnimationComplete = useCallback(() => {
-    setShowSteakAnimation(false);
-  }, []);
+    // Use the new animation manager instead of the old setShowSteakAnimation
+    if (gameAreaRef.current && !isResting) {
+      ItemAnimationManager.createSteakAnimation(gameAreaRef.current);
+    }
+  }, [feed, isResting]);
 
   const handleRest = useCallback(() => {
     // Trigger laying down animation first
@@ -1241,8 +1150,6 @@ function AppContent() {
             onFeedFromBowl={handleFeed}
             onRestFromBed={handleRest}
             onCleanupPoo={handlePooCleanup}
-            showSteakAnimation={showSteakAnimation}
-            onSteakAnimationComplete={handleSteakAnimationComplete}
             soundEffectsEnabled={gameOptions.soundEffectsEnabled}
           />
 

@@ -1,0 +1,157 @@
+/* Unified Item Animation Styles */
+
+.item-animation {
+  position: absolute;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.item-animation img {
+  display: block;
+}
+
+/* Tennis Ball Animation */
+.tennis-ball-animation {
+  width: 40px;
+  height: 40px;
+  left: -50px;
+  top: 60%;
+}
+
+.tennis-ball-animation img {
+  width: 100%;
+  height: 100%;
+}
+
+.tennis-ball-animation.active {
+  animation: bounce-across 2.5s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes bounce-across {
+  0% {
+    left: -50px;
+    top: 60%;
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+  12% {
+    top: 25%;
+    transform: rotate(45deg);
+  }
+  25% {
+    top: 70%;
+    transform: rotate(90deg);
+  }
+  37% {
+    top: 20%;
+    transform: rotate(135deg);
+  }
+  50% {
+    top: 75%;
+    transform: rotate(180deg);
+  }
+  62% {
+    top: 15%;
+    transform: rotate(225deg);
+  }
+  75% {
+    top: 65%;
+    transform: rotate(270deg);
+  }
+  87% {
+    top: 30%;
+    transform: rotate(315deg);
+  }
+  100% {
+    left: calc(100% + 50px);
+    top: 60%;
+    transform: rotate(360deg);
+    opacity: 1;
+  }
+}
+
+/* Steak Animation */
+.steak-animation {
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.steak-animation img {
+  width: 100px;
+  height: 100px;
+  animation: steak-spin 1s ease-out forwards;
+}
+
+.steak-animation.active {
+  animation: steak-toss 1s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes steak-toss {
+  0% {
+    transform: translateX(-50%) translateY(-50vh) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    transform: translateX(-50%) translateY(-100px) scale(1.2);
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-50%) translateY(50px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(100px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes steak-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(720deg);
+  }
+}
+
+/* Future animation types can be added here */
+/* Example: Health Potion Animation */
+/*
+.health-potion-animation {
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.health-potion-animation img {
+  width: 60px;
+  height: 60px;
+}
+
+.health-potion-animation.active {
+  animation: healing-sparkle 1.5s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes healing-sparkle {
+  0% {
+    transform: translateX(-50%) scale(0.5);
+    opacity: 0;
+    filter: brightness(1) drop-shadow(0 0 5px #00ff00);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.2);
+    opacity: 1;
+    filter: brightness(1.5) drop-shadow(0 0 15px #00ff00);
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0;
+    filter: brightness(1) drop-shadow(0 0 5px #00ff00);
+  }
+}
+*/
