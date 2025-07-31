@@ -781,3 +781,26 @@
     gap: 10px;
   }
 }
+
+/* No Parts Message Styling */
+.no-parts-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  grid-column: 1 / -1; /* Span entire grid width */
+}
+
+.no-parts-message p {
+  color: white;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  max-width: 600px;
+  line-height: 1.5;
+}

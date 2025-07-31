@@ -365,199 +365,252 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
             <div className="parts-grid">
               {/* Render individual parts for head and torso */}
               {(activePartType === 'head' || activePartType === 'torso') && 
-                getPartsOfType(activePartType).map(part => {
-                  const quantity = getPartQuantity(part.id);
-                  const isOutOfStock = quantity <= 0;
-                  return (
-                    <div
-                      key={part.id}
-                      className={`part-option ${selectedParts[activePartType]?.id === part.id ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${part.rarity}`}
-                      onClick={() => !isOutOfStock && selectPart(part)}
-                    >
-                      <img src={part.imagePath} alt={part.name} className="part-image" />
-                      <div className="part-info">
-                        <span className="part-name">{part.name}</span>
-                        <span className={`part-rarity rarity-${part.rarity}`}>{part.rarity}</span>
-                        
-                        {/* Stat bonuses */}
-                        <div className="part-stats">
-                          {Object.entries(part.statBonus).map(([stat, value]) => 
-                            value && typeof value === 'number' && value > 0 && (
-                              <span key={stat} className={`stat-bonus ${stat}`}>
-                                +{value} {stat}
-                              </span>
-                            )
-                          ).filter(Boolean)}
-                        </div>
-                        
-                        {/* Ability */}
-                        {part.ability && (
-                          <div className="part-ability">
-                            <span className="ability-name">⚡ {part.ability.name}</span>
-                          </div>
-                        )}
-                        
-                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{quantity}</span>
+                (() => {
+                  const availableParts = getPartsOfType(activePartType).filter(part => getPartQuantity(part.id) > 0);
+                  
+                  if (availableParts.length === 0) {
+                    return (
+                      <div className="no-parts-message">
+                        <p>No {activePartType} parts available.<br /> Defeat enemies in adventure mode to collect parts!</p>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  }
+                  
+                  return availableParts.map(part => {
+                    const quantity = getPartQuantity(part.id);
+                    return (
+                      <div
+                        key={part.id}
+                        className={`part-option ${selectedParts[activePartType]?.id === part.id ? 'selected' : ''} rarity-${part.rarity}`}
+                        onClick={() => selectPart(part)}
+                      >
+                        <img src={part.imagePath} alt={part.name} className="part-image" />
+                        <div className="part-info">
+                          <span className="part-name">{part.name}</span>
+                          <span className={`part-rarity rarity-${part.rarity}`}>{part.rarity}</span>
+                          
+                          {/* Stat bonuses */}
+                          <div className="part-stats">
+                            {Object.entries(part.statBonus).map(([stat, value]) => 
+                              value && typeof value === 'number' && value > 0 && (
+                                <span key={stat} className={`stat-bonus ${stat}`}>
+                                  +{value} {stat}
+                                </span>
+                              )
+                            ).filter(Boolean)}
+                          </div>
+                          
+                          {/* Ability */}
+                          {part.ability && (
+                            <div className="part-ability">
+                              <span className="ability-name">⚡ {part.ability.name}</span>
+                            </div>
+                          )}
+                          
+                          <span className="part-quantity">x{quantity}</span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
               }
               
               {/* Render arm sets */}
               {activePartType === 'armSet' && 
-                getSetsOfType('armSet').map(armSet => {
-                  // Use set quantity directly
-                  const setQuantity = getSetQuantity(armSet.id);
-                  const isOutOfStock = setQuantity <= 0;
-                  return (
-                    <div
-                      key={armSet.id}
-                      className={`part-option ${getSelectedSetId('armSet') === armSet.id ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${armSet.rarity}`}
-                      onClick={() => !isOutOfStock && selectPartSet(armSet)}
-                    >
-                      <div className="set-preview">
-                        <img src={armSet.leftImagePath} alt={`${armSet.name} Left`} className="part-image set-left" />
-                        <img src={armSet.rightImagePath} alt={`${armSet.name} Right`} className="part-image set-right" />
+                (() => {
+                  const availableArmSets = getSetsOfType('armSet').filter(armSet => getSetQuantity(armSet.id) > 0);
+                  
+                  if (availableArmSets.length === 0) {
+                    return (
+                      <div className="no-parts-message">
+                        <p>No arm sets available. <br /> Defeat enemies in adventure mode to collect parts!</p>
                       </div>
-                      <div className="part-info">
-                        <span className="part-name">{armSet.name}</span>
-                        <span className={`part-rarity rarity-${armSet.rarity}`}>{armSet.rarity}</span>
-                        
-                        {/* Stat bonuses */}
-                        <div className="part-stats">
-                          {Object.entries(armSet.statBonus).map(([stat, value]) => 
-                            value && typeof value === 'number' && value > 0 && (
-                              <span key={stat} className={`stat-bonus ${stat}`}>
-                                +{value} {stat}
-                              </span>
-                            )
-                          ).filter(Boolean)}
+                    );
+                  }
+                  
+                  return availableArmSets.map(armSet => {
+                    const setQuantity = getSetQuantity(armSet.id);
+                    return (
+                      <div
+                        key={armSet.id}
+                        className={`part-option ${getSelectedSetId('armSet') === armSet.id ? 'selected' : ''} rarity-${armSet.rarity}`}
+                        onClick={() => selectPartSet(armSet)}
+                      >
+                        <div className="set-preview">
+                          <img src={armSet.leftImagePath} alt={`${armSet.name} Left`} className="part-image set-left" />
+                          <img src={armSet.rightImagePath} alt={`${armSet.name} Right`} className="part-image set-right" />
                         </div>
-                        
-                        {/* Ability */}
-                        {armSet.ability && (
-                          <div className="part-ability">
-                            <span className="ability-name">⚡ {armSet.ability.name}</span>
+                        <div className="part-info">
+                          <span className="part-name">{armSet.name}</span>
+                          <span className={`part-rarity rarity-${armSet.rarity}`}>{armSet.rarity}</span>
+                          
+                          {/* Stat bonuses */}
+                          <div className="part-stats">
+                            {Object.entries(armSet.statBonus).map(([stat, value]) => 
+                              value && typeof value === 'number' && value > 0 && (
+                                <span key={stat} className={`stat-bonus ${stat}`}>
+                                  +{value} {stat}
+                                </span>
+                              )
+                            ).filter(Boolean)}
                           </div>
-                        )}
-                        
-                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{setQuantity}</span>
+                          
+                          {/* Ability */}
+                          {armSet.ability && (
+                            <div className="part-ability">
+                              <span className="ability-name">⚡ {armSet.ability.name}</span>
+                            </div>
+                          )}
+                          
+                          <span className="part-quantity">x{setQuantity}</span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  });
+                })()
               }
               
               {/* Render leg sets */}
               {activePartType === 'legSet' && 
-                getSetsOfType('legSet').map(legSet => {
-                  // Use set quantity directly
-                  const setQuantity = getSetQuantity(legSet.id);
-                  const isOutOfStock = setQuantity <= 0;
-                  return (
-                    <div
-                      key={legSet.id}
-                      className={`part-option ${getSelectedSetId('legSet') === legSet.id ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${legSet.rarity}`}
-                      onClick={() => !isOutOfStock && selectPartSet(legSet)}
-                    >
-                      <div className="set-preview">
-                        <img src={legSet.leftImagePath} alt={`${legSet.name} Left`} className="part-image set-left" />
-                        <img src={legSet.rightImagePath} alt={`${legSet.name} Right`} className="part-image set-right" />
+                (() => {
+                  const availableLegSets = getSetsOfType('legSet').filter(legSet => getSetQuantity(legSet.id) > 0);
+                  
+                  if (availableLegSets.length === 0) {
+                    return (
+                      <div className="no-parts-message">
+                        <p>No leg sets available. <br /> Defeat enemies in adventure mode to collect parts!</p>
                       </div>
-                      <div className="part-info">
-                        <span className="part-name">{legSet.name}</span>
-                        <span className={`part-rarity rarity-${legSet.rarity}`}>{legSet.rarity}</span>
-                        
-                        {/* Stat bonuses */}
-                        <div className="part-stats">
-                          {Object.entries(legSet.statBonus).map(([stat, value]) => 
-                            value && typeof value === 'number' && value > 0 && (
-                              <span key={stat} className={`stat-bonus ${stat}`}>
-                                +{value} {stat}
-                              </span>
-                            )
-                          ).filter(Boolean)}
+                    );
+                  }
+                  
+                  return availableLegSets.map(legSet => {
+                    const setQuantity = getSetQuantity(legSet.id);
+                    return (
+                      <div
+                        key={legSet.id}
+                        className={`part-option ${getSelectedSetId('legSet') === legSet.id ? 'selected' : ''} rarity-${legSet.rarity}`}
+                        onClick={() => selectPartSet(legSet)}
+                      >
+                        <div className="set-preview">
+                          <img src={legSet.leftImagePath} alt={`${legSet.name} Left`} className="part-image set-left" />
+                          <img src={legSet.rightImagePath} alt={`${legSet.name} Right`} className="part-image set-right" />
                         </div>
-                        
-                        {/* Ability */}
-                        {legSet.ability && (
-                          <div className="part-ability">
-                            <span className="ability-name">⚡ {legSet.ability.name}</span>
+                        <div className="part-info">
+                          <span className="part-name">{legSet.name}</span>
+                          <span className={`part-rarity rarity-${legSet.rarity}`}>{legSet.rarity}</span>
+                          
+                          {/* Stat bonuses */}
+                          <div className="part-stats">
+                            {Object.entries(legSet.statBonus).map(([stat, value]) => 
+                              value && typeof value === 'number' && value > 0 && (
+                                <span key={stat} className={`stat-bonus ${stat}`}>
+                                  +{value} {stat}
+                                </span>
+                              )
+                            ).filter(Boolean)}
                           </div>
-                        )}
-                        
-                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{setQuantity}</span>
+                          
+                          {/* Ability */}
+                          {legSet.ability && (
+                            <div className="part-ability">
+                              <span className="ability-name">⚡ {legSet.ability.name}</span>
+                            </div>
+                          )}
+                          
+                          <span className="part-quantity">x{setQuantity}</span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  });
+                })()
               }
 
               {/* Render extra limbs */}
               {activePartType === 'extraLimbs' && 
-                EXTRA_LIMBS.map(extraLimb => {
-                  const quantity = getPartQuantity(extraLimb.id);
-                  const isOutOfStock = quantity <= 0;
-                  const isSelected = (extraLimb.type === 'wings' && selectedParts.wings?.id === extraLimb.id) ||
-                                   (extraLimb.type === 'tail' && selectedParts.tail?.id === extraLimb.id);
-                  return (
-                    <div
-                      key={extraLimb.id}
-                      className={`part-option ${isSelected ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${extraLimb.rarity}`}
-                      onClick={() => !isOutOfStock && selectExtraLimb(extraLimb)}
-                    >
-                      <img src={extraLimb.imagePath} alt={extraLimb.name} className="part-image" />
-                      <div className="part-info">
-                        <span className="part-name">{extraLimb.name}</span>
-                        <span className={`part-rarity rarity-${extraLimb.rarity}`}>{extraLimb.rarity}</span>
-                        
-                        {/* Stat bonuses */}
-                        <div className="part-stats">
-                          {Object.entries(extraLimb.statBonus).map(([stat, value]) => 
-                            value && typeof value === 'number' && value > 0 && (
-                              <span key={stat} className={`stat-bonus ${stat}`}>
-                                +{value} {stat}
-                              </span>
-                            )
-                          ).filter(Boolean)}
-                        </div>
-                        
-                        {/* Ability */}
-                        {extraLimb.ability && (
-                          <div className="part-ability">
-                            <span className="ability-name">⚡ {extraLimb.ability.name}</span>
-                          </div>
-                        )}
-                        
-                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{quantity}</span>
+                (() => {
+                  const availableExtraLimbs = EXTRA_LIMBS.filter(extraLimb => getPartQuantity(extraLimb.id) > 0);
+                  
+                  if (availableExtraLimbs.length === 0) {
+                    return (
+                      <div className="no-parts-message">
+                        <p>No extra limbs available. <br /> Defeat enemies in adventure mode to collect wings and tails!</p>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  }
+                  
+                  return availableExtraLimbs.map(extraLimb => {
+                    const quantity = getPartQuantity(extraLimb.id);
+                    const isSelected = (extraLimb.type === 'wings' && selectedParts.wings?.id === extraLimb.id) ||
+                                     (extraLimb.type === 'tail' && selectedParts.tail?.id === extraLimb.id);
+                    return (
+                      <div
+                        key={extraLimb.id}
+                        className={`part-option ${isSelected ? 'selected' : ''} rarity-${extraLimb.rarity}`}
+                        onClick={() => selectExtraLimb(extraLimb)}
+                      >
+                        <img src={extraLimb.imagePath} alt={extraLimb.name} className="part-image" />
+                        <div className="part-info">
+                          <span className="part-name">{extraLimb.name}</span>
+                          <span className={`part-rarity rarity-${extraLimb.rarity}`}>{extraLimb.rarity}</span>
+                          
+                          {/* Stat bonuses */}
+                          <div className="part-stats">
+                            {Object.entries(extraLimb.statBonus).map(([stat, value]) => 
+                              value && typeof value === 'number' && value > 0 && (
+                                <span key={stat} className={`stat-bonus ${stat}`}>
+                                  +{value} {stat}
+                                </span>
+                              )
+                            ).filter(Boolean)}
+                          </div>
+                          
+                          {/* Ability */}
+                          {extraLimb.ability && (
+                            <div className="part-ability">
+                              <span className="ability-name">⚡ {extraLimb.ability.name}</span>
+                            </div>
+                          )}
+                          
+                          <span className="part-quantity">x{quantity}</span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
               }
 
               {/* Render soul essences */}
               {activePartType === 'soulEssence' && 
-                SOUL_ESSENCES.map(soulEssence => {
-                  const quantity = getSoulEssenceQuantity(soulEssence.id);
-                  const isOutOfStock = quantity <= 0;
-                  return (
-                    <div
-                      key={soulEssence.id}
-                      className={`part-option soul-option ${selectedParts.soulEssence?.id === soulEssence.id ? 'selected' : ''} ${isOutOfStock ? 'out-of-stock' : ''} rarity-${soulEssence.rarity}`}
-                      onClick={() => !isOutOfStock && selectSoulEssence(soulEssence)}
-                    >
-                      <img src={soulEssence.imagePath} alt={soulEssence.name} className="part-image soul-image" />
-                      <div className="part-info">
-                        <span className="part-name">{soulEssence.name}</span>
-                        <span className="part-description">{soulEssence.description}</span>
-                        <span className={`soul-rarity rarity-${soulEssence.rarity}`}>{soulEssence.rarity}</span>
-                        <span className={`part-quantity ${isOutOfStock ? 'out-of-stock' : ''}`}>x{quantity}</span>
+                (() => {
+                  const availableSoulEssences = SOUL_ESSENCES.filter(soulEssence => getSoulEssenceQuantity(soulEssence.id) > 0);
+                  
+                  if (availableSoulEssences.length === 0) {
+                    return (
+                      <div className="no-parts-message">
+                        <p>No soul essences available. <br /> Defeat enemies in adventure mode to collect soul essences!</p>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  }
+                  
+                  return availableSoulEssences.map(soulEssence => {
+                    const quantity = getSoulEssenceQuantity(soulEssence.id);
+                    return (
+                      <div
+                        key={soulEssence.id}
+                        className={`part-option soul-option ${selectedParts.soulEssence?.id === soulEssence.id ? 'selected' : ''} rarity-${soulEssence.rarity}`}
+                        onClick={() => selectSoulEssence(soulEssence)}
+                      >
+                        <img src={soulEssence.imagePath} alt={soulEssence.name} className="part-image soul-image" />
+                        <div className="part-info">
+                          <span className="part-name">{soulEssence.name}</span>
+                          <span className="part-description">{soulEssence.description}</span>
+                          <span className={`soul-rarity rarity-${soulEssence.rarity}`}>{soulEssence.rarity}</span>
+                          <span className="part-quantity">x{quantity}</span>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()
               }
             </div>
           </div>
