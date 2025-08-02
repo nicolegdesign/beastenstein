@@ -49,7 +49,7 @@ export const Debug: React.FC<DebugProps> = ({ options, onOptionsChange, onClose,
         <div className="debug-options">
           <div className="debug-reset-section">
             <p className="debug-description">
-              Reset all beasts to their base stats (Level 1, 50 hunger/happiness/energy, 100 health, 0 age)
+              Reset all beasts to their base stats (Level 1, 50 hunger/happiness/energy, 100 health/mana, 0 age)
             </p>
             <button 
               onClick={onResetAllBeasts} 

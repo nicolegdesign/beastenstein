@@ -4,7 +4,7 @@ import type { GameOptions } from '../types/options';
 import { ExperienceManager } from '../services/ExperienceManager';
 
 export const useBeastStats = (
-  initialStats: BeastStats = { hunger: 50, happiness: 50, energy: 50, health: 100, level: 1, age: 0 }, 
+  initialStats: BeastStats = { hunger: 50, happiness: 50, energy: 50, health: 100, mana: 100, level: 1, age: 0 }, 
   beastId?: string,
   options?: GameOptions,
   createdAt?: number,
@@ -121,7 +121,8 @@ export const useBeastStats = (
           ...prev,
           hunger: Math.max(0, prev.hunger - 2),
           happiness: Math.max(0, prev.happiness - 1),
-          energy: Math.max(0, prev.energy - 1)
+          energy: Math.max(0, prev.energy - 1),
+          mana: Math.min(100, prev.mana + 1) // Slowly regenerate mana over time
         }));
       }
     }, 10000);
@@ -135,10 +136,11 @@ export const useBeastStats = (
       restIntervalRef.current = window.setInterval(() => {
         setStats(prev => {
           const newEnergy = Math.min(100, prev.energy + 10);
+          const newMana = Math.min(100, prev.mana + 5); // Regenerate mana during rest
           if (newEnergy >= 100) {
             setIsResting(false);
           }
-          return { ...prev, energy: newEnergy };
+          return { ...prev, energy: newEnergy, mana: newMana };
         });
       }, 500);
     } else {
@@ -247,6 +249,29 @@ export const useBeastStats = (
     }
   }, [isResting, stats.level, maxLevel]);
 
+  const fillMana = useCallback(() => {
+    if (isResting) return;
+    setStats(prev => ({
+      ...prev,
+      mana: 100
+    }));
+    // Only gain experience if not at max level
+    if (stats.level < maxLevel) {
+      setExperience(prev => prev + 20); // Bonus experience for using items
+    }
+  }, [isResting, stats.level, maxLevel]);
+
+  const useMana = useCallback((amount: number) => {
+    setStats(prev => ({
+      ...prev,
+      mana: Math.max(0, prev.mana - amount)
+    }));
+  }, []);
+
+  const hasEnoughMana = useCallback((requiredMana: number): boolean => {
+    return stats.mana >= requiredMana;
+  }, [stats.mana]);
+
   const getBeastMood = useCallback((): BeastMood => {
     if (stats.happiness >= 80) return 'happy';
     if (stats.happiness >= 20) return 'normal';
@@ -274,6 +299,7 @@ export const useBeastStats = (
       happiness: 50,
       energy: 50,
       health: 100,
+      mana: 100,
       level: 1,
       age: 0
     });
@@ -299,6 +325,9 @@ export const useBeastStats = (
     fillHappiness,
     fillHunger,
     fillEnergy,
+    fillMana,
+    useMana,
+    hasEnoughMana,
     getBeastMood,
     getExperience,
     setExternalExperience,

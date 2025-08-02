@@ -8,6 +8,7 @@ export interface ItemEffectContext {
   cleanup: () => void;
   fillHappiness: () => void;
   fillHunger: () => void;
+  fillMana: () => void;
   updateHealth: (newHealth: number) => void;
   
   // Animation container
@@ -23,6 +24,7 @@ export interface ItemEffectContext {
     hunger: number;
     happiness: number;
     energy: number;
+    mana: number;
     level: number;
     age: number;
   };
@@ -50,6 +52,7 @@ export class ItemEffectsManager {
       cleanup,
       fillHappiness,
       fillHunger,
+      fillMana,
       updateHealth,
       gameAreaRef,
       isResting,
@@ -95,6 +98,8 @@ export class ItemEffectsManager {
         
       case 'mana':
         return this.handleManaItem(item, {
+          fillMana,
+          stats,
           setToast
         });
         
@@ -247,25 +252,38 @@ export class ItemEffectsManager {
   }
 
   /**
-   * Handle mana-restoring items (battle-only)
+   * Handle mana-restoring items
    */
   private static handleManaItem(
     item: InventoryItem,
     context: {
+      fillMana: () => void;
+      stats: { mana: number };
       setToast: (toast: { message: string; show: boolean; type: 'success' | 'info' }) => void;
     }
   ): ItemEffectResult {
-    const { setToast } = context;
+    const { fillMana, stats, setToast } = context;
 
-    // Mana Potion - can only be used during battle
+    // Check if mana is already full
+    if (stats.mana >= 100) {
+      setToast({
+        message: `💙 ${item.name} - Mana is already full!`,
+        show: true,
+        type: 'info'
+      });
+      return { success: false, consumeItem: false };
+    }
+
+    // Use the mana potion
+    fillMana();
+    
     setToast({
-      message: `💙 ${item.name} can only be used during battle!`,
+      message: `💙 ${item.name} restored your beast's mana!`,
       show: true,
-      type: 'info'
+      type: 'success'
     });
 
-    // Don't consume the item if it can't be used
-    return { success: false, consumeItem: false };
+    return { success: true, consumeItem: true };
   }
 
   /**

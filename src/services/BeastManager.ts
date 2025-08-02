@@ -99,6 +99,7 @@ export class BeastManager {
       happiness: 50,
       energy: 50,
       health: 100,
+      mana: 100,
       level: 1,
       age: 0,
       attack: 7,  // Base 6 + 1 from Brave personality
@@ -191,6 +192,7 @@ export class BeastManager {
       happiness: 50,
       energy: 50,
       health: 100 + (customBeast.totalStatBonus.health || 0), // Apply health bonus from parts
+      mana: 100,
       level: 1,
       age: 0,
       attack: finalStats.attack,
@@ -334,7 +336,7 @@ export class BeastManager {
    */
   static validateBeastData(beastData: Partial<IndividualBeastData>): boolean {
     const requiredFields = [
-      'name', 'hunger', 'happiness', 'energy', 'health', 'level', 'age',
+      'name', 'hunger', 'happiness', 'energy', 'health', 'mana', 'level', 'age',
       'attack', 'defense', 'speed', 'magic', 'isResting', 'experience', 'maxLevel'
     ];
 
@@ -350,7 +352,8 @@ export class BeastManager {
       ...beastData,
       createdAt: beastData.createdAt || Date.now(),
       maxLevel: beastData.maxLevel || 5,
-      experience: beastData.experience || 0
+      experience: beastData.experience || 0,
+      mana: beastData.mana || 100  // Default mana value for migrated beasts
     };
 
     return migrated as IndividualBeastData;

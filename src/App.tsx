@@ -102,6 +102,7 @@ function AppContent() {
     cleanup,
     fillHappiness,
     fillHunger,
+    fillMana,
     getBeastMood,
     getExperience,
     setExternalExperience,
@@ -112,6 +113,7 @@ function AppContent() {
     happiness: currentBeastData?.happiness || 50,
     energy: currentBeastData?.energy || 50,
     health: currentBeastData?.health || 100,
+    mana: currentBeastData?.mana || 100,
     level: currentBeastData?.level || 1,
     age: currentBeastData?.age || 0
   }, currentBeastId, gameOptions, currentBeastData?.createdAt || Date.now(), currentBeastData?.experience || 0, currentBeastData?.maxLevel || 5);
@@ -196,6 +198,7 @@ function AppContent() {
       happiness: 90,
       energy: 90,
       health: 100,
+      mana: 100,
       level: 1,
       age: 0,
       attack: 7,  // Base 6 + 1 from Brave personality
@@ -336,6 +339,7 @@ function AppContent() {
           happiness: stats.happiness,
           energy: stats.energy,
           health: stats.health,
+          mana: stats.mana,
           level: stats.level,
           age: stats.age,
           attack: currentStats.attack,
@@ -354,6 +358,7 @@ function AppContent() {
           currentStats.happiness !== stats.happiness ||
           currentStats.energy !== stats.energy ||
           currentStats.health !== stats.health ||
+          currentStats.mana !== stats.mana ||
           currentStats.level !== stats.level ||
           currentStats.age !== stats.age ||
           currentStats.isResting !== isResting ||
@@ -371,7 +376,7 @@ function AppContent() {
     }, 50); // 50ms debounce
 
     return () => clearTimeout(timeoutId);
-  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience, setBeastData]);
+  }, [stats.hunger, stats.happiness, stats.energy, stats.health, stats.mana, stats.level, stats.age, isResting, currentBeastId, currentBeastData, saveBeastData, getExperience, setBeastData]);
 
   // Level up detection and celebration
   useEffect(() => {
@@ -605,6 +610,7 @@ function AppContent() {
       cleanup,
       fillHappiness,
       fillHunger,
+      fillMana,
       updateHealth,
       
       // Animation container
@@ -638,7 +644,7 @@ function AppContent() {
         return updatedItems;
       });
     }
-  }, [inventoryItems, play, feed, cleanup, fillHappiness, fillHunger, updateHealth, gameAreaRef, isResting, setToast, stats, poos, cleanupPoo, setInventoryItems]);
+  }, [inventoryItems, play, feed, cleanup, fillHappiness, fillHunger, fillMana, updateHealth, gameAreaRef, isResting, setToast, stats, poos, cleanupPoo, setInventoryItems]);
 
   const handleAddInventoryItem = useCallback((item: InventoryItem) => {
     setInventoryItems(prevItems => {
@@ -783,7 +789,7 @@ function AppContent() {
     const confirmed = window.confirm(
       "⚠️ Are you sure you want to reset ALL beasts to base stats?\n\n" +
       "This will:\n" +
-      "• Set all stats to base values (Level 1, 50 hunger/happiness/energy, 100 health, 0 age)\n" +
+      "• Set all stats to base values (Level 1, 50 hunger/happiness/energy, 100 health/mana, 0 age)\n" +
       "• Keep beast names and combat stats\n" +
       "• Reset creation time to now\n\n" +
       "This action cannot be undone!"
@@ -1080,6 +1086,7 @@ function AppContent() {
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
         <StatusBar label="Energy" value={stats.energy} id="energy" />
+        <StatusBar label="Mana" value={stats.mana} id="mana" />
       </div>
 
       {/* Sidebar Beast Selector */}

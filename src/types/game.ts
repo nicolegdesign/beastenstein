@@ -10,6 +10,7 @@ export interface BeastStats {
   happiness: number;
   energy: number;
   health: number;
+  mana: number;
   level: number;
   age: number; // in days
 }
