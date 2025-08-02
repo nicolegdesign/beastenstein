@@ -103,6 +103,7 @@ function AppContent() {
     fillHappiness,
     fillHunger,
     fillMana,
+    setMana,
     getBeastMood,
     getExperience,
     setExternalExperience,
@@ -1129,18 +1130,36 @@ function AppContent() {
       )}
       
       {inAdventure ? (
-        <Adventure
-          playerStats={{
+        (() => {
+          const playerStatsToPass = {
             ...getEnhancedCombatStats(currentBeastId),
-            health: getEnhancedHealth(currentBeastId)
-          }}
-          onClose={() => setInAdventure(false)}
-          onUpdateExperience={updateBeastExperience}
-          soundEffectsEnabled={gameOptions.soundEffectsEnabled}
-          inventoryItems={inventoryItems}
-          onItemClick={handleItemClick}
-          onAddInventoryItem={handleAddInventoryItem}
-        />
+            health: stats.health, // Use current health from useBeastStats
+            mana: stats.mana      // Use current mana from useBeastStats
+          };
+          console.log('Passing stats to Adventure:', playerStatsToPass);
+          return (
+            <Adventure
+              playerStats={playerStatsToPass}
+              onClose={() => {
+                console.log('Adventure closed, returning to beast den');
+                setInAdventure(false);
+              }}
+              onUpdateExperience={updateBeastExperience}
+              onUpdateHealth={(newHealth: number) => {
+                console.log('Adventure updating health:', newHealth);
+                updateHealth(newHealth);
+              }}
+              onUpdateMana={(newMana: number) => {
+                console.log('Adventure updating mana:', newMana);
+                setMana(newMana);
+              }}
+              soundEffectsEnabled={gameOptions.soundEffectsEnabled}
+              inventoryItems={inventoryItems}
+              onItemClick={handleItemClick}
+              onAddInventoryItem={handleAddInventoryItem}
+            />
+          );
+        })()
       ) : (
         <>
           <BeastDen

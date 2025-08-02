@@ -268,6 +268,13 @@ export const useBeastStats = (
     }));
   }, []);
 
+  const setMana = useCallback((newMana: number) => {
+    setStats(prev => ({
+      ...prev,
+      mana: Math.max(0, Math.min(100, newMana))
+    }));
+  }, []);
+
   const hasEnoughMana = useCallback((requiredMana: number): boolean => {
     return stats.mana >= requiredMana;
   }, [stats.mana]);
@@ -327,6 +334,7 @@ export const useBeastStats = (
     fillEnergy,
     fillMana,
     useMana,
+    setMana,
     hasEnoughMana,
     getBeastMood,
     getExperience,

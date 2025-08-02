@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { AnimatedCustomBeast } from '../AnimatedCustomBeast/AnimatedCustomBeast';
 import { AdventureMap } from '../AdventureMap/AdventureMap';
@@ -28,9 +28,11 @@ import { BeastFactory } from '../../services/BeastFactory';
 import type { BattleBeast, CombatState, CustomBeast } from '../../types/combat';
 
 interface AdventureProps {
-  playerStats: BeastCombatStats & { health: number };
+  playerStats: BeastCombatStats & { health: number; mana: number };
   onClose: () => void;
   onUpdateExperience: (beastId: string, newExperience: number) => boolean;
+  onUpdateHealth: (newHealth: number) => void;
+  onUpdateMana: (newMana: number) => void;
   soundEffectsEnabled?: boolean;
   inventoryItems: InventoryItem[];
   onItemClick: (itemId: string) => void;
@@ -41,6 +43,8 @@ export const Adventure: React.FC<AdventureProps> = ({
   playerStats, 
   onClose, 
   onUpdateExperience, 
+  onUpdateHealth,
+  onUpdateMana,
   soundEffectsEnabled = true,
   inventoryItems,
   onItemClick,
@@ -268,6 +272,27 @@ export const Adventure: React.FC<AdventureProps> = ({
   const handleMapClose = () => {
     onClose();
   };
+
+  // Helper function to sync the primary player beast's health/mana back to beast den
+  const syncPrimaryBeastStats = useCallback(() => {
+    if (combatState.playerBeasts.length > 0) {
+      const primaryBeast = combatState.playerBeasts[0]; // First beast is the primary one
+      console.log('Syncing beast stats back to den:', {
+        health: primaryBeast.currentHealth,
+        mana: primaryBeast.currentMana
+      });
+      onUpdateHealth(primaryBeast.currentHealth);
+      onUpdateMana(primaryBeast.currentMana);
+    }
+  }, [combatState.playerBeasts, onUpdateHealth, onUpdateMana]);
+
+  // Auto-sync stats when exiting battle
+  useEffect(() => {
+    if (gameState !== 'battle' && combatState.playerBeasts.length > 0) {
+      // Sync stats when leaving battle
+      syncPrimaryBeastStats();
+    }
+  }, [gameState, syncPrimaryBeastStats, combatState.playerBeasts]);
 
   // Generate random opponent when entering setup
   useEffect(() => {
@@ -1300,6 +1325,13 @@ export const Adventure: React.FC<AdventureProps> = ({
       console.log(`Beast ${i + 1} abilities:`, beast.availableAbilities);
       
       const battleBeast = createBattleBeast(beast, beastStats, positions[i]);
+      
+      // For the first beast (primary beast), use the current health/mana from beast den
+      if (i === 0) {
+        battleBeast.currentHealth = playerStats.health;
+        battleBeast.currentMana = playerStats.mana;
+      }
+      
       playerBattleBeasts.push(battleBeast);
     }
     
