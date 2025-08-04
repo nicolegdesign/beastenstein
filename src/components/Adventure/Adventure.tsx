@@ -18,6 +18,7 @@ import type { InventoryItem } from '../../types/inventory';
 import { EXTRA_LIMBS } from '../../data/beastParts';
 import { LOOT_ITEMS, RARITY_WEIGHTS, type LootItem } from '../../data/lootData';
 import { generateItemDrop } from '../../data/battleRewards';
+import { calculateTotalStatBonus } from '../../utils/beastStatsCalculator';
 import { getLevelName } from '../../data/levelData';
 import './Adventure.css';
 
@@ -1431,13 +1432,17 @@ export const Adventure: React.FC<AdventureProps> = ({
         
         // Ensure beast has enhanced properties for combat
         if (!beast.totalStatBonus) {
-          beast.totalStatBonus = {
-            attack: (beast.armLeft?.statBonus?.attack || 0) + (beast.armRight?.statBonus?.attack || 0),
-            defense: (beast.torso?.statBonus?.defense || 0),
-            speed: (beast.legLeft?.statBonus?.speed || 0) + (beast.legRight?.statBonus?.speed || 0),
-            magic: (beast.head?.statBonus?.magic || 0),
-            health: (beast.torso?.statBonus?.health || 0)
-          };
+          // Use the centralized stat calculation function to ensure consistency
+          beast.totalStatBonus = calculateTotalStatBonus({
+            head: beast.head,
+            torso: beast.torso,
+            armLeft: beast.armLeft,
+            armRight: beast.armRight,
+            legLeft: beast.legLeft,
+            legRight: beast.legRight,
+            wings: beast.wings,
+            tail: beast.tail
+          });
         }
         
         // Ensure beast has abilities

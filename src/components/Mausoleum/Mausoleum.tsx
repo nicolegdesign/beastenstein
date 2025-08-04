@@ -6,6 +6,7 @@ import { useBeastPartInventory } from '../../hooks/useBeastPartInventory';
 import type { EnhancedBeastPart, EnhancedBeastPartSet, StatBonus, Ability } from '../../types/abilities';
 import { BEAST_PARTS, ARM_SETS, LEG_SETS, EXTRA_LIMBS } from '../../data/beastParts';
 import { SOUL_ESSENCES, type SoulEssence } from '../../data/soulEssences';
+import { calculateTotalStatBonus } from '../../utils/beastStatsCalculator';
 import './Mausoleum.css';
 
 interface CustomBeast {
@@ -36,16 +37,21 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
   
   // Calculate total stat bonuses and available abilities
   const calculateBeastStats = (): { totalStatBonus: StatBonus; availableAbilities: Ability[] } => {
-    const totalStatBonus: StatBonus = {
-      attack: 0,
-      defense: 0,
-      speed: 0,
-      magic: 0,
-      health: 0
-    };
+    // Use the centralized stat calculation function
+    const totalStatBonus = calculateTotalStatBonus({
+      head: selectedParts.head,
+      torso: selectedParts.torso,
+      armLeft: selectedParts.armLeft,
+      armRight: selectedParts.armRight,
+      legLeft: selectedParts.legLeft,
+      legRight: selectedParts.legRight,
+      wings: selectedParts.wings,
+      tail: selectedParts.tail
+    });
+
     const availableAbilities: Ability[] = [];
 
-    // Add bonuses from each part
+    // Add abilities from each part
     const parts = [
       selectedParts.head,
       selectedParts.torso,
@@ -59,11 +65,6 @@ export const Mausoleum: React.FC<MausoleumProps> = ({ onClose, onCreateBeast }) 
 
     parts.forEach(part => {
       if (part) {
-        Object.keys(part.statBonus).forEach(stat => {
-          const statKey = stat as keyof StatBonus;
-          totalStatBonus[statKey] = (totalStatBonus[statKey] || 0) + (part.statBonus[statKey] || 0);
-        });
-
         // Add ability if it exists and isn't already added
         if (part.ability && !availableAbilities.some(a => a.id === part.ability!.id)) {
           availableAbilities.push(part.ability);

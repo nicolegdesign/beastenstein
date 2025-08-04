@@ -51,7 +51,7 @@ export const usePooManager = (
 
   // Poo spawning timer - spawn poo every 10-60 seconds when not resting (unless disabled)
   useEffect(() => {
-    console.log('Poo manager effect:', { isResting, disablePooSpawning: options?.disablePooSpawning });
+    // console.log('Poo manager effect:', { isResting, disablePooSpawning: options?.disablePooSpawning });
     if (isResting || options?.disablePooSpawning) {
       console.log('Poo spawning disabled:', { isResting, disablePooSpawning: options?.disablePooSpawning });
       return;
@@ -62,7 +62,7 @@ export const usePooManager = (
     
     const scheduleNextPoo = () => {
       const delay = Math.random() * (maxDelay - minDelay) + minDelay;
-      console.log(`Next poo scheduled in ${delay / 1000} seconds`);
+      // console.log(`Next poo scheduled in ${delay / 1000} seconds`);
       return setTimeout(() => {
         spawnPoo();
         scheduleNextPoo();

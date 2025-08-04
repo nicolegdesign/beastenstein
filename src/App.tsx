@@ -35,6 +35,7 @@ import { BeastManager, type CustomBeast } from './services/BeastManager';
 import { ExperienceManager } from './services/ExperienceManager';
 import { ItemEffectsManager } from './services/ItemEffectsManager';
 import { ItemAnimationManager } from './services/ItemAnimationManager';
+import { calculateTotalStatBonus } from './utils/beastStatsCalculator';
 import './App.css';
 import './services/ItemAnimationManager.css';
 
@@ -193,31 +194,62 @@ function AppContent() {
     const now = Date.now();
     const customBeastId = `custom_${now}`;
     
-    const newBeastData: IndividualBeastData = {
-      name: name,
-      hunger: 90,
-      happiness: 90,
-      energy: 90,
-      health: 100,
-      mana: 100,
-      level: 1,
-      age: 0,
-      attack: 7,  // Base 6 + 1 from Brave personality
-      defense: 6,
-      speed: 6,
-      magic: 6,
-      isResting: false,
-      createdAt: now,
-      experience: 0,
-      maxLevel: 5  // Dim soul max level
-    };
-    
     // Create the custom beast configuration using the factory function
     const customBeast = createBeastFromTemplate('nightwolf', name);
     if (!customBeast) {
       console.error('Failed to create Night Wolf beast from template');
       return;
     }
+    
+    // Calculate total stat bonuses using the centralized function
+    const totalStatBonus = calculateTotalStatBonus({
+      head: customBeast.head,
+      torso: customBeast.torso,
+      armLeft: customBeast.armLeft,
+      armRight: customBeast.armRight,
+      legLeft: customBeast.legLeft,
+      legRight: customBeast.legRight,
+      wings: customBeast.wings,
+      tail: customBeast.tail
+    });
+    
+    // Base stats
+    const baseStats = { attack: 6, defense: 6, speed: 6, magic: 6 };
+    
+    // Apply personality modifiers (Brave gives +1 attack)
+    const personalityStats = {
+      attack: baseStats.attack + (customBeast.personality?.statModifiers?.attack || 0),
+      defense: baseStats.defense + (customBeast.personality?.statModifiers?.defense || 0),
+      speed: baseStats.speed + (customBeast.personality?.statModifiers?.speed || 0),
+      magic: baseStats.magic + (customBeast.personality?.statModifiers?.magic || 0),
+    };
+    
+    // Apply part bonuses using the calculated totalStatBonus
+    const finalStats = {
+      attack: personalityStats.attack + (totalStatBonus.attack || 0),
+      defense: personalityStats.defense + (totalStatBonus.defense || 0),
+      speed: personalityStats.speed + (totalStatBonus.speed || 0),
+      magic: personalityStats.magic + (totalStatBonus.magic || 0),
+    };
+    
+    const newBeastData: IndividualBeastData = {
+      name: name,
+      hunger: 90,
+      happiness: 90,
+      energy: 90,
+      health: 100 + (totalStatBonus.health || 0), // Use enhanced health from part bonuses
+      mana: 100,
+      level: 1,
+      age: 0,
+      attack: finalStats.attack,
+      defense: finalStats.defense,
+      speed: finalStats.speed,
+      magic: finalStats.magic,
+      isResting: false,
+      createdAt: now,
+      experience: 0,
+      maxLevel: 5  // Dim soul max level
+    };
     
     // Save to state and localStorage
     setBeastData(prev => ({ ...prev, [customBeastId]: newBeastData }));
@@ -932,27 +964,23 @@ function AppContent() {
           legRight?: { statBonus?: { attack?: number; defense?: number; speed?: number; magic?: number } };
         };
         
-        // Calculate stat bonuses from all parts
-        let attackBonus = 0;
-        let defenseBonus = 0;
-        let speedBonus = 0;
-        let magicBonus = 0;
-
-        // Add bonuses from each part
-        [customBeast.head, customBeast.torso, customBeast.armLeft, customBeast.armRight, customBeast.legLeft, customBeast.legRight].forEach(part => {
-          if (part?.statBonus) {
-            attackBonus += part.statBonus.attack || 0;
-            defenseBonus += part.statBonus.defense || 0;
-            speedBonus += part.statBonus.speed || 0;
-            magicBonus += part.statBonus.magic || 0;
-          }
+        // Use the centralized stat calculation function
+        const totalStatBonus = calculateTotalStatBonus({
+          head: customBeast.head,
+          torso: customBeast.torso,
+          armLeft: customBeast.armLeft,
+          armRight: customBeast.armRight,
+          legLeft: customBeast.legLeft,
+          legRight: customBeast.legRight,
+          wings: undefined,
+          tail: undefined
         });
 
         return {
-          attack: baseStats.attack + attackBonus,
-          defense: baseStats.defense + defenseBonus,
-          speed: baseStats.speed + speedBonus,
-          magic: baseStats.magic + magicBonus
+          attack: baseStats.attack + (totalStatBonus.attack || 0),
+          defense: baseStats.defense + (totalStatBonus.defense || 0),
+          speed: baseStats.speed + (totalStatBonus.speed || 0),
+          magic: baseStats.magic + (totalStatBonus.magic || 0)
         };
       }
     } catch (error) {
@@ -965,36 +993,13 @@ function AppContent() {
   // Calculate enhanced health including health bonuses from beast parts
   const getEnhancedHealth = (beastId: string): number => {
     const currentBeast = beastData[beastId];
-    const baseHealth = currentBeast?.health || 100;
-
-    try {
-      const customBeastData = getCustomBeastData(beastId);
-      if (customBeastData && typeof customBeastData === 'object') {
-        const customBeast = customBeastData as {
-          head?: { statBonus?: { health?: number } };
-          torso?: { statBonus?: { health?: number } };
-          armLeft?: { statBonus?: { health?: number } };
-          armRight?: { statBonus?: { health?: number } };
-          legLeft?: { statBonus?: { health?: number } };
-          legRight?: { statBonus?: { health?: number } };
-        };
-        
-        let healthBonus = 0;
-
-        // Add health bonuses from all parts
-        [customBeast.head, customBeast.torso, customBeast.armLeft, customBeast.armRight, customBeast.legLeft, customBeast.legRight].forEach(part => {
-          if (part?.statBonus) {
-            healthBonus += part.statBonus.health || 0;
-          }
-        });
-
-        return baseHealth + healthBonus;
-      }
-    } catch (error) {
-      console.error('Failed to load custom beast data for enhanced health:', error);
-    }
-
-    return baseHealth;
+    if (!currentBeast) return 100;
+    
+    // The current health in beastData already includes both:
+    // 1. Part bonuses (applied during creation)
+    // 2. Level-up bonuses (applied when leveling up)
+    // So we can just return the stored health value as the max health
+    return currentBeast.health;
   };
 
   return (
@@ -1083,7 +1088,7 @@ function AppContent() {
 
       {/* Top stats bar - compact horizontal layout */}
       <div id="top-stats-container">
-        <StatusBar label="Health" value={stats.health} id="health" />
+        <StatusBar label="Health" value={stats.health} id="health" maxValue={getEnhancedHealth(currentBeastId)} />
         <StatusBar label="Hunger" value={stats.hunger} id="hunger" />
         <StatusBar label="Happiness" value={stats.happiness} id="happiness" />
         <StatusBar label="Energy" value={stats.energy} id="energy" />

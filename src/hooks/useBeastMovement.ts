@@ -57,7 +57,7 @@ export const useBeastMovement = (
       const deltaX = safePosition.x - currentPosition.x;
       if (Math.abs(deltaX) > 5) { // Only change facing if there's significant horizontal movement
         const newFacing = deltaX > 0 ? 'right' : 'left';
-        console.log('Beast facing change:', { deltaX, newFacing, from: currentPosition, to: safePosition });
+        // console.log('Beast facing change:', { deltaX, newFacing, from: currentPosition, to: safePosition });
         setFacing(newFacing);
       }
     }
