@@ -25,6 +25,7 @@
   cursor: pointer;
   z-index: 5;
   transition: all 0.3s ease;
+  display: none;
 }
 
 #food-bowl:hover {
