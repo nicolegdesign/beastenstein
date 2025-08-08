@@ -67,7 +67,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = fa
           // Type guard to ensure we have a valid custom beast object
           const customBeast = customBeastData as CustomBeastData;
           if (customBeast && customBeast.name && customBeast.head && customBeast.torso) {
-            let animatedMood: 'normal' | 'happy' | 'sad' | 'rest' | 'laying';
+            let animatedMood: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'walk';
             if (isLayingDown) {
               animatedMood = 'laying';
             } else if (isResting) {
@@ -77,6 +77,7 @@ export const Beast: React.FC<BeastProps> = ({ mood, isResting, isLayingDown = fa
             }
             return (
               <AnimatedCustomBeast 
+                key={`animated-${animatedMood}`}
                 mood={animatedMood} 
                 size={500}
                 facing={facing}

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import './AnimatedCustomBeast.css';
 
 interface AnimatedCustomBeastProps {
-  mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'attack';
+  mood?: 'normal' | 'happy' | 'sad' | 'rest' | 'laying' | 'attack' | 'walk';
   size?: number;
   facing?: 'left' | 'right';
   soundEffectsEnabled?: boolean;
@@ -51,6 +51,8 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         return 0.3; // Very gentle breathing-like motion
       case 'laying':
         return 0.2; // Minimal movement while laying down
+      case 'walk':
+        return 1.2; // Slightly energetic for walking
       case 'attack':
         return 2.5; // Very aggressive and intense
       default:
@@ -98,6 +100,13 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         y: [0, -30, 10, -15, 0], // Higher vertical leap for dramatic effect
         rotate: [0, 5, -2, 3, 0], // More pronounced rotation during leap
         scaleX: facing === 'left' ? -1 : 1, // Add facing direction to attack animation
+      } : mood === 'walk' ? {
+        // Subtle body bob while walking
+        x: 0,
+        y: [0, -4, 0, -2, 0],
+        rotate: 0,
+        scaleX: facing === 'left' ? -1 : 1,
+        scaleY: [1, 0.995, 1, 0.997, 1]
       } : {
         rotate: layingProps.rotate,
         x: layingProps.x,
@@ -112,6 +121,12 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
         ease: "easeInOut",
         // Faster transition for facing changes during attack
         scaleX: { duration: 0.05, ease: "easeOut" }
+      } : mood === 'walk' ? {
+        duration: 0.9,
+        repeat: Infinity,
+        ease: "easeInOut",
+        scaleX: { duration: 0.05, ease: "easeOut" },
+        scaleY: { duration: 0.3, ease: "easeInOut" }
       } : {
         ...layingProps.transition,
         // Much faster and smoother transition for facing changes
@@ -129,6 +144,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           animate={mood === 'attack' ? {
             rotate: [0, -15, 8, -10, 0],
             x: [0, 5, -3, 2, 0],
+          } : mood === 'walk' ? {
+            // Walk cycle: back/left leg moves opposite to right leg
+            rotate: [10, -25, 10],
+            x: [0, 3, 0],
+            y: [0, -1, 0],
           } : {
             rotate: [0, 3 * scale, 0, -2 * scale, 0],
           }}
@@ -137,6 +157,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             repeat: 0, // Play once
             ease: "easeInOut",
             delay: 0.1
+          } : mood === 'walk' ? {
+            duration: 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
           } : {
             duration: 2.8,
             repeat: Infinity,
@@ -161,6 +185,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           animate={mood === 'attack' ? {
             rotate: [0, 10, -8, 12, 0],
             x: [0, -5, 3, -2, 0],
+          } : mood === 'walk' ? {
+            // Walk cycle: front/right leg opposite of left leg
+            rotate: [-10, 25, -10],
+            x: [0, -3, 0],
+            y: [0, 1, 0]
           } : {
             rotate: [0, -2 * scale, 0, 3 * scale, 0],
           }}
@@ -169,6 +198,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             repeat: 0, // Play once
             ease: "easeInOut",
             delay: 0.4
+          } : mood === 'walk' ? {
+            duration: 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
           } : {
             duration: 2.8,
             repeat: Infinity,
@@ -194,6 +227,9 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             animate={mood === 'attack' ? {
               rotate: [0, 8, -5, 6, 0],
               scaleY: [1, 1.1, 0.95, 1.05, 1],
+            } : mood === 'walk' ? {
+              rotate: [0, 6, 0, -6, 0],
+              scaleY: [1, 1.05, 1, 0.95, 1],
             } : {
               rotate: [0, 3 * scale, 0, -2 * scale, 0],
               scaleY: [1, 1 + (0.05 * scale), 1], // Wing flapping effect
@@ -203,6 +239,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
               repeat: 0,
               ease: "easeInOut",
               delay: 0.1
+            } : mood === 'walk' ? {
+              duration: 1.0,
+              repeat: Infinity,
+              ease: "easeInOut",
             } : {
               duration: 2.0,
               repeat: Infinity,
@@ -229,6 +269,9 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             animate={mood === 'attack' ? {
               rotate: [0, 15, -10, 12, 0],
               x: [0, -5, 3, -4, 0],
+            } : mood === 'walk' ? {
+              rotate: [0, 12, 0, -10, 0],
+              x: [0, -2, 0, 2, 0],
             } : {
               rotate: [0, 8 * scale, 0, -6 * scale, 0],
               x: [0, 2 * scale, 0, -2 * scale, 0], // Swaying motion
@@ -238,6 +281,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
               repeat: 0,
               ease: "easeInOut",
               delay: 0.3
+            } : mood === 'walk' ? {
+              duration: 1.0,
+              repeat: Infinity,
+              ease: "easeInOut"
             } : {
               duration: 2.5,
               repeat: Infinity,
@@ -265,6 +312,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             x: [0, 10, -5, 8, 0], // Forward lunging motion
             scaleY: [1, 1.1, 0.95, 1.05, 1],
             scaleX: [1, 1.05, 0.98, 1.02, 1],
+          } : mood === 'walk' ? {
+            y: [0, -6, 0, -3, 0], // Stronger bob while walking
+            x: [0, 1, 0, -1, 0],
+            scaleY: [1, 1.02, 0.99, 1.01, 1],
+            scaleX: [1, 1.01, 0.99, 1.01, 1],
           } : {
             y: [0, -1.5 * scale, 0],
             scaleY: [1, 1 + (0.03 * scale), 1], // Breathing effect
@@ -272,6 +324,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
           transition={mood === 'attack' ? {
             duration: 0.9,
             repeat: 0, // Play once
+            ease: "easeInOut"
+          } : mood === 'walk' ? {
+            duration: 0.9,
+            repeat: Infinity,
             ease: "easeInOut"
           } : {
             duration: 3.2,
@@ -296,6 +352,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             rotate: [0, -25, 15, -20, 0], // Aggressive swinging
             x: [0, 8, -5, 6, 0],
             y: [0, -3, 2, -2, 0],
+          } : mood === 'walk' ? {
+            // Opposite of front/right arm when walking
+            rotate: [20, -20, 20],
+            x: [0, 2, 0],
+            y: [0, -2, 0]
           } : {
             rotate: [0, 5 * scale, 0, -3 * scale, 0],
           }}
@@ -304,6 +365,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             repeat: 0, // Play once
             ease: "easeInOut",
             delay: 0.05
+          } : mood === 'walk' ? {
+            duration: 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
           } : {
             duration: 2.4,
             repeat: Infinity,
@@ -329,6 +394,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             rotate: [0, 30, -20, 25, 0], // More dramatic swinging on front arm
             x: [0, -8, 5, -6, 0],
             y: [0, -5, 3, -4, 0],
+          } : mood === 'walk' ? {
+            // Opposite of back/left arm when walking
+            rotate: [-20, 20, -20],
+            x: [0, -2, 0],
+            y: [0, 2, 0]
           } : {
             rotate: [0, -3 * scale, 0, 5 * scale, 0],
           }}
@@ -337,6 +407,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             repeat: 0, // Play once
             ease: "easeInOut",
             delay: 0.35 // Offset from left arm for more dynamic feel
+          } : mood === 'walk' ? {
+            duration: 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
           } : {
             duration: 2.4,
             repeat: Infinity,
@@ -363,6 +437,11 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             x: [0, 4, -2, 3, 0], // Reduced forward motion to stay connected
             rotate: [0, -3, 2, -2, 0], // Gentler head rotation
             scale: [1, 1.02, 0.99, 1.01, 1], // Very subtle scaling
+          } : mood === 'walk' ? {
+            y: [0, -3, 0, -1, 0],
+            x: [0, 1, 0, -1, 0],
+            rotate: [0, -4, 0, 3, 0], // Slight counter-rotation to torso
+            scale: [1, 1.01, 1, 1.005, 1],
           } : {
             y: [0, -2 * scale, 0],
             rotate: [0, 1.5 * scale, 0, -1.5 * scale, 0],
@@ -372,6 +451,10 @@ export const AnimatedCustomBeast: React.FC<AnimatedCustomBeastProps> = ({
             repeat: 0, // Play once
             ease: "easeInOut",
             delay: 0.2
+          } : mood === 'walk' ? {
+            duration: 0.9,
+            repeat: Infinity,
+            ease: "easeInOut"
           } : {
             duration: 3,
             repeat: Infinity,

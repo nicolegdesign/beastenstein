@@ -126,7 +126,7 @@ function AppContent() {
     setIsResting(currentBeastData?.isResting || false);
   }, [currentBeastId, currentBeastData?.isResting, setIsResting]);
 
-  const { position, facing } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
+  const { position, facing, isWalking } = useBeastMovement(isResting, gameAreaRef, gameOptions.disableRandomMovement);
   
   const { poos, cleanupPoo } = usePooManager(isResting, gameAreaRef, gameOptions);
 
@@ -1173,7 +1173,7 @@ function AppContent() {
           <BeastDen
             ref={gameAreaRef}
             backgroundIndex={currentBackgroundIndex}
-            beastMood={getBeastMood()}
+            beastMood={isWalking ? 'walk' : getBeastMood()}
             isResting={isResting}
             isLayingDown={isLayingDown}
             beastPosition={position}

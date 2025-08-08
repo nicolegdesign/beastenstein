@@ -31,7 +31,7 @@ export interface BeastState extends BeastStats {
   currentBeastId: string;
 }
 
-export type BeastMood = 'happy' | 'normal' | 'sad';
+export type BeastMood = 'happy' | 'normal' | 'sad' | 'walk';
 
 export interface GameState extends BeastState {
   currentBackgroundIndex: number;
