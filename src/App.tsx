@@ -103,6 +103,7 @@ function AppContent() {
     cleanup,
     fillHappiness,
     fillHunger,
+    fillEnergy,
     fillMana,
     setMana,
     getBeastMood,
@@ -643,12 +644,14 @@ function AppContent() {
       cleanup,
       fillHappiness,
       fillHunger,
+      fillEnergy,
       fillMana,
       updateHealth,
       
       // Animation container
       gameAreaRef,
       isResting,
+      setIsLayingDown,
       
       // Toast notifications
       setToast,
@@ -677,7 +680,7 @@ function AppContent() {
         return updatedItems;
       });
     }
-  }, [inventoryItems, play, feed, cleanup, fillHappiness, fillHunger, fillMana, updateHealth, gameAreaRef, isResting, setToast, stats, poos, cleanupPoo, setInventoryItems]);
+  }, [inventoryItems, play, feed, cleanup, fillHappiness, fillHunger, fillEnergy, fillMana, updateHealth, gameAreaRef, isResting, setIsLayingDown, setToast, stats, poos, cleanupPoo, setInventoryItems]);
 
   const handleAddInventoryItem = useCallback((item: InventoryItem) => {
     setInventoryItems(prevItems => {

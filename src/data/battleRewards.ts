@@ -71,12 +71,12 @@ export const BATTLE_ITEM_DROPS: InventoryItem[] = [
   
   // Rare items (7% chance)
   {
-    id: 'dragonScale',
-    name: 'Dragon Scale',
-    image: './images/items/dragonScale.svg',
+    id: 'cozyBed',
+    name: 'Cozy Bed',
+    image: './images/items/petBed.svg',
     quantity: 1,
-    description: 'A rare scale that provides temporary protection',
-    effect: 'none',
+    description: 'A soft and warm bed that restores energy',
+    effect: 'energy',
     rarity: 'rare'
   },
   

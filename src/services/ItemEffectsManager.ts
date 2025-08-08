@@ -8,12 +8,14 @@ export interface ItemEffectContext {
   cleanup: () => void;
   fillHappiness: () => void;
   fillHunger: () => void;
+  fillEnergy: () => void;
   fillMana: () => void;
   updateHealth: (newHealth: number) => void;
   
   // Animation container
   gameAreaRef: React.RefObject<HTMLDivElement | null>;
   isResting: boolean;
+  setIsLayingDown: (laying: boolean) => void;
   
   // Toast notifications
   setToast: (toast: { message: string; show: boolean; type: 'success' | 'info' }) => void;
@@ -52,10 +54,12 @@ export class ItemEffectsManager {
       cleanup,
       fillHappiness,
       fillHunger,
+      fillEnergy,
       fillMana,
       updateHealth,
       gameAreaRef,
       isResting,
+      setIsLayingDown,
       setToast,
       stats,
       poos,
@@ -101,6 +105,14 @@ export class ItemEffectsManager {
           fillMana,
           stats,
           setToast
+        });
+        
+      case 'energy':
+        return this.handleEnergyItem(item, {
+          fillEnergy,
+          stats,
+          setToast,
+          setIsLayingDown
         });
         
       default:
@@ -287,10 +299,56 @@ export class ItemEffectsManager {
   }
 
   /**
+   * Handle energy-restoring items
+   */
+  private static handleEnergyItem(
+    item: InventoryItem,
+    context: {
+      fillEnergy: () => void;
+      stats: { energy: number };
+      setToast: (toast: { message: string; show: boolean; type: 'success' | 'info' }) => void;
+      setIsLayingDown: (laying: boolean) => void;
+    }
+  ): ItemEffectResult {
+    const { fillEnergy, stats, setToast, setIsLayingDown } = context;
+
+    // Check if energy is already full
+    if (stats.energy >= 100) {
+      setToast({
+        message: `😴 ${item.name} - Energy is already full!`,
+        show: true,
+        type: 'info'
+      });
+      return { success: false, consumeItem: false };
+    }
+
+    // Use the Cozy Bed - trigger laying down animation first (like Rest button)
+    setIsLayingDown(true);
+    
+    // After the laying animation completes, restore energy
+    setTimeout(() => {
+      fillEnergy();
+      
+      setToast({
+        message: `😴 ${item.name} used! Your beast feels well-rested and energized!`,
+        show: true,
+        type: 'success'
+      });
+      
+      // Keep laying animation for a bit longer to show the beast is resting
+      setTimeout(() => {
+        setIsLayingDown(false);
+      }, 2000); // Beast stays laying for 2 seconds (same as Rest button)
+    }, 1500); // Wait for laying animation to complete (1.5 seconds)
+
+    return { success: true, consumeItem: true };
+  }
+
+  /**
    * Get a list of all supported item effect types
    */
   static getSupportedEffectTypes(): string[] {
-    return ['happiness', 'hunger', 'cleanup', 'health', 'mana'];
+    return ['happiness', 'hunger', 'cleanup', 'health', 'mana', 'energy'];
   }
 
   /**

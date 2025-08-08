@@ -85,6 +85,9 @@ const supportedTypes = ItemEffectsManager.getSupportedEffectTypes();
 ### 5. Mana Items
 - **Mana Potion**: Only usable in battle (prevents consumption if not in battle)
 
+### 6. Energy Items
+- **Cozy Bed**: Restores energy to 100% with laying animation (same as Rest button)
+
 ## Benefits of This Architecture
 
 ### Code Organization
